@@ -3,15 +3,35 @@
     "plugins": {
       "SamplePlugin": {
         "src": "src/plugins/SamplePlugin"
+      },
+      "ModelToVerification": {
+        "src": "src/plugins/ModelToVerification"
+      },
+      "NoMetaPlugin": {
+        "src": "src/plugins/NoMetaPlugin"
+      },
+      "MissingPlugin": {
+        "src": "src/plugins/DoesNotExist"
       }
     },
     "seeds": {
-      "SampleSeed": {
-        "src": "src/seeds/SampleSeed"
+      "StateMachine": {
+        "src": "src/seeds/StateMachine"
+      },
+      "EmptySeed": {
+        "src": "src/seeds/EmptySeed"
       }
     },
-    "visualizers": {},
-    "routers": {}
+    "visualizers": {
+      "SampleViz": {
+        "src": "src/visualizers/SampleViz"
+      }
+    },
+    "routers": {
+      "SampleRouter": {
+        "src": "src/routers/SampleRouter"
+      }
+    }
   },
   "dependencies": {
     "plugins": {},

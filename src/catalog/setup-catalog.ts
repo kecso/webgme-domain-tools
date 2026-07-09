@@ -40,6 +40,41 @@ function findWebgmexFiles(seedDir: string): string[] {
   return results.sort();
 }
 
+function resolveSeedArtifacts(
+  seedDir: string,
+  seedName: string,
+  exists: boolean,
+): { artifacts: string[]; notes: string[] } {
+  const notes: string[] = [];
+  if (!exists) return { artifacts: [], notes };
+
+  const all = findWebgmexFiles(seedDir);
+  const expectedBasename = seedName + ".webgmex";
+  const primary = all.find((f) => path.basename(f) === expectedBasename);
+  const ignored = all.filter((f) => path.basename(f) !== expectedBasename);
+
+  if (all.length === 0) {
+    notes.push("missing .webgmex — expected " + seedName + ".webgmex");
+    return { artifacts: [], notes };
+  }
+
+  if (!primary) {
+    notes.push("missing .webgmex — expected " + seedName + ".webgmex");
+  }
+
+  for (const file of ignored) {
+    notes.push(
+      "ignored .webgmex: " +
+        path.basename(file) +
+        " (tool uses " +
+        expectedBasename +
+        " only)",
+    );
+  }
+
+  return { artifacts: primary ? [primary] : [], notes };
+}
+
 function buildEntry(
   cwd: string,
   kind: ComponentKind,
@@ -56,10 +91,9 @@ function buildEntry(
   let metadataPath: string | undefined;
 
   if (kind === "seeds") {
-    artifacts = findWebgmexFiles(absPath);
-    if (exists && artifacts.length === 0) {
-      notes.push("missing .webgmex — expected " + name + ".webgmex");
-    }
+    const resolved = resolveSeedArtifacts(absPath, name, exists);
+    artifacts = resolved.artifacts;
+    notes.push(...resolved.notes);
   }
 
   if (kind === "plugins") {
@@ -99,17 +133,15 @@ export function loadSetupCatalog(cwd: string): SetupCatalog {
 }
 
 export function resolveSeed(catalog: SetupCatalog, name: string): CatalogEntry {
-  const entry = catalog.seeds.find(
-    (s) => s.name === name || s.ref === "seed:" + name,
-  );
-  if (!entry) throw new Error(formatUnknownSeedError(catalog, name));
+  const bare = name.startsWith("seed:") ? name.slice("seed:".length) : name;
+  const entry = catalog.seeds.find((s) => s.name === bare || s.ref === "seed:" + bare);
+  if (!entry) throw new Error(formatUnknownSeedError(catalog, bare));
   return entry;
 }
 
 export function resolvePlugin(catalog: SetupCatalog, name: string): CatalogEntry {
-  const entry = catalog.plugins.find(
-    (p) => p.name === name || p.ref === "plugin:" + name,
-  );
-  if (!entry) throw new Error(formatUnknownPluginError(catalog, name));
+  const bare = name.startsWith("plugin:") ? name.slice("plugin:".length) : name;
+  const entry = catalog.plugins.find((p) => p.name === bare || p.ref === "plugin:" + bare);
+  if (!entry) throw new Error(formatUnknownPluginError(catalog, bare));
   return entry;
 }

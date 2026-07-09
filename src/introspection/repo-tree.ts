@@ -37,7 +37,9 @@ function formatEntryLines(catalog: SetupCatalog, entry: CatalogEntry): string[] 
     lines.push("      meta: (missing metadata.json)");
   }
   for (const note of entry.notes) {
-    if (note.startsWith("produces")) lines.push("      note: " + note);
+    if (note.startsWith("produces") || note.startsWith("ignored")) {
+      lines.push("      note: " + note);
+    }
   }
   return lines;
 }

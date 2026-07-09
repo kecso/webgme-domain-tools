@@ -48,10 +48,25 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
 | F0 | Repo scaffold (package, TS, CI, README) | `review` | `npm run build && npm test` |
-| F1 | SetupCatalog + catalog errors | `review` | `node dist/cli.js tree repo --cwd ../StaMS` |
-| F2 | `tree repo` (plugins, seeds, viz, routers) | `review` | Check refs like `seed:StateMachine`, blob notes |
-| F3 | `ls` alias | `review` | `node dist/cli.js ls plugins --cwd ../StaMS` |
+| F1 | SetupCatalog + catalog errors | `review` | `npm test` — catalog-errors + setup-catalog tests |
+| F2 | `tree repo` (plugins, seeds, viz, routers) | `review` | `npm test` — repo-tree tests (all kinds × formats) |
+| F3 | `ls` compact listing | `review` | `npm test` — ls tests; see [ls vs tree](#ls-vs-tree) |
 | F4 | Test fixtures + CI on push | `review` | GitHub Actions tab after push |
+
+### M0 review notes (2026-07-09)
+
+| ID | Feedback | Action |
+|----|----------|--------|
+| F0 | Fixture should include a real `.webgmex` | StaMS `StateMachine.webgmex` (+ extra `_StateMachine_.webgmex` for ignore test) in fixture |
+| F1 | Tests for all catalog error paths; warn on extra `.webgmex` | `catalog-errors.test.js`, expanded setup-catalog tests; seed uses `{name}.webgmex` only, notes ignored files |
+| F2 | Fixture + tests for all kinds and formats; TDD / coverage rule | Expanded fixture (viz, router, edge cases); `repo-tree.test.js`; `.cursor/rules/test-coverage.mdc` |
+| F3 | Why does `ls` format differ from `tree`? | By design — see [ls vs tree](#ls-vs-tree) |
+| F4 | Approved as-is | — |
+
+### ls vs tree
+
+`ls` is a **compact index** for quick scanning: one block per kind, names only (`seeds:\n  local: StateMachine EmptySeed`).  
+`tree` is **introspection**: stable refs, `src`, artifacts, metadata paths, warnings/notes. Different commands, different output — not a shared formatter. Unifying UX is optional backlog (B4).
 
 **Status legend:** `pending` · `in progress` · `review` · `done` · `deferred`
 
@@ -126,6 +141,7 @@ Record of completed reviews (newest first).
 - F0–F4: SetupCatalog, `tree repo`, `ls`, tests, CI workflow
 - StaMS smoke-tested: `tree repo --kind seeds,plugins`
 - Process: `M0` branch for retroactive review; review-feedback template; main protected for agents
+- M0 review: StateMachine fixture, catalog error tests, seed webgmex selection, expanded repo-tree/ls tests, test-coverage rule
 
 ---
 

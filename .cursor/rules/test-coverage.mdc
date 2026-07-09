@@ -1,0 +1,23 @@
+---
+description: Test-driven development and coverage requirements for features
+alwaysApply: true
+---
+
+# Test coverage
+
+Features are **not complete** until behavior is covered by tests.
+
+## Requirements
+
+- Add or extend tests with every feature change (TDD preferred: failing test first when practical).
+- Cover happy paths, error paths, and format/option variants the feature exposes.
+- Run `npm test` before marking a feature ready for review.
+- No feature row in `docs/PROJECT.md` moves to `review` or `done` without corresponding tests.
+
+## Exceptions
+
+Document any intentionally untested code in `docs/PROJECT.md` (feature Notes) or a short comment at the site — e.g. thin CLI wiring, unreachable defensive branches.
+
+## Fixtures
+
+Use `test/fixtures/` for realistic `webgme-setup.json` projects; prefer real artifacts (e.g. `.webgmex`) when behavior depends on them.
