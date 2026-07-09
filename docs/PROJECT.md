@@ -11,20 +11,39 @@ Living tracker for milestones, feature review, and backlog. Update this file as 
 
 | Step | What happens |
 |------|----------------|
-| 1. Feature branch | `feature/<id>-short-name` (e.g. `feature/F2-setup-catalog`) |
-| 2. Implement + tests | PR or commit on branch |
-| 3. **Ready for review** | Status below → `review`; you try commands / read diff |
-| 4. **Done** | Merged to `main`; status → `done`; version note in [Changelog](#changelog) |
+| 1. Feature branch | `feature/<id>-short-name` (e.g. `feature/F6-tree-seed`) — work **only** on the branch |
+| 2. Implement + tests | Commits on that branch; PR optional but recommended |
+| 3. **Ready for review** | Status → `review`; reviewer runs **Review** column commands / reads diff |
+| 4. **Review outcome** | Approve, or file [change requests](#review-cycle-change-requests) — see below |
+| 5. **Done** | **After approval**, merge to `main`; status → `done`; note in [Changelog](#changelog) |
 
-**Review checkpoints:** Each feature row has a **Review** column — commands or files to look at. Comment on the PR/issue or reply in chat with approve / change requests.
+**Hard rule:** Nothing merges to `main` until the reviewer approves. Agents must not commit to or merge `main` unless explicitly instructed (see `.cursor/rules/protect-main.mdc`).
 
-**Adding work:** Open a [Feature request](.github/ISSUE_TEMPLATE/feature.md) or [Task](.github/ISSUE_TEMPLATE/task.md) issue, then add a row to [Backlog](#backlog) or [Features](#features).
+**Review checkpoints:** Each feature row has a **Review** column — commands or files to look at.
+
+**Adding work:** [Feature request](.github/ISSUE_TEMPLATE/feature.md) or [Task](.github/ISSUE_TEMPLATE/task.md) for new scope; [Review feedback](.github/ISSUE_TEMPLATE/review-feedback.md) for fixes during review.
+
+### Review cycle (change requests)
+
+When review finds problems **in the feature itself** (bugs, wrong behavior, missing acceptance criteria — not a separate new feature):
+
+1. **Report** — Open a [Review feedback](.github/ISSUE_TEMPLATE/review-feedback.md) issue, or reply in chat with feature ID (e.g. `F2`) and what is wrong.
+2. **Fix on branch** — Agent implements fixes on the **same milestone/feature branch** (e.g. `M0`, `feature/F6-tree-seed`). Status → `in progress`.
+3. **Re-review** — When fixes are ready, status → `review` again; reviewer re-runs the **Review** column.
+4. **Approve** — Reviewer marks approved (issue checkbox or explicit “approve” in chat).
+5. **Merge** — Only then: merge branch → `main`, status → `done`, row in [Review log](#review-log).
+
+Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE_TEMPLATE/task.md)) and picked up after merge.
 
 ---
 
 ## Current milestone
 
 **M0 — Foundation** (target: first usable `tree repo` against StaMS)
+
+**Active branch:** `M0` — all M0 review and fixes happen here until you approve a merge to `main`.
+
+> **M0 is a special retroactive review.** The initial foundation was committed to `main` before review gates existed. Branch `M0` restores the intended process: you review and request changes on `M0`; `main` is updated only after you approve F0–F4. From the next milestone onward, use feature branches and review **before** the first merge to `main`.
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
@@ -96,7 +115,7 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
-| — | — | — | — | *First review pending* |
+| — | — | — | — | *M0 retroactive review in progress on branch `M0`* |
 
 ---
 
@@ -106,13 +125,15 @@ Record of completed reviews (newest first).
 - Initial repository, PROJECT.md, issue templates
 - F0–F4: SetupCatalog, `tree repo`, `ls`, tests, CI workflow
 - StaMS smoke-tested: `tree repo --kind seeds,plugins`
+- Process: `M0` branch for retroactive review; review-feedback template; main protected for agents
 
 ---
 
 ## Quick commands (once built)
 
 ```bash
-# From webgme-domain-tools checkout
+# From webgme-domain-tools checkout (use branch M0 during milestone review)
+git checkout M0
 npm install && npm run build
 
 # Repo tree against StaMS
@@ -127,7 +148,7 @@ domain-tools tree repo
 
 ## Design reference
 
-Full architecture: see StaMS planning doc or future `docs/DESIGN.md` in this repo. Core ideas:
+Full architecture: see StaMS planning doc or [DESIGN.md](DESIGN.md) in this repo. Core ideas:
 
 - **SetupCatalog** — canonical `webgme-setup.json` view; all commands validate against it
 - **tree repo** — discover plugins/seeds; **tree --seed** — pick plugin context

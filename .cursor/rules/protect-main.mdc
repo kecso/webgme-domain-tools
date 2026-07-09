@@ -1,0 +1,30 @@
+---
+description: Forbid agents from modifying or merging main unless explicitly instructed
+alwaysApply: true
+---
+
+# Protect main branch
+
+Agents must **not** merge into, push to, or commit directly on `main` unless the user **explicitly** asks in the current message (e.g. "merge M0 to main", "commit on main").
+
+## Default workflow
+
+- Implement and fix on a feature or milestone branch (`feature/<id>-…`, `M0`, etc.).
+- Open or update a PR from that branch; leave `main` unchanged.
+- Only the user approves review and requests the merge to `main`.
+
+## Forbidden without explicit instruction
+
+- `git checkout main` then commit
+- `git merge …` into `main`
+- `git push origin main`
+- Rewriting `main` (reset, rebase onto main, force-push)
+
+## Allowed on any branch except main
+
+- Commits, pushes, and PRs from feature/milestone branches
+- Updating `docs/PROJECT.md` status on the active work branch
+
+## If unsure
+
+Stay on the current feature/milestone branch and ask before touching `main`.
