@@ -1,0 +1,22 @@
+{
+  "components": {
+    "plugins": {
+      "SamplePlugin": {
+        "src": "src/plugins/SamplePlugin"
+      }
+    },
+    "seeds": {
+      "SampleSeed": {
+        "src": "src/seeds/SampleSeed"
+      }
+    },
+    "visualizers": {},
+    "routers": {}
+  },
+  "dependencies": {
+    "plugins": {},
+    "seeds": {},
+    "visualizers": {},
+    "routers": {}
+  }
+}

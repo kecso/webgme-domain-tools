@@ -1,0 +1,7 @@
+{
+  "id": "SamplePlugin",
+  "name": "SamplePlugin",
+  "version": "0.1.0",
+  "description": "Fixture plugin",
+  "configStructure": []
+}
