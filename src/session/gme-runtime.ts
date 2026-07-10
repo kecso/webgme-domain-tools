@@ -33,6 +33,7 @@ export interface GmeCore {
   isMetaNode: (node: GmeNode) => boolean;
   getAllMetaNodes: (root: GmeNode) => Record<string, GmeNode>;
   getJsonMeta: (node: GmeNode) => Record<string, unknown>;
+  getBase: (node: GmeNode) => GmeNode | null;
   getChildrenRelids: (node: GmeNode) => string[];
   getChild: (node: GmeNode, relid: string) => GmeNode | null;
 }

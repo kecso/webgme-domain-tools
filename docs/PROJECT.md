@@ -44,8 +44,8 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
 | F16a | Meta representation specs (IR, descriptor, MetaLang) | `in progress` | `docs/meta/README.md` + examples |
-| F16b | `seed meta --format descriptor` | `pending` | `ir → descriptor` translator |
-| F16c | `seed meta --format metalang` | `pending` | `descriptor → metalang` renderer |
+| F16b | `seed meta --format descriptor` | `done` | `ir → descriptor` translator |
+| F16c | `seed meta --format metalang` | `done` | `descriptor → metalang` renderer |
 | F16d | MetaLang parser / Langium (optional) | `deferred` | — |
 
 **Phase 3 — Plugin run** — `pending`
@@ -132,9 +132,9 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 ### Phase 2½ — Meta presentation
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F16a | Meta specs + examples | `review` | `docs/meta/` — pointer-first descriptor (no `relationships`), MetaLang EBNF + RULES |
-| F16b | `seed meta --format descriptor` | `pending` | `irToDescriptor` |
-| F16c | `seed meta --format metalang` | `pending` | `descriptorToMetalang` |
+| F16a | Meta specs + examples | `done` | `docs/meta/` — pointer-first descriptor, MetaLang EBNF + RULES |
+| F16b | `seed meta --format descriptor` | `done` | `irToDescriptor` + tests |
+| F16c | `seed meta --format metalang` | `done` | `descriptorToMetalang` + tests |
 | F16d | MetaLang parser (Langium optional) | `deferred` | Authoring path metalang → descriptor |
 
 ### Phase 3 — Plugin run

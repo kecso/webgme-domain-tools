@@ -1,0 +1,103 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+import { buildSeedMetaIr, renderSeedMetaOutput } from "../dist/introspection/seed-meta.js";
+import { irToDescriptor } from "../dist/meta/ir-to-descriptor.js";
+import { descriptorToMetalang } from "../dist/meta/descriptor-to-metalang.js";
+import { cardinalityFromMinMax } from "../dist/meta/cardinality.js";
+import { parseSeedMetaFormat, runSeedMetaCommand } from "../dist/commands/seed.js";
+import {
+  closeProjectSession,
+  openProjectSession,
+} from "../dist/session/project-session.js";
+import { loadSetupCatalog, resolveSeed } from "../dist/catalog/setup-catalog.js";
+
+const fixture = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures", "sample-project");
+const docsExamples = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "docs", "meta", "examples");
+
+async function withStateMachineSession(fn) {
+  const catalog = loadSetupCatalog(fixture);
+  const entry = resolveSeed(catalog, "StateMachine");
+  const context = await openProjectSession({ cwd: fixture, seed: entry });
+  try {
+    await fn(context);
+  } finally {
+    await closeProjectSession();
+  }
+}
+
+test("cardinalityFromMinMax maps core limits", () => {
+  assert.equal(cardinalityFromMinMax(-1, -1), undefined);
+  assert.equal(cardinalityFromMinMax(0, -1), "*");
+  assert.equal(cardinalityFromMinMax(1, -1), "+");
+  assert.equal(cardinalityFromMinMax(-1, 1), "0..1");
+  assert.equal(cardinalityFromMinMax(2, 5), "2..5");
+  assert.equal(cardinalityFromMinMax(3, 3), "3");
+});
+
+test("parseSeedMetaFormat accepts descriptor and metalang", () => {
+  assert.equal(parseSeedMetaFormat("descriptor"), "descriptor");
+  assert.equal(parseSeedMetaFormat("metalang"), "metalang");
+  assert.throws(() => parseSeedMetaFormat("yaml"), /json, tree, descriptor, or metalang/);
+});
+
+test("irToDescriptor matches StateMachine example", async () => {
+  await withStateMachineSession(async (context) => {
+    const ir = buildSeedMetaIr(context);
+    const descriptor = irToDescriptor(ir, context);
+    const expected = JSON.parse(
+      readFileSync(path.join(docsExamples, "state-machine.descriptor.json"), "utf8"),
+    );
+
+    assert.deepEqual(descriptor.concepts, expected.concepts);
+  });
+});
+
+test("descriptorToMetalang renders pointers including src/dst", async () => {
+  await withStateMachineSession(async (context) => {
+    const ir = buildSeedMetaIr(context);
+    const descriptor = irToDescriptor(ir, context);
+    const metalang = descriptorToMetalang(descriptor, "StateMachine");
+
+    assert.match(metalang, /^domain StateMachine/);
+    assert.match(metalang, /concept Transition \{/);
+    assert.match(metalang, /src -> State;/);
+    assert.match(metalang, /dst -> State;/);
+    assert.match(metalang, /contains Action\*, Constraint\*, Event\*, Guard\*, State\*;/);
+    assert.doesNotMatch(metalang, /relationship/);
+  });
+});
+
+test("runSeedMetaCommand descriptor and metalang formats", async () => {
+  const descriptorOut = await runSeedMetaCommand({
+    cwd: fixture,
+    seed: "StateMachine",
+    format: "descriptor",
+  });
+  const descriptor = JSON.parse(descriptorOut);
+  assert.equal(descriptor.version, 1);
+  assert.deepEqual(descriptor.concepts.Transition.pointers, {
+    src: "State",
+    dst: "State",
+    event: "Event",
+    guard: "Guard",
+    action: "Action",
+  });
+
+  const metalangOut = await runSeedMetaCommand({
+    cwd: fixture,
+    seed: "StateMachine",
+    format: "metalang",
+  });
+  assert.match(metalangOut, /entry -> Action;/);
+});
+
+test("renderSeedMetaOutput tree unchanged", async () => {
+  await withStateMachineSession(async (context) => {
+    const ir = buildSeedMetaIr(context);
+    const tree = renderSeedMetaOutput(ir, "tree");
+    assert.match(tree, /meta\//);
+  });
+});

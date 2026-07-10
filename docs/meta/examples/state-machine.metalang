@@ -22,7 +22,7 @@ concept Transition {
 
 concept Machine {
   description: string;
-  contains State*, Event*, Guard*, Action*, Constraint*;
+  contains Action*, Constraint*, Event*, Guard*, State*;
 }
 
 concept Event;
@@ -34,7 +34,7 @@ concept Action {
 
 concept Constraint {
   body: string;
-  kind: string;
+  kind: enum[safety, goal];
 }
 
 concept Variable {

@@ -37,7 +37,7 @@ webdot ls plugins
 | `tree --seed <name>` | Model tree from a file-project seed |
 | `tree --seed <name> --at <path>` | Subtree from a node path |
 | `tree --seed <name> --select <paths>` | Comma-separated node paths |
-| `seed meta --seed <name>` | MetaAspectSet IR (json) |
+| `seed meta --seed <name>` | MetaAspectSet IR (`--format json`), descriptor, or metalang |
 | `ls [kind]` | Compact component listing |
 
 More commands (`plugin run`, `generate meta-ts`, …) are tracked in [docs/PROJECT.md](docs/PROJECT.md).

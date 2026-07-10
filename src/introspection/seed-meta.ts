@@ -1,5 +1,9 @@
-import type { GmeCore, GmeNode } from "../session/gme-runtime.js";
 import type { LoadedSeedContext } from "../session/project-session.js";
+import type { GmeNode } from "../session/gme-runtime.js";
+import { renderSeedMetaOutput, type SeedMetaFormat } from "./seed-meta-render.js";
+
+export type { SeedMetaFormat };
+export { renderSeedMetaOutput };
 
 export interface MetaAspectNodeIr {
   path: string;
@@ -14,7 +18,7 @@ export interface SeedMetaIr {
   metaAspectSet: MetaAspectNodeIr[];
 }
 
-function metaNodeName(core: GmeCore, node: GmeNode): string {
+function metaNodeName(core: LoadedSeedContext["core"], node: GmeNode): string {
   const value = core.getAttribute(node, "name");
   return typeof value === "string" && value.length > 0 ? value : "(unnamed)";
 }
@@ -37,20 +41,11 @@ export function buildSeedMetaIr(context: LoadedSeedContext): SeedMetaIr {
   };
 }
 
-export function renderSeedMeta(ir: SeedMetaIr, format: "json" | "tree" = "json"): string {
-  if (format === "tree") {
-    const lines = [
-      "seed:" + ir.seed + "  (" + ir.webgmex + ")",
-      "  meta/",
-    ];
-    if (ir.metaAspectSet.length === 0) {
-      lines.push("    (none)");
-    } else {
-      for (const node of ir.metaAspectSet) {
-        lines.push("    " + node.path + "  " + node.name);
-      }
-    }
-    return lines.join("\n");
-  }
-  return JSON.stringify(ir, null, 2);
+/** @deprecated Use renderSeedMetaOutput */
+export function renderSeedMeta(
+  ir: SeedMetaIr,
+  format: "json" | "tree" = "json",
+  context?: LoadedSeedContext,
+): string {
+  return renderSeedMetaOutput(ir, format, context);
 }

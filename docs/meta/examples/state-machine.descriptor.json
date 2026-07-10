@@ -23,11 +23,11 @@
     },
     "Machine": {
       "contains": {
-        "State": "*",
+        "Action": "*",
+        "Constraint": "*",
         "Event": "*",
         "Guard": "*",
-        "Action": "*",
-        "Constraint": "*"
+        "State": "*"
       },
       "attributes": {
         "description": "string"
@@ -43,7 +43,10 @@
     "Constraint": {
       "attributes": {
         "body": "string",
-        "kind": "string"
+        "kind": {
+          "type": "enum",
+          "values": ["safety", "goal"]
+        }
       }
     },
     "Variable": {
@@ -52,8 +55,15 @@
           "type": "enum",
           "values": ["float", "string"]
         }
+      },
+      "contains": {
+        "Machine": "*"
       }
     },
-    "File": {}
+    "File": {
+      "contains": {
+        "Machine": "*"
+      }
+    }
   }
 }

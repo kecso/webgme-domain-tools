@@ -71,7 +71,7 @@ program
   .command("meta")
   .description("MetaAspectSet IR from a file-project seed")
   .requiredOption("--seed <name>", "Seed name from webgme-setup.json")
-  .option("--format <fmt>", "json | tree", "json")
+  .option("--format <fmt>", "json | tree | descriptor | metalang", "json")
   .action((opts: { seed: string; format?: string }, cmd) => {
     const globals = cmd.optsWithGlobals();
     const cwd = path.resolve(globals.cwd ?? process.cwd());
@@ -79,7 +79,7 @@ program
       runSeedMetaCommand({
         cwd,
         seed: opts.seed,
-        format: opts.format === "tree" ? "tree" : "json",
+        format: opts.format as "json" | "tree" | "descriptor" | "metalang" | undefined,
       }),
     );
   });
