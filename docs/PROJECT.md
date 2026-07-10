@@ -39,14 +39,21 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 2½ — Meta representations** — `in progress` on branch `feature/F16-meta-representations`
+**Phase 2½ — Meta representations** — `review` on branch `feature/F16-meta-representations`
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F16a | Meta representation specs (IR, descriptor, MetaLang) | `in progress` | `docs/meta/README.md` + examples |
-| F16b | `seed meta --format descriptor` | `done` | `ir → descriptor` translator |
-| F16c | `seed meta --format metalang` | `done` | `descriptor → metalang` renderer |
+| F16a | Meta representation specs (IR, descriptor, MetaLang) | `done` | `docs/meta/README.md` + examples |
+| F16b | `seed meta --format descriptor` | `done` | `npm test` — `meta-translate.test.js` |
+| F16c | `seed meta --format metalang` | `done` | `webdot seed meta --seed StateMachine --format metalang` |
 | F16d | MetaLang parser / Langium (optional) | `deferred` | — |
+
+### Phase 2½ review notes (2026-07-10)
+
+| ID | Feedback | Action |
+|----|----------|--------|
+| F16 | Library/namespace not in v1 representations | **F17** backlog — see roadmap |
+| F16b/c | `seed meta --format tree` should match `tree --seed` indentation | Reuses `renderSeedTree` (relid, branches, path tail) |
 
 **Phase 3 — Plugin run** — `pending`
 
@@ -137,6 +144,21 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 | F16c | `seed meta --format metalang` | `done` | `descriptorToMetalang` + tests |
 | F16d | MetaLang parser (Langium optional) | `deferred` | Authoring path metalang → descriptor |
 
+### Phase 2½+ — Meta completeness
+| ID | Feature | Status | Notes |
+|----|---------|--------|-------|
+| F17 | Library & namespace meta | `pending` | After Phase 3 — see below |
+
+**F17 — Library & namespace (planned)**  
+WebGME seeds may embed or reference **libraries** (`addLibrary`, library roots, `getFullyQualifiedName` / namespace). v1 IR/descriptor/MetaLang and `tree --seed` use concept **names** and storage **paths** only. F17 should:
+
+- Document how libraries appear in IR (`getJsonMeta`, library GUIDs, cross-project refs)
+- Extend descriptor + MetaLang if needed (e.g. qualified names, `library` blocks, namespace in `domain`)
+- Adjust **seed traversal** (`tree --seed`) to mark library-sourced nodes vs owned meta
+- Align **F16 translators** once representation rules are settled
+
+Priority: **medium** — after F9–F15; not blocking F16 merge.
+
 ### Phase 3 — Plugin run
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
@@ -166,6 +188,7 @@ Tasks not tied to a single milestone — pick up anytime.
 | B4 | streamline | Single `webdot tree` UX doc + shell completions | low |
 | B5 | refactor | Metadata convention `domainTools.producesArtifacts` | low |
 | B6 | optimize | Cache SetupCatalog per process for multi-subcommand REPL (future) | low |
+| B7 | meta | See **F17** — library/namespace in IR, descriptor, MetaLang, traversal | medium |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
 

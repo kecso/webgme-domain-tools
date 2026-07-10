@@ -37,10 +37,15 @@ test("cardinalityFromMinMax maps core limits", () => {
   assert.equal(cardinalityFromMinMax(3, 3), "3");
 });
 
-test("parseSeedMetaFormat accepts descriptor and metalang", () => {
+test("parseSeedMetaFormat accepts all meta output formats", () => {
   assert.equal(parseSeedMetaFormat("descriptor"), "descriptor");
   assert.equal(parseSeedMetaFormat("metalang"), "metalang");
-  assert.throws(() => parseSeedMetaFormat("yaml"), /json, tree, descriptor, or metalang/);
+  assert.equal(parseSeedMetaFormat("tree"), "tree");
+  assert.equal(parseSeedMetaFormat("tree-verbose"), "tree-verbose");
+  assert.throws(
+    () => parseSeedMetaFormat("yaml"),
+    /json, tree, tree-verbose, descriptor, or metalang/,
+  );
 });
 
 test("irToDescriptor matches StateMachine example", async () => {
@@ -94,10 +99,23 @@ test("runSeedMetaCommand descriptor and metalang formats", async () => {
   assert.match(metalangOut, /entry -> Action;/);
 });
 
-test("renderSeedMetaOutput tree unchanged", async () => {
+test("renderSeedMetaOutput tree matches seed tree indentation", async () => {
   await withStateMachineSession(async (context) => {
     const ir = buildSeedMetaIr(context);
     const tree = renderSeedMetaOutput(ir, "tree");
-    assert.match(tree, /meta\//);
+    assert.match(tree, /^seed:StateMachine/);
+    assert.match(tree, /├─|└─/);
+    const stateLine = tree.split("\n").find((line) => line.includes("/G/z"));
+    assert.ok(stateLine);
+    assert.match(stateLine, /\/G\/z\s*$/);
+    assert.match(stateLine, /State/);
+  });
+});
+
+test("renderSeedMetaOutput tree-verbose includes meta tag", async () => {
+  await withStateMachineSession(async (context) => {
+    const ir = buildSeedMetaIr(context);
+    const tree = renderSeedMetaOutput(ir, "tree-verbose");
+    assert.match(tree, /\[meta\]/);
   });
 });

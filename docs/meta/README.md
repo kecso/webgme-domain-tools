@@ -21,10 +21,9 @@ Foundation for describing WebGME **MetaAspectSet** metamodels in three complemen
    (F8)             (F16b)         (F16c)
 ```
 
-**CLI (planned):**
-
 ```bash
-webdot seed meta --seed StateMachine --format ir          # default today
+webdot seed meta --seed StateMachine --format ir          # default: json
+webdot seed meta --seed StateMachine --format tree        # same indentation as tree --seed
 webdot seed meta --seed StateMachine --format descriptor
 webdot seed meta --seed StateMachine --format metalang
 ```

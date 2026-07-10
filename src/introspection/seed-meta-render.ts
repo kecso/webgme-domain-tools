@@ -2,27 +2,27 @@ import type { LoadedSeedContext } from "../session/project-session.js";
 import { descriptorToMetalang } from "../meta/descriptor-to-metalang.js";
 import { irToDescriptor } from "../meta/ir-to-descriptor.js";
 import type { SeedMetaIr } from "./seed-meta.js";
+import { renderSeedTree, type SeedNodeRow, type SeedTreeFormat } from "./seed-tree.js";
 
-export type SeedMetaFormat = "json" | "tree" | "descriptor" | "metalang";
+export type SeedMetaFormat = "json" | "tree" | "tree-verbose" | "descriptor" | "metalang";
+
+function metaAspectToRows(metaAspectSet: SeedMetaIr["metaAspectSet"]): SeedNodeRow[] {
+  return metaAspectSet.map((node) => ({
+    path: node.path,
+    name: node.name,
+    metaType: null,
+    isMeta: true,
+  }));
+}
 
 export function renderSeedMetaOutput(
   ir: SeedMetaIr,
   format: SeedMetaFormat,
   context?: LoadedSeedContext,
 ): string {
-  if (format === "tree") {
-    const lines = [
-      "seed:" + ir.seed + "  (" + ir.webgmex + ")",
-      "  meta/",
-    ];
-    if (ir.metaAspectSet.length === 0) {
-      lines.push("    (none)");
-    } else {
-      for (const node of ir.metaAspectSet) {
-        lines.push("    " + node.path + "  " + node.name);
-      }
-    }
-    return lines.join("\n");
+  if (format === "tree" || format === "tree-verbose") {
+    const rows = metaAspectToRows(ir.metaAspectSet);
+    return renderSeedTree(ir.seed, ir.webgmex, rows, { format: format as SeedTreeFormat });
   }
 
   if (format === "descriptor" || format === "metalang") {

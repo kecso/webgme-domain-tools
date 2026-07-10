@@ -2,7 +2,7 @@
 import path from "node:path";
 import { Command } from "commander";
 import { runLsCommand } from "./commands/ls.js";
-import { runSeedMetaCommand } from "./commands/seed.js";
+import { runSeedMetaCommand, type SeedMetaFormat } from "./commands/seed.js";
 import { runTreeCommand } from "./commands/tree.js";
 import { parseSelect } from "./commands/seed-tree.js";
 import { AmbiguousSeedError } from "./session/seed-resolution.js";
@@ -71,7 +71,7 @@ program
   .command("meta")
   .description("MetaAspectSet IR from a file-project seed")
   .requiredOption("--seed <name>", "Seed name from webgme-setup.json")
-  .option("--format <fmt>", "json | tree | descriptor | metalang", "json")
+  .option("--format <fmt>", "json | tree | tree-verbose | descriptor | metalang", "json")
   .action((opts: { seed: string; format?: string }, cmd) => {
     const globals = cmd.optsWithGlobals();
     const cwd = path.resolve(globals.cwd ?? process.cwd());
@@ -79,7 +79,7 @@ program
       runSeedMetaCommand({
         cwd,
         seed: opts.seed,
-        format: opts.format as "json" | "tree" | "descriptor" | "metalang" | undefined,
+        format: opts.format as SeedMetaFormat | undefined,
       }),
     );
   });

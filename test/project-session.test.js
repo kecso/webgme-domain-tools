@@ -130,7 +130,8 @@ test("buildSeedMetaIr returns MetaAspectSet nodes", async () => {
     assert.ok(ir.metaAspectSet.length > 0);
     assert.ok(ir.metaAspectSet[0].meta);
     const tree = renderSeedMeta(ir, "tree");
-    assert.match(tree, /meta\//);
+    assert.match(tree, /├─|└─/);
+    assert.match(tree, /State  \/G\/z/);
   });
 });
 
