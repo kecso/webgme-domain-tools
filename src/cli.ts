@@ -8,13 +8,14 @@ import { parseSelect } from "./commands/seed-tree.js";
 import { AmbiguousSeedError } from "./session/seed-resolution.js";
 import type { RepoTreeFormat } from "./introspection/repo-tree.js";
 import type { SeedTreeFormat } from "./introspection/seed-tree.js";
+import { CLI_NAME } from "./cli-brand.js";
 
 const program = new Command();
 
 program
-  .name("domain-tools")
-  .description("Minimal-footprint CLI for WebGME domain studios")
-  .version("0.1.0")
+  .name(CLI_NAME)
+  .description("WebGME domain tools")
+  .version("0.2.0")
   .option("-C, --cwd <dir>", "WebGME project root (webgme-setup.json)", process.cwd());
 
 async function runCli(action: () => Promise<string>): Promise<void> {
@@ -68,7 +69,7 @@ program
   .command("seed")
   .description("Seed model introspection")
   .command("meta")
-  .description("MetaAspectSet IR from an imported seed")
+  .description("MetaAspectSet IR from a file-project seed")
   .requiredOption("--seed <name>", "Seed name from webgme-setup.json")
   .option("--format <fmt>", "json | tree", "json")
   .action((opts: { seed: string; format?: string }, cmd) => {

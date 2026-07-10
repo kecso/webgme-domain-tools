@@ -7,7 +7,7 @@ Headless CLI for WebGME domain studios. Complements webgme-cli (scaffold + serve
 Loaded from `{cwd}/webgme-setup.json`. Every command that names a seed, plugin, or component kind resolves through the catalog. Errors cite:
 
 ```text
-domain-tools tree repo --kind seeds
+webdot tree repo --kind seeds
 ```
 
 Stable refs: `seed:StateMachine`, `plugin:TextToModel`, `viz:MonacoEditor`, `router:StudioAssets`.
@@ -17,7 +17,7 @@ Stable refs: `seed:StateMachine`, `plugin:TextToModel`, `viz:MonacoEditor`, `rou
 | Scope | Invocation | Data source |
 |-------|------------|-------------|
 | Repo (default) | `tree` / `tree repo` | SetupCatalog only |
-| Seed model | `tree --seed <name>` | In-memory import of `.webgmex` |
+| Seed model | `tree --seed <name>` | File-project load from `.webgmex` |
 
 Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-separated). Ambiguous seed names exit 2 with candidates.
 
@@ -27,7 +27,7 @@ Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-sepa
 
 | Subcommand | Invocation | Output |
 |------------|------------|--------|
-| Meta IR | `seed meta --seed <name>` | MetaAspectSet JSON (`getJsonMeta` per meta node) |
+| Meta IR | `seed meta --seed <name>` | MetaAspectSet JSON (`getJsonMeta` per meta node); concise MetaDescriptor format planned (F16) |
 
 ## Plugin execution (planned)
 

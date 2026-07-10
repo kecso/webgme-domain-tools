@@ -44,7 +44,7 @@ export async function openProjectSession(
   const { bridge } = loadGmeRuntime();
   const webgmexPath = primaryWebgmexPath(options.seed);
   const projectName =
-    (options.projectNamePrefix ?? "domain_tools") +
+    (options.projectNamePrefix ?? "file_project") +
     "_" +
     options.seed.name +
     "_" +

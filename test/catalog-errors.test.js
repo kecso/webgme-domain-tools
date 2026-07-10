@@ -20,7 +20,7 @@ test("formatUnknownSeedError lists available seeds", () => {
   assert.match(msg, /Unknown seed "NoSuchSeed"/);
   assert.match(msg, /Available seeds/);
   assert.match(msg, /seed:StateMachine/);
-  assert.match(msg, /domain-tools tree repo --kind seeds/);
+  assert.match(msg, /webdot tree repo --kind seeds/);
   assert.doesNotMatch(msg, /Did you mean/);
 });
 
@@ -39,7 +39,7 @@ test("formatUnknownPluginError lists available plugins", () => {
   assert.match(msg, /Unknown plugin "NoSuchPlugin"/);
   assert.match(msg, /Available plugins/);
   assert.match(msg, /plugin:SamplePlugin/);
-  assert.match(msg, /domain-tools tree repo --kind plugins/);
+  assert.match(msg, /webdot tree repo --kind plugins/);
 });
 
 test("formatUnknownPluginError suggests close typo", () => {

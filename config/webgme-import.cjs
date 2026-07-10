@@ -30,7 +30,7 @@ async function importSeedProject(storage, parameters) {
   const core = new Core(project, { globConf: gmeConfig, logger });
   const storageUtils = requireJS("common/storage/util");
   const commitResult = await storageUtils.insertProjectJson(project, projectJson, {
-    commitMessage: "seed imported",
+    commitMessage: "file-project load",
   });
   await project.createBranch(branchName, commitResult.hash);
   const rootNode = await core.loadRoot(projectJson.rootHash);

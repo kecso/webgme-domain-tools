@@ -1,3 +1,4 @@
+import { CLI_NAME } from "../cli-brand.js";
 import type { SetupCatalog } from "./types.js";
 
 function levenshtein(a: string, b: string): number {
@@ -31,7 +32,7 @@ function formatList(catalog: SetupCatalog, kind: "seeds" | "plugins"): string {
   const lines = entries.map((e) => "  " + e.ref);
   return [
     "",
-    "Available " + kind + " (run: domain-tools tree repo --kind " + kind + "):",
+    "Available " + kind + " (run: " + CLI_NAME + " tree repo --kind " + kind + "):",
     ...lines,
   ].join("\n");
 }

@@ -1,7 +1,7 @@
 {
   "name": "@kecso/webgme-domain-tools",
-  "version": "0.1.0",
-  "description": "Minimal-footprint CLI for WebGME domain studios",
+  "version": "0.2.0",
+  "description": "webdot — WebGME domain studio CLI",
   "repository": {
     "type": "git",
     "url": "https://github.com/kecso/webgme-domain-tools.git"
@@ -9,7 +9,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "domain-tools": "./dist/cli.js"
+    "webdot": "./dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

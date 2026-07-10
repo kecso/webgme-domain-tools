@@ -135,7 +135,7 @@ export function createSessionLogger(gmeConfig: Record<string, unknown>): Session
     create: (name: string, config: unknown, useStdout: boolean) => SessionLogger;
   };
   const server = gmeConfig.server as { log: unknown };
-  return Logger.create("domain-tools", server.log, false);
+  return Logger.create("webdot", server.log, false);
 }
 
 export async function createMemoryGmeAuth(projectName: string): Promise<{

@@ -14,7 +14,7 @@ config.authentication.gmeAuth = {
   ),
 };
 
-config.blob.fsDir = path.join(os.tmpdir(), "webgme-domain-tools-blob");
+config.blob.fsDir = path.join(os.tmpdir(), "webdot-blob");
 
 config.server.log = {
   transports: [

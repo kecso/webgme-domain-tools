@@ -1,3 +1,4 @@
+import { CLI_NAME } from "../cli-brand.js";
 import type { CatalogEntry, SetupCatalog } from "../catalog/types.js";
 import { formatUnknownSeedError } from "../catalog/catalog-errors.js";
 
@@ -17,7 +18,7 @@ function formatAmbiguousSeedMessage(candidates: string[]): string {
     "Ambiguous seed name — multiple matches:",
     ...lines,
     "",
-    "Use the full seed name, e.g.: domain-tools tree --seed " + candidates[0],
+    "Use the full seed name, e.g.: " + CLI_NAME + " tree --seed " + candidates[0],
   ].join("\n");
 }
 
@@ -55,7 +56,7 @@ export function primaryWebgmexPath(entry: CatalogEntry): string {
   if (entry.artifacts.length === 0) {
     throw new Error(
       "Seed \"" + entry.name + "\" has no " + entry.name + ".webgmex. " +
-        "Run: domain-tools tree repo --kind seeds",
+        "Run: " + CLI_NAME + " tree repo --kind seeds",
     );
   }
   return entry.artifacts[0];

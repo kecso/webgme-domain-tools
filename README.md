@@ -1,6 +1,6 @@
 # webgme-domain-tools
 
-Minimal-footprint CLI for WebGME domain studios. Complements [webgme-cli](https://github.com/webgme/webgme-cli) with headless tooling that works from `webgme-setup.json` and in-memory seeds — no server required.
+**webdot** — minimal CLI for WebGME domain studios. Complements [webgme-cli](https://github.com/webgme/webgme-cli) with headless tooling that works from `webgme-setup.json` and file-project seeds — no server required.
 
 ## Status
 
@@ -9,8 +9,10 @@ Minimal-footprint CLI for WebGME domain studios. Complements [webgme-cli](https:
 ## Install
 
 ```bash
-npm install @kecso/webgme-domain-tools
-# or from a checkout:
+npm install -g @kecso/webgme-domain-tools
+# or one-off:
+npx @kecso/webgme-domain-tools tree repo
+# from a checkout:
 npm install --ignore-scripts && npm run build
 npm link
 ```
@@ -22,9 +24,9 @@ npm link
 Run from a WebGME project root (directory containing `webgme-setup.json`):
 
 ```bash
-domain-tools tree repo
-domain-tools tree repo --kind seeds,plugins
-domain-tools ls plugins
+webdot tree repo
+webdot tree repo --kind seeds,plugins
+webdot ls plugins
 ```
 
 ## Commands (v0.1)
@@ -32,7 +34,7 @@ domain-tools ls plugins
 | Command | Description |
 |---------|-------------|
 | `tree [repo]` | Repository component tree from `webgme-setup.json` (default) |
-| `tree --seed <name>` | Model tree from an in-memory seed |
+| `tree --seed <name>` | Model tree from a file-project seed |
 | `tree --seed <name> --at <path>` | Subtree from a node path |
 | `tree --seed <name> --select <paths>` | Comma-separated node paths |
 | `seed meta --seed <name>` | MetaAspectSet IR (json) |
