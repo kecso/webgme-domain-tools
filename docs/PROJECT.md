@@ -39,19 +39,17 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**M0 — Foundation** (target: first usable `tree repo` against StaMS)
-
-**Active branch:** `M0` — all M0 review and fixes happen here until you approve a merge to `main`.
-
-> **M0 is a special retroactive review.** The initial foundation was committed to `main` before review gates existed. Branch `M0` restores the intended process: you review and request changes on `M0`; `main` is updated only after you approve F0–F4. From the next milestone onward, use feature branches and review **before** the first merge to `main`.
+**M0 — Foundation** — `done` (merged to `main` 2026-07-10)
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F0 | Repo scaffold (package, TS, CI, README) | `review` | `npm run build && npm test` |
-| F1 | SetupCatalog + catalog errors | `review` | `npm test` — catalog-errors + setup-catalog tests |
-| F2 | `tree repo` (plugins, seeds, viz, routers) | `review` | `npm test` — repo-tree tests (all kinds × formats) |
-| F3 | `ls` compact listing | `review` | `npm test` — ls tests; see [ls vs tree](#ls-vs-tree) |
-| F4 | Test fixtures + CI on push | `review` | GitHub Actions tab after push |
+| F0 | Repo scaffold (package, TS, CI, README) | `done` | `npm run build && npm test` |
+| F1 | SetupCatalog + catalog errors | `done` | `npm test` — catalog-errors + setup-catalog tests |
+| F2 | `tree repo` (plugins, seeds, viz, routers) | `done` | `npm test` — repo-tree tests (all kinds × formats) |
+| F3 | `ls` compact listing | `done` | `npm test` — ls tests; see [ls vs tree](#ls-vs-tree) |
+| F4 | Test fixtures + CI on push | `done` | GitHub Actions tab after push |
+
+**Next:** Phase 2 — `feature/F5-project-session` (or next feature branch from `main`).
 
 ### M0 review notes (2026-07-09)
 
@@ -77,10 +75,10 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 ### Phase 1 — Catalog & repo tree
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F1 | SetupCatalog from webgme-setup.json | `review` | Stable refs `seed:`, `plugin:`, etc. |
-| F2 | Malformed-input errors → cite `tree repo` | `review` | Fuzzy name suggestions |
-| F3 | `tree repo` tree / flat / json | `review` | `--kind` filter |
-| F4 | `ls` compact listing | `review` | Delegates to catalog |
+| F1 | SetupCatalog from webgme-setup.json | `done` | Stable refs `seed:`, `plugin:`, etc. |
+| F2 | Malformed-input errors → cite `tree repo` | `done` | Fuzzy name suggestions |
+| F3 | `tree repo` tree / flat / json | `done` | `--kind` filter |
+| F4 | `ls` compact listing | `done` | Delegates to catalog |
 
 ### Phase 2 — Seed model tree & session
 | ID | Feature | Status | Notes |
@@ -130,26 +128,28 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
-| — | — | — | — | *M0 retroactive review in progress on branch `M0`* |
+| 2026-07-10 | M0 (F0–F4) | maintainer | Approved | Retroactive review on branch `M0`; merged to `main` |
+| 2026-07-09 | M0 (F0–F4) | maintainer | Change requests | Fixtures, catalog tests, seed webgmex selection, test-coverage rule |
 
 ---
 
 ## Changelog
 
-### Unreleased
-- Initial repository, PROJECT.md, issue templates
-- F0–F4: SetupCatalog, `tree repo`, `ls`, tests, CI workflow
+### 0.1.0 (2026-07-10)
+- M0 foundation: SetupCatalog, `tree repo`, `ls`, tests, CI
 - StaMS smoke-tested: `tree repo --kind seeds,plugins`
-- Process: `M0` branch for retroactive review; review-feedback template; main protected for agents
-- M0 review: StateMachine fixture, catalog error tests, seed webgmex selection, expanded repo-tree/ls tests, test-coverage rule
+- Process: review-feedback template, main protected for agents, test-coverage rule
+- M0 review: StateMachine fixture, catalog error tests, seed webgmex selection
+
+### Unreleased
+- *(next: Phase 2 — ProjectSession, `tree --seed`)*
 
 ---
 
 ## Quick commands (once built)
 
 ```bash
-# From webgme-domain-tools checkout (use branch M0 during milestone review)
-git checkout M0
+# From webgme-domain-tools checkout
 npm install && npm run build
 
 # Repo tree against StaMS
