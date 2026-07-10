@@ -12,7 +12,9 @@ concept State {
   exit -> Action?;
 }
 
-concept Transition connect State -> State {
+concept Transition {
+  src -> State;
+  dst -> State;
   event -> Event;
   guard -> Guard?;
   action -> Action?;

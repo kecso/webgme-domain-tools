@@ -8,7 +8,9 @@ Foundation for describing WebGME **MetaAspectSet** metamodels in three complemen
 |--------|------|------|----------|
 | **IR** (`ir`) | Canonical dump from `core.getJsonMeta` per meta node | None | Round-trip fidelity, tooling, diffing raw WebGME meta |
 | **Descriptor** (`descriptor`) | Compact JSON aligned with [webgme/mcp](https://github.com/webgme/mcp) `MetaDescriptor` v1 | Paths, sheets, mixins, some constraints | LLM context, patch APIs, cross-tool interchange |
-| **MetaLang** (`metalang`) | Human-readable surface syntax | Same as descriptor (target surface) | Reading, authoring sketches, future codegen |
+| **MetaLang** (`metalang`) | Human-readable surface syntax — **pointers, contains, sets** | Same as descriptor (target surface) | Reading, authoring; see [CONNECTIONS.md](CONNECTIONS.md) |
+
+> **Connections** are not a meta primitive. `src`/`dst` are pointer names; `relationships` in descriptor JSON is a derived projection (mcp-compatible).
 
 ```
 .webgmex  →  ProjectSession  →  core.getAllMetaNodes / getJsonMeta

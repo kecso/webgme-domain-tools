@@ -108,46 +108,50 @@ concept Machine {
 }
 ```
 
-## add-relationship
+## add-relationship (descriptor projection only)
 
-Connection concept with `connect` syntax (may also `extends` a connection base):
+In **descriptor JSON**, `relationships` is a compact projection of `src`/`dst` pointers — not a separate meta primitive. See [`../CONNECTIONS.md`](../CONNECTIONS.md).
+
+**MetaLang** defines pointers instead:
 
 ```metalang
-concept Transition connect State -> State {
+concept Transition {
+  src -> State;
+  dst -> State;
   event -> Event;
   guard -> Guard?;
   action -> Action?;
 }
-
-concept ElectricalConnection extends ConnectionBase connect Pin -> Pin;
 ```
+
+Descriptor equivalent (mcp):
 
 ```json
 [
   { "op": "add", "path": "/concepts/Transition", "value": {} },
-  {
-    "op": "add",
-    "path": "/relationships/Transition",
-    "value": { "from": "State", "to": "State" }
-  },
+  { "op": "add", "path": "/relationships/Transition", "value": { "from": "State", "to": "State" } },
   { "op": "add", "path": "/concepts/Transition/pointers/event", "value": "Event" },
   { "op": "add", "path": "/concepts/Transition/pointers/guard", "value": "Guard" },
   { "op": "add", "path": "/concepts/Transition/pointers/action", "value": "Action" }
 ]
 ```
 
-```json
-[
-  { "op": "add", "path": "/concepts/ElectricalConnection", "value": { "extends": "ConnectionBase" } },
-  {
-    "op": "add",
-    "path": "/relationships/ElectricalConnection",
-    "value": { "from": "Pin", "to": "Pin" }
-  }
-]
+Multi-target pointer (Modelica `RealValueFlow`):
+
+```metalang
+concept RealValueFlow extends ConnectionBase {
+  src -> RealOutput;
+  dst -> RealInput | RealVectorInput;
+}
 ```
 
-`connect` establishes `relationships.{Concept}`; the block body adds non-connection pointers on the same concept.
+```json
+{
+  "op": "add",
+  "path": "/relationships/RealValueFlow",
+  "value": { "from": "RealOutput", "to": ["RealInput", "RealVectorInput"] }
+}
+```
 
 ## remove-* / replace-*
 

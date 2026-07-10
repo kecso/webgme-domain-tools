@@ -20,7 +20,11 @@ concept ComponentBase {
   contains PortBase*;
 }
 concept Pin extends PortBase;
-concept ElectricalConnection extends ConnectionBase connect Pin -> Pin;
+
+concept ElectricalConnection extends ConnectionBase {
+  src -> Pin;
+  dst -> Pin;
+}
 
 // --- MSL library (sample; full seed has 200+ similar concepts) ---
 concept Modelica.Electrical.Analog.Basic.Resistor extends ComponentBase;

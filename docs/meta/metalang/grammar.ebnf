@@ -1,5 +1,5 @@
-; MetaLang v0 grammar (EBNF)
-; Maps to MetaDescriptor v1 — see RULES.md for semantics.
+; MetaLang v0 grammar (EBNF) — pointer-first
+; Connections are NOT primitive; src/dst are pointer names. See CONNECTIONS.md.
 
 document     = { statement } ;
 
@@ -9,9 +9,7 @@ statement    = domain_decl
 domain_decl  = "domain" , qualified_name , { newline } ;
 
 concept_decl = "concept" , identifier , [ "extends" , identifier ] ,
-               [ connect_clause ] , concept_body , { newline } ;
-
-connect_clause = "connect" , type_ref , "->" , type_ref ;
+               concept_body , { newline } ;
 
 concept_body = block_body | ";" ;
 
@@ -19,17 +17,22 @@ block_body   = "{" , { member } , "}" ;
 
 member       = attribute_decl
                | pointer_decl
-               | contains_decl ;
+               | contains_decl
+               | set_decl ;
 
 attribute_decl = identifier , ":" , type_expr , ";" ;
 
-pointer_decl   = identifier , "->" , type_ref , [ "?" ] , ";" ;
+pointer_decl   = identifier , "->" , type_ref_list , [ "?" ] , ";" ;
+
+set_decl       = "set" , identifier , "->" , type_ref_list , [ cardinality ] , ";" ;
 
 contains_decl  = "contains" , contains_list , ";" ;
 
 contains_list  = contains_item , { "," , contains_item } ;
 
 contains_item  = identifier , [ cardinality ] ;
+
+type_ref_list  = type_ref , { "|" , type_ref } ;
 
 type_expr    = scalar_type | enum_type ;
 

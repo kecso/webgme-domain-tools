@@ -1,6 +1,5 @@
-// webgme-dss ModelicaBaseSeed — MetaLang v0
-// Source: webgme-dss/src/seeds/Modelica/ModelicaBaseSeed.webgmex (36 concepts)
-// Inheritance: core.getBase — FCO bases omit "extends"; others shown below.
+// webgme-dss ModelicaBaseSeed — MetaLang v0 (pointer-first)
+// See docs/meta/CONNECTIONS.md — src/dst are pointers; relationships in JSON are projected.
 
 domain DSS.ModelicaBase
 
@@ -41,17 +40,55 @@ concept IntegerVectorInput extends PortBase;
 concept ComplexInput extends PortBase;
 concept ComplexOutput extends PortBase;
 
-concept RealValueFlow extends ConnectionBase;
-concept BooleanValueFlow extends ConnectionBase;
-concept IntegerValueFlow extends ConnectionBase;
-concept ComplexValueFlow extends ConnectionBase;
+concept RealValueFlow extends ConnectionBase {
+  src -> RealOutput;
+  dst -> RealInput | RealVectorInput;
+}
 
-concept ElectricalConnection extends ConnectionBase connect Pin -> Pin;
-concept MechanicsRotationalConnection extends ConnectionBase connect Rotational_Flange -> Rotational_Flange;
-concept MechanicsTranslationalConnection extends ConnectionBase connect Translational_Flange -> Translational_Flange;
-concept MechanicalConnection extends ConnectionBase connect Mechanical_Frame -> Mechanical_Frame;
-concept HeatFlow extends ConnectionBase connect HeatPort -> HeatPort;
-concept FluidHeatFlow extends ConnectionBase connect FlowPort -> FlowPort;
+concept BooleanValueFlow extends ConnectionBase {
+  src -> BooleanOutput;
+  dst -> BooleanInput | BooleanVectorInput;
+}
+
+concept IntegerValueFlow extends ConnectionBase {
+  src -> IntegerOutput;
+  dst -> IntegerInput | IntegerVectorInput;
+}
+
+concept ComplexValueFlow extends ConnectionBase {
+  src -> ComplexOutput;
+  dst -> ComplexInput;
+}
+
+concept ElectricalConnection extends ConnectionBase {
+  src -> Pin;
+  dst -> Pin;
+}
+
+concept MechanicsRotationalConnection extends ConnectionBase {
+  src -> Rotational_Flange;
+  dst -> Rotational_Flange;
+}
+
+concept MechanicsTranslationalConnection extends ConnectionBase {
+  src -> Translational_Flange;
+  dst -> Translational_Flange;
+}
+
+concept MechanicalConnection extends ConnectionBase {
+  src -> Mechanical_Frame;
+  dst -> Mechanical_Frame;
+}
+
+concept HeatFlow extends ConnectionBase {
+  src -> HeatPort;
+  dst -> HeatPort;
+}
+
+concept FluidHeatFlow extends ConnectionBase {
+  src -> FlowPort;
+  dst -> FlowPort;
+}
 
 concept Documentation;
 concept SimulationResult;
