@@ -14,10 +14,6 @@ export function cardinalityFromMinMax(
   if (lo >= 0 && hi >= 0 && lo === hi) return String(lo);
   if (lo >= 0 && hi >= 0 && lo <= hi) return `${lo}..${hi}`;
   if (lo === -1 && hi >= 0) return `0..${hi}`;
-  if (lo >= 0 && hi === -1) {
-    if (lo === 0) return "*";
-    if (lo === 1) return "+";
-  }
   return undefined;
 }
 

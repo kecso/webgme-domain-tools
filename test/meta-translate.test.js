@@ -6,7 +6,11 @@ import { fileURLToPath } from "node:url";
 import { buildSeedMetaIr, renderSeedMetaOutput } from "../dist/introspection/seed-meta.js";
 import { irToDescriptor } from "../dist/meta/ir-to-descriptor.js";
 import { descriptorToMetalang } from "../dist/meta/descriptor-to-metalang.js";
-import { cardinalityFromMinMax } from "../dist/meta/cardinality.js";
+import {
+  cardinalityFromMinMax,
+  formatGlobalCardinality,
+  formatMemberCardinality,
+} from "../dist/meta/cardinality.js";
 import { parseSeedMetaFormat, runSeedMetaCommand } from "../dist/commands/seed.js";
 import {
   closeProjectSession,
@@ -30,11 +34,34 @@ async function withStateMachineSession(fn) {
 
 test("cardinalityFromMinMax maps core limits", () => {
   assert.equal(cardinalityFromMinMax(-1, -1), undefined);
+  assert.equal(cardinalityFromMinMax(null, undefined), undefined);
   assert.equal(cardinalityFromMinMax(0, -1), "*");
   assert.equal(cardinalityFromMinMax(1, -1), "+");
   assert.equal(cardinalityFromMinMax(-1, 1), "0..1");
+  assert.equal(cardinalityFromMinMax(0, 1), "0..1");
   assert.equal(cardinalityFromMinMax(2, 5), "2..5");
   assert.equal(cardinalityFromMinMax(3, 3), "3");
+  assert.equal(cardinalityFromMinMax(10, 100), "10..100");
+  assert.equal(cardinalityFromMinMax(-1, 8), "0..8");
+  assert.equal(cardinalityFromMinMax(2, -1), undefined);
+});
+
+test("formatMemberCardinality for MetaLang suffixes", () => {
+  assert.equal(formatMemberCardinality(undefined), "*");
+  assert.equal(formatMemberCardinality("*"), "*");
+  assert.equal(formatMemberCardinality("+"), "+");
+  assert.equal(formatMemberCardinality("0..1"), "?");
+  assert.equal(formatMemberCardinality("?"), "?");
+  assert.equal(formatMemberCardinality("3"), ":3");
+  assert.equal(formatMemberCardinality("2..5"), ":2..5");
+});
+
+test("formatGlobalCardinality for bracket syntax", () => {
+  assert.equal(formatGlobalCardinality("*"), "0..*");
+  assert.equal(formatGlobalCardinality("+"), "1..*");
+  assert.equal(formatGlobalCardinality("0..1"), "0..1");
+  assert.equal(formatGlobalCardinality("?"), "0..1");
+  assert.equal(formatGlobalCardinality("0..100"), "0..100");
 });
 
 test("parseSeedMetaFormat accepts all meta output formats", () => {

@@ -15,7 +15,7 @@ const program = new Command();
 program
   .name(CLI_NAME)
   .description("WebGME domain tools")
-  .version("0.2.0")
+  .version("0.3.0")
   .option("-C, --cwd <dir>", "WebGME project root (webgme-setup.json)", process.cwd());
 
 async function runCli(action: () => Promise<string>): Promise<void> {
