@@ -4,12 +4,14 @@
 document     = { statement } ;
 
 statement    = domain_decl
-               | concept_decl
-               | relationship_decl ;
+               | concept_decl ;
 
 domain_decl  = "domain" , qualified_name , { newline } ;
 
-concept_decl = "concept" , identifier , [ "extends" , identifier ] , concept_body , { newline } ;
+concept_decl = "concept" , identifier , [ "extends" , identifier ] ,
+               [ connect_clause ] , concept_body , { newline } ;
+
+connect_clause = "connect" , type_ref , "->" , type_ref ;
 
 concept_body = block_body | ";" ;
 
@@ -28,11 +30,6 @@ contains_decl  = "contains" , contains_list , ";" ;
 contains_list  = contains_item , { "," , contains_item } ;
 
 contains_item  = identifier , [ cardinality ] ;
-
-relationship_decl = "concept" , identifier , "connect" , type_ref , "->" , type_ref ,
-                    [ relationship_body ] , ";" ;
-
-relationship_body = "{" , { pointer_decl } , "}" ;
 
 type_expr    = scalar_type | enum_type ;
 

@@ -12,6 +12,8 @@ domain StaMS.StateMachine
 
 ## add-concept
 
+Bare concept (extends FCO — **do not** write `extends FCO`):
+
 ```metalang
 concept Event;
 ```
@@ -20,14 +22,36 @@ concept Event;
 { "op": "add", "path": "/concepts/Event", "value": {} }
 ```
 
-With inheritance:
+With inheritance (base ≠ FCO — **required** in MetaLang when rendering):
 
 ```metalang
+concept Pin extends PortBase;
 concept InitialState extends State;
 ```
 
 ```json
-{ "op": "add", "path": "/concepts/InitialState", "value": { "extends": "State" } }
+[
+  { "op": "add", "path": "/concepts/Pin", "value": { "extends": "PortBase" } },
+  { "op": "add", "path": "/concepts/InitialState", "value": { "extends": "State" } }
+]
+```
+
+**Source of truth:** `core.getBase(metaNode)`; compare base concept name to `"FCO"`. Same rule as mcp `buildMetaDescriptorFromCore` (`extends` field omitted for FCO).
+
+## set-base / change-inheritance
+
+```metalang
+concept Resistor extends ComponentBase;
+```
+
+```json
+{ "op": "add", "path": "/concepts/Resistor", "value": { "extends": "ComponentBase" } }
+```
+
+Or replace on existing concept:
+
+```json
+{ "op": "replace", "path": "/concepts/Resistor/extends", "value": "ComponentBase" }
 ```
 
 ## add-attribute
@@ -86,7 +110,7 @@ concept Machine {
 
 ## add-relationship
 
-Connection concept with `connect` syntax:
+Connection concept with `connect` syntax (may also `extends` a connection base):
 
 ```metalang
 concept Transition connect State -> State {
@@ -94,6 +118,8 @@ concept Transition connect State -> State {
   guard -> Guard?;
   action -> Action?;
 }
+
+concept ElectricalConnection extends ConnectionBase connect Pin -> Pin;
 ```
 
 ```json
@@ -107,6 +133,17 @@ concept Transition connect State -> State {
   { "op": "add", "path": "/concepts/Transition/pointers/event", "value": "Event" },
   { "op": "add", "path": "/concepts/Transition/pointers/guard", "value": "Guard" },
   { "op": "add", "path": "/concepts/Transition/pointers/action", "value": "Action" }
+]
+```
+
+```json
+[
+  { "op": "add", "path": "/concepts/ElectricalConnection", "value": { "extends": "ConnectionBase" } },
+  {
+    "op": "add",
+    "path": "/relationships/ElectricalConnection",
+    "value": { "from": "Pin", "to": "Pin" }
+  }
 ]
 ```
 

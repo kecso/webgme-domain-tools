@@ -19,5 +19,5 @@ Each entry in `metaAspectSet` is one meta node:
 
 | To | Function (planned) | Notes |
 |----|-------------------|-------|
-| Descriptor | `irToDescriptor(ir)` | Resolves paths → concept names; drops FCO/META; maps `src`/`dst` to `relationships` |
-| MetaLang | `ir → descriptor → metalang` | Do not render IR directly to text |
+| Descriptor | `irToDescriptor(ir)` | Resolves paths → concept names; drops FCO/META; `extends` when `getBase` ≠ FCO; maps `src`/`dst` to `relationships` |
+| MetaLang | `ir → descriptor → metalang` | Emit `extends Base` for non-FCO bases only |

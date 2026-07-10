@@ -11,7 +11,7 @@
 
 domain DSS.Modelica
 
-// --- core (same as ModelicaBaseSeed) ---
+// --- core (same as ModelicaBaseSeed; see modelica-base.metalang for full extends) ---
 concept Model { contains ComponentBase*, ConnectionBase*; }
 concept Domain { contains Model*; }
 concept ComponentBase {
@@ -19,7 +19,8 @@ concept ComponentBase {
   ModelicaURI: string;
   contains PortBase*;
 }
-concept ElectricalConnection connect Pin -> Pin;
+concept Pin extends PortBase;
+concept ElectricalConnection extends ConnectionBase connect Pin -> Pin;
 
 // --- MSL library (sample; full seed has 200+ similar concepts) ---
 concept Modelica.Electrical.Analog.Basic.Resistor extends ComponentBase;

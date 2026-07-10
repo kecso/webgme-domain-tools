@@ -6,16 +6,14 @@ Patch paths use RFC 6902 JSON Pointer on the descriptor root.
 
 ## add-concept
 
-Introduce a new meta type extending FCO (default).
-
 ```json
 { "op": "add", "path": "/concepts/State", "value": {} }
 ```
 
-With base type:
+With base type (omit when base is FCO):
 
 ```json
-{ "op": "add", "path": "/concepts/InitialState", "value": { "extends": "State" } }
+{ "op": "add", "path": "/concepts/Pin", "value": { "extends": "PortBase" } }
 ```
 
 ## remove-concept

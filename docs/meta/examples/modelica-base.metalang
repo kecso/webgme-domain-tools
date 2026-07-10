@@ -1,6 +1,6 @@
 // webgme-dss ModelicaBaseSeed — MetaLang v0
 // Source: webgme-dss/src/seeds/Modelica/ModelicaBaseSeed.webgmex (36 concepts)
-// Catalog seed name "Modelica" uses Modelica.webgmex; base seed is sibling file (F1 ignore note).
+// Inheritance: core.getBase — FCO bases omit "extends"; others shown below.
 
 domain DSS.ModelicaBase
 
@@ -19,39 +19,39 @@ concept ComponentBase {
 }
 
 concept PortBase;
-concept Pin;
-
 concept ConnectionBase;
 
-concept ElectricalConnection connect Pin -> Pin;
-concept MechanicsRotationalConnection connect Rotational_Flange -> Rotational_Flange;
-concept MechanicsTranslationalConnection connect Translational_Flange -> Translational_Flange;
-concept MechanicalConnection connect Mechanical_Frame -> Mechanical_Frame;
-concept HeatFlow connect HeatPort -> HeatPort;
-concept FluidHeatFlow connect FlowPort -> FlowPort;
+concept Pin extends PortBase;
+concept HeatPort extends PortBase;
+concept FlowPort extends PortBase;
+concept Rotational_Flange extends PortBase;
+concept Translational_Flange extends PortBase;
+concept Mechanical_Frame extends PortBase;
+concept Mechanical_FlangeWithBearing extends PortBase;
 
-concept Rotational_Flange;
-concept Translational_Flange;
-concept Mechanical_Frame;
-concept Mechanical_FlangeWithBearing;
-concept HeatPort;
-concept FlowPort;
+concept RealInput extends PortBase;
+concept RealOutput extends PortBase;
+concept RealVectorInput extends PortBase;
+concept BooleanInput extends PortBase;
+concept BooleanOutput extends PortBase;
+concept BooleanVectorInput extends PortBase;
+concept IntegerInput extends PortBase;
+concept IntegerOutput extends PortBase;
+concept IntegerVectorInput extends PortBase;
+concept ComplexInput extends PortBase;
+concept ComplexOutput extends PortBase;
 
-concept RealInput;
-concept RealOutput;
-concept RealVectorInput;
-concept RealValueFlow;
-concept BooleanInput;
-concept BooleanOutput;
-concept BooleanVectorInput;
-concept BooleanValueFlow;
-concept IntegerInput;
-concept IntegerOutput;
-concept IntegerVectorInput;
-concept IntegerValueFlow;
-concept ComplexInput;
-concept ComplexOutput;
-concept ComplexValueFlow;
+concept RealValueFlow extends ConnectionBase;
+concept BooleanValueFlow extends ConnectionBase;
+concept IntegerValueFlow extends ConnectionBase;
+concept ComplexValueFlow extends ConnectionBase;
+
+concept ElectricalConnection extends ConnectionBase connect Pin -> Pin;
+concept MechanicsRotationalConnection extends ConnectionBase connect Rotational_Flange -> Rotational_Flange;
+concept MechanicsTranslationalConnection extends ConnectionBase connect Translational_Flange -> Translational_Flange;
+concept MechanicalConnection extends ConnectionBase connect Mechanical_Frame -> Mechanical_Frame;
+concept HeatFlow extends ConnectionBase connect HeatPort -> HeatPort;
+concept FluidHeatFlow extends ConnectionBase connect FlowPort -> FlowPort;
 
 concept Documentation;
 concept SimulationResult;

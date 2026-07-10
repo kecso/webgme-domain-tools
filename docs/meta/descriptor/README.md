@@ -8,6 +8,7 @@
 ## Design choices
 
 - Concept **names** only (no `/G/z` paths).
+- **`extends`** when base ≠ FCO (omitted for FCO — default in MetaLang).
 - **Connection** types: empty concept body + `relationships.{Name}.from|to` (maps to WebGME `src`/`dst`).
 - **Containment** cardinality on the container's `contains` map (`*`, `+`, `?`, `1`, `0..1`).
 - **Pointers** for non-connection refs (`event -> Event`).
