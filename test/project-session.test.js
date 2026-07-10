@@ -8,7 +8,13 @@ import {
   closeProjectSession,
   openProjectSession,
 } from "../dist/session/project-session.js";
-import { collectSeedNodes, renderSeedTree } from "../dist/introspection/seed-tree.js";
+import {
+  collectSeedNodes,
+  displayPath,
+  pathDepth,
+  relidFromPath,
+  renderSeedTree,
+} from "../dist/introspection/seed-tree.js";
 import { buildSeedMetaIr, renderSeedMeta } from "../dist/introspection/seed-meta.js";
 import { runSeedMetaCommand } from "../dist/commands/seed.js";
 import { runSeedTreeCommand } from "../dist/commands/seed-tree.js";
@@ -27,12 +33,31 @@ async function withStateMachineSession(fn) {
   }
 }
 
+test("path helpers", () => {
+  assert.equal(pathDepth(""), 0);
+  assert.equal(pathDepth("/G/d"), 2);
+  assert.equal(relidFromPath("/G/d"), "d");
+  assert.equal(displayPath(""), "/");
+  assert.equal(displayPath("/1"), "/1");
+});
+
 test("openProjectSession imports StateMachine webgmex", async () => {
   await withStateMachineSession(async (context) => {
     assert.match(context.webgmexPath, /StateMachine\.webgmex$/);
     assert.ok(context.rootNode);
     const nodes = await context.core.loadSubTree(context.rootNode);
     assert.ok(nodes.length > 1);
+  });
+});
+
+test("collectSeedNodes uses depth-first sibling order (not path sort)", async () => {
+  await withStateMachineSession(async (context) => {
+    const rows = await collectSeedNodes(context.core, context.rootNode, {});
+    const underG = rows.filter((r) => r.path === "/G" || r.path.startsWith("/G/"));
+    const wIndex = underG.findIndex((r) => r.path === "/G/W");
+    const hIndex = underG.findIndex((r) => r.path === "/G/h");
+    assert.ok(wIndex >= 0 && hIndex >= 0);
+    assert.ok(wIndex < hIndex, "DFS should list /G/W before /G/h (relid order, not localeCompare)");
   });
 });
 
@@ -57,6 +82,28 @@ test("collectSeedNodes supports --select paths", async () => {
     assert.equal(picked.length, 2);
     assert.equal(picked[0].path, all[0].path);
     assert.equal(picked[1].path, all[1].path);
+  });
+});
+
+test("renderSeedTree tree format is indented with path tail", async () => {
+  await withStateMachineSession(async (context) => {
+    const rows = await collectSeedNodes(context.core, context.rootNode, {});
+    const tree = renderSeedTree("StateMachine", context.webgmexPath, rows, { format: "tree" });
+    assert.match(tree, /seed:StateMachine/);
+    assert.match(tree, /├─|└─/);
+    assert.match(tree, /\/G\/W/);
+    assert.doesNotMatch(tree, /\[meta/);
+    const wLine = tree.split("\n").find((line) => line.includes("/G/W"));
+    assert.ok(wLine);
+    assert.match(wLine, /\/G\/W\s*$/);
+  });
+});
+
+test("renderSeedTree tree-verbose includes meta tags", async () => {
+  await withStateMachineSession(async (context) => {
+    const rows = await collectSeedNodes(context.core, context.rootNode, {});
+    const tree = renderSeedTree("StateMachine", context.webgmexPath, rows, { format: "tree-verbose" });
+    assert.match(tree, /\[meta/);
   });
 });
 
@@ -94,7 +141,7 @@ test("runSeedTreeCommand and runSeedMetaCommand", async () => {
     format: "tree",
   });
   assert.match(treeOut, /seed:StateMachine/);
-  assert.match(treeOut, /model\//);
+  assert.match(treeOut, /├─|└─/);
 
   const metaOut = await runSeedMetaCommand({
     cwd: fixture,

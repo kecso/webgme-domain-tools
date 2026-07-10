@@ -6,6 +6,7 @@ import {
   renderRepoTree,
   type RepoTreeFormat,
 } from "../introspection/repo-tree.js";
+import type { SeedTreeFormat } from "../introspection/seed-tree.js";
 
 function parseKinds(raw: string | undefined): ComponentKind[] | undefined {
   if (!raw) return undefined;
@@ -24,18 +25,25 @@ export interface TreeCommandOptions {
   cwd: string;
   seed?: string;
   kind?: string;
-  format?: RepoTreeFormat;
+  format?: RepoTreeFormat | SeedTreeFormat;
   at?: string;
   select?: string[];
 }
 
 export async function runTreeCommand(options: TreeCommandOptions): Promise<string> {
   if (options.seed) {
-    return runSeedTreeCommand(options);
+    return runSeedTreeCommand({
+      ...options,
+      format: options.format as SeedTreeFormat | undefined,
+    });
   }
   const catalog = loadSetupCatalog(options.cwd);
+  const format = options.format as RepoTreeFormat | undefined;
+  if (format && format !== "tree" && format !== "flat" && format !== "json") {
+    throw new Error("Repo tree format must be tree, flat, or json (tree-verbose is for --seed only)");
+  }
   return renderRepoTree(catalog, {
     kinds: parseKinds(options.kind),
-    format: options.format,
+    format,
   });
 }

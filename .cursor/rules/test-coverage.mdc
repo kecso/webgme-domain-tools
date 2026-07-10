@@ -11,7 +11,7 @@ Features are **not complete** until behavior is covered by tests.
 
 - Add or extend tests with every feature change (TDD preferred: failing test first when practical).
 - Cover happy paths, error paths, and format/option variants the feature exposes.
-- Run `npm test` before marking a feature ready for review.
+- Run `npm test` before marking a feature ready for review; output ends with a **coverage summary** (lines / branches / functions / statements via `c8`).
 - No feature row in `docs/PROJECT.md` moves to `review` or `done` without corresponding tests.
 
 ## Exceptions

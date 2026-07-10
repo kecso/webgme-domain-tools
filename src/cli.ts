@@ -7,6 +7,7 @@ import { runTreeCommand } from "./commands/tree.js";
 import { parseSelect } from "./commands/seed-tree.js";
 import { AmbiguousSeedError } from "./session/seed-resolution.js";
 import type { RepoTreeFormat } from "./introspection/repo-tree.js";
+import type { SeedTreeFormat } from "./introspection/seed-tree.js";
 
 const program = new Command();
 
@@ -36,7 +37,7 @@ program
   .argument("[scope]", "repo (default) or seed", "repo")
   .option("--seed <name>", "Load seed and show model tree")
   .option("--kind <kinds>", "Repo scope: seeds,plugins,visualizers,routers (comma-separated)")
-  .option("--format <fmt>", "tree | flat | json", "tree")
+  .option("--format <fmt>", "repo: tree|flat|json — seed: tree|tree-verbose|flat|json", "tree")
   .option("--at <path>", "Seed scope: subtree root path (e.g. /1)")
   .option("--select <paths>", "Seed scope: comma-separated node paths to list")
   .action((scope: string, opts: {
@@ -56,7 +57,7 @@ program
         cwd,
         seed: scope === "seed" ? opts.seed : opts.seed,
         kind: opts.kind,
-        format: (opts.format ?? "tree") as RepoTreeFormat,
+        format: (opts.format ?? "tree") as RepoTreeFormat | SeedTreeFormat,
         at: opts.at,
         select: parseSelect(opts.select),
       }),

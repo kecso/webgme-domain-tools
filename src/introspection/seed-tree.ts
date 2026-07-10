@@ -1,6 +1,6 @@
 import type { GmeCore, GmeNode } from "../session/gme-runtime.js";
 
-export type SeedTreeFormat = "tree" | "flat" | "json";
+export type SeedTreeFormat = "tree" | "tree-verbose" | "flat" | "json";
 
 export interface SeedTreeOptions {
   format?: SeedTreeFormat;
@@ -36,6 +36,28 @@ function toRow(core: GmeCore, node: GmeNode): SeedNodeRow {
   };
 }
 
+function walkDepthFirst(core: GmeCore, node: GmeNode, rows: SeedNodeRow[]): void {
+  rows.push(toRow(core, node));
+  for (const relid of core.getChildrenRelids(node)) {
+    const child = core.getChild(node, relid);
+    if (child) walkDepthFirst(core, child, rows);
+  }
+}
+
+export function pathDepth(nodePath: string): number {
+  if (!nodePath) return 0;
+  return nodePath.split("/").filter(Boolean).length;
+}
+
+export function relidFromPath(nodePath: string): string {
+  const parts = nodePath.split("/").filter(Boolean);
+  return parts[parts.length - 1] ?? "";
+}
+
+export function displayPath(nodePath: string): string {
+  return nodePath || "/";
+}
+
 export async function collectSeedNodes(
   core: GmeCore,
   rootNode: GmeNode,
@@ -50,7 +72,7 @@ export async function collectSeedNodes(
       }
       rows.push(toRow(core, node));
     }
-    return rows.sort((a, b) => a.path.localeCompare(b.path));
+    return rows;
   }
 
   const start = options.at
@@ -60,10 +82,90 @@ export async function collectSeedNodes(
     throw new Error('Node path does not exist: "' + (options.at ?? "") + '"');
   }
 
-  const nodes = await core.loadSubTree(start);
-  return nodes
-    .map((node) => toRow(core, node))
-    .sort((a, b) => a.path.localeCompare(b.path));
+  await core.loadSubTree(start);
+  const rows: SeedNodeRow[] = [];
+  walkDepthFirst(core, start, rows);
+  return rows;
+}
+
+function treePrefix(depth: number, isLast: boolean, parentContinues: boolean[]): string {
+  if (depth === 0) return "";
+  const ancestors = parentContinues
+    .slice(0, depth - 1)
+    .map((continues) => (continues ? "│  " : "   "))
+    .join("");
+  const branch = isLast ? "└─ " : "├─ ";
+  return ancestors + branch;
+}
+
+function renderIndentedTreeLine(
+  row: SeedNodeRow,
+  depth: number,
+  isLast: boolean,
+  parentContinues: boolean[],
+  verbose: boolean,
+): string {
+  const relid = relidFromPath(row.path);
+  const label = relid || row.name;
+  const prefix = treePrefix(depth, isLast, parentContinues);
+  const pathTail = displayPath(row.path);
+  let line = prefix + label;
+  if (relid && row.name !== relid) {
+    line += "  " + row.name;
+  }
+  line += "  " + pathTail;
+  if (verbose) {
+    const tags: string[] = [];
+    if (row.isMeta) tags.push("meta");
+    if (row.metaType) tags.push("type:" + row.metaType);
+    if (tags.length > 0) line += "  [" + tags.join(", ") + "]";
+  }
+  return line;
+}
+
+function renderTreeBodySimple(rows: SeedNodeRow[], verbose: boolean): string[] {
+  if (rows.length === 0) return ["(empty)"];
+
+  const childrenByParent = new Map<string, SeedNodeRow[]>();
+  for (const row of rows) {
+    const parent = parentPath(row.path);
+    const list = childrenByParent.get(parent) ?? [];
+    list.push(row);
+    childrenByParent.set(parent, list);
+  }
+
+  const lines: string[] = [];
+
+  function walk(nodePath: string, depth: number, parentContinues: boolean[]): void {
+    const row = rows.find((r) => r.path === nodePath);
+    if (!row) return;
+
+    const siblings = childrenByParent.get(parentPath(nodePath)) ?? [];
+    const index = siblings.findIndex((s) => s.path === nodePath);
+    const isLast = index === siblings.length - 1;
+
+    lines.push(renderIndentedTreeLine(row, depth, isLast, parentContinues, verbose));
+
+    const children = childrenByParent.get(nodePath) ?? [];
+    const nextContinues = [...parentContinues, !isLast];
+    for (const child of children) {
+      walk(child.path, depth + 1, nextContinues);
+    }
+  }
+
+  const roots = childrenByParent.get("__root__") ?? [];
+  for (const root of roots) {
+    walk(root.path, pathDepth(root.path), []);
+  }
+
+  return lines;
+}
+
+function parentPath(nodePath: string): string {
+  if (!nodePath) return "__root__";
+  const parts = nodePath.split("/").filter(Boolean);
+  if (parts.length <= 1) return "__root__";
+  return "/" + parts.slice(0, -1).join("/");
 }
 
 export function renderSeedTree(
@@ -86,17 +188,8 @@ export function renderSeedTree(
       .join("\n");
   }
 
-  const lines = ["seed:" + seedName + "  (" + webgmexPath + ")", "  model/"];
-  if (rows.length === 0) {
-    lines.push("    (empty)");
-  } else {
-    for (const row of rows) {
-      const tags: string[] = [];
-      if (row.isMeta) tags.push("meta");
-      if (row.metaType) tags.push("type:" + row.metaType);
-      const suffix = tags.length > 0 ? "  [" + tags.join(", ") + "]" : "";
-      lines.push("    " + row.path + "  " + row.name + suffix);
-    }
-  }
-  return lines.join("\n");
+  const verbose = format === "tree-verbose";
+  const header = "seed:" + seedName + "  (" + webgmexPath + ")";
+  const body = renderTreeBodySimple(rows, verbose);
+  return [header, ...body].join("\n");
 }

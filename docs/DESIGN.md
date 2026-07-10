@@ -21,6 +21,8 @@ Stable refs: `seed:StateMachine`, `plugin:TextToModel`, `viz:MonacoEditor`, `rou
 
 Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-separated). Ambiguous seed names exit 2 with candidates.
 
+**Seed tree formats:** `tree` (default — DFS, npm-style branches, path tail), `tree-verbose` (+ meta/type), `flat`, `json`.
+
 ## seed command
 
 | Subcommand | Invocation | Output |

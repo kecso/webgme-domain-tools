@@ -45,10 +45,17 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F5 | ProjectSession (memory storage + import) | `review` | `npm test` — project-session tests |
+| F5 | ProjectSession (memory storage + import) | `review` | `npm test` — ends with coverage summary (~95% lines) |
 | F6 | `tree --seed` model walk | `review` | `node dist/cli.js tree --seed StateMachine --cwd test/fixtures/sample-project` |
 | F7 | Multi-seed resolution rules | `review` | `npm test` — seed-resolution tests; ambiguous name → exit 2 |
 | F8 | `seed meta` | `review` | `node dist/cli.js seed meta --seed StateMachine --cwd test/fixtures/sample-project` |
+
+### Phase 2 review notes (2026-07-10)
+
+| ID | Feedback | Action |
+|----|----------|--------|
+| F5 | Want coverage metric, not just test count | `c8` integrated into `npm test`; prints summary table (statements/branches/functions/lines) |
+| F6 | Default tree used path sort (wrong for case-sensitive relids); wanted DFS + npm-style indent | DFS via `getChildrenRelids`; `tree` format uses `├─`/`└─`, relid + name, full path tail; `tree-verbose` adds meta/type |
 
 **M0 — Foundation** — `done` (merged to `main` 2026-07-10)
 
@@ -93,7 +100,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
 | F5 | ProjectSession (memory storage + import) | `review` | MemoryGMEAuth + webgmex import; no HTTP server |
-| F6 | `tree --seed` model walk | `review` | `--at`, `--select`; tree / flat / json |
+| F6 | `tree --seed` model walk | `review` | DFS `tree` + `tree-verbose`; `--at`, `--select` |
 | F7 | Multi-seed resolution rules | `review` | Ambiguous prefix → exit 2 + candidate list |
 | F8 | `seed meta` | `review` | MetaAspectSet IR (`seed meta --seed`) |
 
