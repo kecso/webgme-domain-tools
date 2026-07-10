@@ -1,30 +1,28 @@
-// webgme-dss Modelica domain — MetaLang v0 (sketch)
-// Source: webgme-dss seed Modelica — .webgmex not vendored in webdot repo.
-// Validate with: webdot seed meta --seed Modelica -C ../webgme-dss --format metalang (F16c)
+// webgme-dss Modelica (full library seed) — MetaLang v0 (pattern only)
+// Source: webgme-dss/src/seeds/Modelica/Modelica.webgmex (~1.4 MB, 200+ library concepts)
+// Includes ModelicaBaseSeed metamodel + MSL component types (Modelica.Electrical.*, etc.)
 //
-// DSS couples Modelica libraries (see src/seeds/Modelica/metadata.json portMap)
-// with a diagram-level metamodel. This sketch captures the usual containment +
-// connection pattern; refine when IR is available.
+// webgme-setup.json lists one seed "Modelica"; F1 selects Modelica.webgmex and notes:
+//   ignored .webgmex: ModelicaBaseSeed.webgmex
+//
+// For the full library, descriptor/metalang list every Modelica.* component as concepts
+// extending ComponentBase — too large for a hand example. See modelica-base.* for the
+// DSS core (36 concepts). Representative library entries:
 
 domain DSS.Modelica
 
-concept Diagram {
-  contains Component*, Connection*;
+// --- core (same as ModelicaBaseSeed) ---
+concept Model { contains ComponentBase*, ConnectionBase*; }
+concept Domain { contains Model*; }
+concept ComponentBase {
+  ShortName: string;
+  ModelicaURI: string;
+  contains PortBase*;
 }
+concept ElectricalConnection connect Pin -> Pin;
 
-concept Component {
-  description: string;
-  // Full WebGME: ports as sets — add-set rule (future)
-  // ports: set Pin*;
-}
-
-concept Connection connect Pin -> Pin;
-
-concept Pin;
-
-concept RealInput;
-concept RealOutput;
-concept BooleanInput;
-concept BooleanOutput;
-
-// Port aliases from metadata.json portMap collapse to Pin / flange types at meta level.
+// --- MSL library (sample; full seed has 200+ similar concepts) ---
+concept Modelica.Electrical.Analog.Basic.Resistor extends ComponentBase;
+concept Modelica.Electrical.Analog.Basic.Capacitor extends ComponentBase;
+concept Modelica.Mechanics.Rotational.Components.Inertia extends ComponentBase;
+concept Modelica.Blocks.Sources.Constant extends ComponentBase;

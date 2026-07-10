@@ -44,10 +44,12 @@ MetaLang uses **EBNF + RULES** for now (zero runtime deps). **Langium** (or simi
 
 ## Examples (from real seeds)
 
-| Studio | Seed | Files |
-|--------|------|-------|
-| StaMS | `StateMachine` | [`examples/state-machine.*`](examples/) |
-| webgme-dss | `Modelica` | [`examples/modelica-domain.metalang`](examples/modelica-domain.metalang) (sketch — `.webgmex` not in repo; validate when available) |
+| Studio | Seed folder | `.webgmex` files | Example docs |
+|--------|-------------|------------------|--------------|
+| StaMS | `StateMachine/` | `StateMachine.webgmex` | [`examples/state-machine.*`](examples/) |
+| webgme-dss | `Modelica/` | `ModelicaBaseSeed.webgmex` (core), `Modelica.webgmex` (full library) | [`examples/modelica-base.*`](examples/), [`modelica-domain.metalang`](examples/modelica-domain.metalang) |
+
+Catalog entry `Modelica` loads `Modelica.webgmex` per F1; base seed is sibling file (see `tree repo` ignore note).
 
 Generate fresh IR from the fixture:
 

@@ -1,0 +1,58 @@
+// webgme-dss ModelicaBaseSeed — MetaLang v0
+// Source: webgme-dss/src/seeds/Modelica/ModelicaBaseSeed.webgmex (36 concepts)
+// Catalog seed name "Modelica" uses Modelica.webgmex; base seed is sibling file (F1 ignore note).
+
+domain DSS.ModelicaBase
+
+concept Model {
+  contains ComponentBase*, ConnectionBase*;
+}
+
+concept Domain {
+  contains Model*;
+}
+
+concept ComponentBase {
+  ShortName: string;
+  ModelicaURI: string;
+  contains PortBase*;
+}
+
+concept PortBase;
+concept Pin;
+
+concept ConnectionBase;
+
+concept ElectricalConnection connect Pin -> Pin;
+concept MechanicsRotationalConnection connect Rotational_Flange -> Rotational_Flange;
+concept MechanicsTranslationalConnection connect Translational_Flange -> Translational_Flange;
+concept MechanicalConnection connect Mechanical_Frame -> Mechanical_Frame;
+concept HeatFlow connect HeatPort -> HeatPort;
+concept FluidHeatFlow connect FlowPort -> FlowPort;
+
+concept Rotational_Flange;
+concept Translational_Flange;
+concept Mechanical_Frame;
+concept Mechanical_FlangeWithBearing;
+concept HeatPort;
+concept FlowPort;
+
+concept RealInput;
+concept RealOutput;
+concept RealVectorInput;
+concept RealValueFlow;
+concept BooleanInput;
+concept BooleanOutput;
+concept BooleanVectorInput;
+concept BooleanValueFlow;
+concept IntegerInput;
+concept IntegerOutput;
+concept IntegerVectorInput;
+concept IntegerValueFlow;
+concept ComplexInput;
+concept ComplexOutput;
+concept ComplexValueFlow;
+
+concept Documentation;
+concept SimulationResult;
+concept SimulationResults;
