@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://webgme.org/schemas/webdot/meta-ir/v1.json",
+  "title": "SeedMetaIr",
+  "description": "Lossless MetaAspectSet intermediate representation from webdot seed meta (core.getJsonMeta per meta node).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["seed", "branch", "webgmex", "metaAspectSet"],
+  "properties": {
+    "seed": { "type": "string", "minLength": 1 },
+    "branch": { "type": "string", "minLength": 1 },
+    "webgmex": { "type": "string", "minLength": 1 },
+    "metaAspectSet": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/metaAspectNodeIr" }
+    }
+  },
+  "$defs": {
+    "metaAspectNodeIr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "name", "meta"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Absolute node path in the file-project (e.g. /G/z). Stable within one import, not portable across projects.",
+          "pattern": "^/"
+        },
+        "name": {
+          "type": "string",
+          "description": "Concept name (name attribute)."
+        },
+        "meta": {
+          "type": "object",
+          "description": "Opaque getJsonMeta payload: children, attributes, pointers, aspects, constraints, etc.",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

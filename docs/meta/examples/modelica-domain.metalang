@@ -1,0 +1,30 @@
+// webgme-dss Modelica domain — MetaLang v0 (sketch)
+// Source: webgme-dss seed Modelica — .webgmex not vendored in webdot repo.
+// Validate with: webdot seed meta --seed Modelica -C ../webgme-dss --format metalang (F16c)
+//
+// DSS couples Modelica libraries (see src/seeds/Modelica/metadata.json portMap)
+// with a diagram-level metamodel. This sketch captures the usual containment +
+// connection pattern; refine when IR is available.
+
+domain DSS.Modelica
+
+concept Diagram {
+  contains Component*, Connection*;
+}
+
+concept Component {
+  description: string;
+  // Full WebGME: ports as sets — add-set rule (future)
+  // ports: set Pin*;
+}
+
+concept Connection connect Pin -> Pin;
+
+concept Pin;
+
+concept RealInput;
+concept RealOutput;
+concept BooleanInput;
+concept BooleanOutput;
+
+// Port aliases from metadata.json portMap collapse to Pin / flange types at meta level.

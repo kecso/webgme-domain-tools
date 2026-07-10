@@ -1,0 +1,62 @@
+; MetaLang v0 grammar (EBNF)
+; Maps to MetaDescriptor v1 — see RULES.md for semantics.
+
+document     = { statement } ;
+
+statement    = domain_decl
+               | concept_decl
+               | relationship_decl ;
+
+domain_decl  = "domain" , qualified_name , { newline } ;
+
+concept_decl = "concept" , identifier , [ "extends" , identifier ] , concept_body , { newline } ;
+
+concept_body = block_body | ";" ;
+
+block_body   = "{" , { member } , "}" ;
+
+member       = attribute_decl
+               | pointer_decl
+               | contains_decl ;
+
+attribute_decl = identifier , ":" , type_expr , ";" ;
+
+pointer_decl   = identifier , "->" , type_ref , [ "?" ] , ";" ;
+
+contains_decl  = "contains" , contains_list , ";" ;
+
+contains_list  = contains_item , { "," , contains_item } ;
+
+contains_item  = identifier , [ cardinality ] ;
+
+relationship_decl = "concept" , identifier , "connect" , type_ref , "->" , type_ref ,
+                    [ relationship_body ] , ";" ;
+
+relationship_body = "{" , { pointer_decl } , "}" ;
+
+type_expr    = scalar_type | enum_type ;
+
+scalar_type  = "string" | "bool" | "float" | "integer" | "asset" ;
+
+enum_type    = "enum" , "[" , enum_value , { "," , enum_value } , "]" ;
+
+enum_value   = identifier | string_literal ;
+
+type_ref     = identifier ;
+
+cardinality  = "*" | "+" | "?" | "1" | "0..1" ;
+
+qualified_name = identifier , { "." , identifier } ;
+
+identifier     = letter , { letter | digit | "_" } ;
+
+string_literal = '"' , { character - '"' } , '"' ;
+
+letter         = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
+               | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+               | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+               | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;
+
+digit          = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+newline        = ? ASCII LF or CRLF ? ;

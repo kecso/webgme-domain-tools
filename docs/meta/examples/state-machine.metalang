@@ -1,0 +1,42 @@
+// StaMS StateMachine — MetaLang v0
+// Source: test/fixtures/sample-project (StaMS StateMachine.webgmex)
+// Descriptor: state-machine.descriptor.json
+
+domain StaMS.StateMachine
+
+concept State {
+  isInitial: bool;
+  isFinal: bool;
+  entry -> Action?;
+  run -> Action?;
+  exit -> Action?;
+}
+
+concept Transition connect State -> State {
+  event -> Event;
+  guard -> Guard?;
+  action -> Action?;
+}
+
+concept Machine {
+  description: string;
+  contains State*, Event*, Guard*, Action*, Constraint*;
+}
+
+concept Event;
+concept Guard;
+
+concept Action {
+  body: string;
+}
+
+concept Constraint {
+  body: string;
+  kind: string;
+}
+
+concept Variable {
+  type: enum[float, string];
+}
+
+concept File;

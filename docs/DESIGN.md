@@ -27,7 +27,7 @@ Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-sepa
 
 | Subcommand | Invocation | Output |
 |------------|------------|--------|
-| Meta IR | `seed meta --seed <name>` | MetaAspectSet JSON (`getJsonMeta` per meta node); concise MetaDescriptor format planned (F16) |
+| Meta IR | `seed meta --seed <name>` | MetaAspectSet JSON (`getJsonMeta` per meta node); see [`docs/meta/`](meta/README.md) |
 
 ## Plugin execution (planned)
 

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://webgme.org/schemas/webdot/meta-descriptor/v1.json",
+  "title": "MetaDescriptor",
+  "description": "Compact metamodel (webdot). Canonical definition shared with webgme/mcp MetaDescriptor v1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "concepts"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "concepts": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/conceptName" },
+      "additionalProperties": { "$ref": "#/$defs/conceptBody" }
+    },
+    "relationships": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/conceptName" },
+      "additionalProperties": { "$ref": "#/$defs/relationshipBody" }
+    }
+  },
+  "$defs": {
+    "conceptName": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+    },
+    "cardinality": {
+      "type": "string",
+      "enum": ["*", "+", "?", "1", "0..1"]
+    },
+    "attributeType": {
+      "type": "string",
+      "enum": ["string", "float", "enum", "bool", "asset", "integer"]
+    },
+    "attributeMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "$ref": "#/$defs/attributeType" },
+        "hidden": { "type": "boolean" },
+        "readOnly": { "type": "boolean" },
+        "values": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "default": {}
+      }
+    },
+    "attributeDef": {
+      "oneOf": [{ "$ref": "#/$defs/attributeType" }, { "$ref": "#/$defs/attributeMeta" }]
+    },
+    "typeRef": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+    "typeRefOrList": {
+      "oneOf": [
+        { "$ref": "#/$defs/typeRef" },
+        { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/typeRef" } }
+      ]
+    },
+    "containsMap": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/conceptName" },
+      "additionalProperties": { "$ref": "#/$defs/cardinality" }
+    },
+    "relationshipBody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "$ref": "#/$defs/typeRefOrList" },
+        "to": { "$ref": "#/$defs/typeRefOrList" }
+      }
+    },
+    "conceptBody": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "extends": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+        "contains": { "$ref": "#/$defs/containsMap" },
+        "pointers": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/typeRefOrList" }
+        },
+        "sets": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/containsMap" }
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/attributeDef" }
+        }
+      }
+    }
+  }
+}

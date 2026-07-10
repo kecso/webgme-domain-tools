@@ -39,6 +39,15 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
+**Phase 2½ — Meta representations** — `in progress` on branch `feature/F16-meta-representations`
+
+| ID | Feature | Status | Review |
+|----|---------|--------|--------|
+| F16a | Meta representation specs (IR, descriptor, MetaLang) | `in progress` | `docs/meta/README.md` + examples |
+| F16b | `seed meta --format descriptor` | `pending` | `ir → descriptor` translator |
+| F16c | `seed meta --format metalang` | `pending` | `descriptor → metalang` renderer |
+| F16d | MetaLang parser / Langium (optional) | `deferred` | — |
+
 **Phase 3 — Plugin run** — `pending`
 
 **Phase 2 — Seed model tree & session** — `done` (merged to `main` 2026-07-10, branch `feature/phase2-seed-model`)
@@ -120,10 +129,13 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 | F7 | Multi-seed resolution rules | `done` | Catalog shorthand: unique prefix OK; shared prefix → exit 2 |
 | F8 | `seed meta` | `done` | MetaAspectSet IR (`seed meta --seed`); JSON IR for now — concise MetaDescriptor in F16 |
 
-### Phase 2½ — Meta presentation (follow-up)
+### Phase 2½ — Meta presentation
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F16 | `seed meta --format descriptor` | `pending` | Concise MetaDescriptor text (webgme/mcp `metaDescriptor.ts`); F8 keeps raw IR |
+| F16a | Meta specs + examples | `in progress` | `docs/meta/` — IR schema, descriptor (mcp-aligned), MetaLang EBNF + RULES |
+| F16b | `seed meta --format descriptor` | `pending` | `irToDescriptor` |
+| F16c | `seed meta --format metalang` | `pending` | Human-readable; rules separate from grammar |
+| F16d | MetaLang parser (Langium optional) | `deferred` | Authoring path metalang → descriptor |
 
 ### Phase 3 — Plugin run
 | ID | Feature | Status | Notes |
