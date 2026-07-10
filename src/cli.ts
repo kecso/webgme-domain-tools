@@ -4,11 +4,13 @@ import { Command } from "commander";
 import { runLsCommand } from "./commands/ls.js";
 import { runSeedMetaCommand, type SeedMetaFormat } from "./commands/seed.js";
 import { runTreeCommand } from "./commands/tree.js";
+import { runPluginInfoCommand, runPluginRunCommand } from "./commands/plugin.js";
 import { parseSelect } from "./commands/seed-tree.js";
 import { AmbiguousSeedError } from "./session/seed-resolution.js";
 import type { RepoTreeFormat } from "./introspection/repo-tree.js";
 import type { SeedTreeFormat } from "./introspection/seed-tree.js";
 import { CLI_NAME } from "./cli-brand.js";
+import { formatPluginMessages } from "./plugin/result-format.js";
 
 const program = new Command();
 
@@ -93,6 +95,68 @@ program
     try {
       console.log(runLsCommand(cwd, kind));
     } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exit(1);
+    }
+  });
+
+const pluginCmd = program.command("plugin").description("Plugin introspection and execution");
+
+pluginCmd
+  .command("info")
+  .description("Show plugin metadata and configStructure defaults")
+  .argument("<name>", "Plugin name from webgme-setup.json")
+  .action((name: string, _opts, cmd) => {
+    const cwd = path.resolve(cmd.optsWithGlobals().cwd ?? process.cwd());
+    void runCli(() => runPluginInfoCommand({ cwd, plugin: name }));
+  });
+
+pluginCmd
+  .command("run")
+  .description("Run a plugin headlessly against a file-project seed")
+  .argument("<name>", "Plugin name from webgme-setup.json")
+  .requiredOption("--seed <name>", "Seed to load as plugin context")
+  .option("--at <path>", "Active node path (e.g. /1)")
+  .option("--select <paths>", "Comma-separated selected node paths")
+  .option("--branch <name>", "Branch name", "master")
+  .option("--config-file <path>", "JSON file with plugin config overrides")
+  .option("--set <pair...>", "Config override name=value (repeatable)")
+  .option("--artifacts-out <dir>", "Directory (relative to -C cwd) for blob artifacts")
+  .action(async (name: string, opts: {
+    seed: string;
+    at?: string;
+    select?: string;
+    branch?: string;
+    configFile?: string;
+    set?: string[];
+    artifactsOut?: string;
+  }, cmd) => {
+    const cwd = path.resolve(cmd.optsWithGlobals().cwd ?? process.cwd());
+    try {
+      const result = await runPluginRunCommand({
+        cwd,
+        plugin: name,
+        seed: opts.seed,
+        at: opts.at,
+        select: parseSelect(opts.select),
+        branch: opts.branch,
+        configFile: opts.configFile,
+        set: opts.set,
+        artifactsOut: opts.artifactsOut,
+      });
+      for (const line of formatPluginMessages(JSON.parse(result.output).result)) {
+        console.error(line);
+      }
+      for (const warning of result.warnings) {
+        console.error("warning:", warning);
+      }
+      console.log(result.output);
+      if (!result.success) process.exit(1);
+    } catch (err) {
+      if (err instanceof AmbiguousSeedError) {
+        console.error(err.message);
+        process.exit(2);
+      }
       console.error(err instanceof Error ? err.message : err);
       process.exit(1);
     }

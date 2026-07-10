@@ -1,6 +1,7 @@
 "use strict";
 
 const path = require("path");
+const fs = require("fs");
 
 global.WebGMEGlobal = global.WebGMEGlobal || {};
 require("webgme-engine");
@@ -57,8 +58,68 @@ function loadGmeConfig() {
   return JSON.parse(JSON.stringify(require(configPath)));
 }
 
+function withProjectPluginPaths(gmeConfig, cwd) {
+  const pluginBase = path.join(cwd, "src", "plugins");
+  if (fs.existsSync(pluginBase)) {
+    gmeConfig.plugin.basePaths = [pluginBase].concat(gmeConfig.plugin.basePaths || []);
+  }
+  return gmeConfig;
+}
+
+function registerRequireJsPaths(gmeConfig) {
+  const webgme = require("webgme-engine");
+  const engineSrc = path.join(path.dirname(require.resolve("webgme-engine/package.json")), "src");
+  const textPlugin = path
+    .relative(engineSrc, require.resolve("requirejs-text/text.js"))
+    .replace(/\.js$/i, "")
+    .split(path.sep)
+    .join("/");
+  global.requireJS.config({
+    paths: {
+      text: textPlugin,
+    },
+  });
+  webgme.addToRequireJsPaths(gmeConfig);
+}
+
+async function executePlugin(parameters) {
+  const webgme = require("webgme-engine");
+  const gmeConfig = parameters.gmeConfig;
+  registerRequireJsPaths(gmeConfig);
+
+  const PluginCliManager = webgme.PluginCliManager;
+  const pluginManager = new PluginCliManager(
+    parameters.project,
+    parameters.logger,
+    gmeConfig,
+    parameters.blobOpts || {},
+  );
+  pluginManager.projectAccess = { read: true, write: true, delete: true };
+
+  return new Promise((resolve, reject) => {
+    pluginManager.executePlugin(
+      parameters.pluginName,
+      parameters.pluginConfig || {},
+      parameters.context,
+      function (err, result) {
+        if (err && !result) {
+          reject(err instanceof Error ? err : new Error(String(err)));
+          return;
+        }
+        resolve({
+          err: err ? String(err) : null,
+          result: result && typeof result.serialize === "function" ? result.serialize() : result,
+        });
+      },
+    );
+  });
+}
+
 module.exports = {
   importSeedProject,
   createMemoryStorage,
   loadGmeConfig,
+  withProjectPluginPaths,
+  registerRequireJsPaths,
+  executePlugin,
 };

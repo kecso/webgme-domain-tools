@@ -39,15 +39,15 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 3 — Plugin run** — `pending`
+**Phase 3 — Plugin run** — `review` on branch `feature/phase3-plugin-run`
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F9 | `plugin info` (configStructure) | `pending` | — |
-| F10 | `plugin run` context flags | `pending` | — |
-| F11 | Config validation + `--set` | `pending` | — |
-| F12 | Message / result routing | `pending` | — |
-| F13 | Ephemeral FS blob + `--artifacts-out` | `pending` | — |
+| F9 | `plugin info` (configStructure) | `done` | `webdot plugin info EchoPlugin --cwd test/fixtures/sample-project` |
+| F10 | `plugin run` context flags | `done` | `webdot plugin run EchoPlugin --seed StateMachine --at /G` |
+| F11 | Config validation + `--set` | `done` | `npm test` — `plugin-config.test.js` |
+| F12 | Message / result routing | `done` | `npm test` — `plugin-command.test.js` (stderr messages + JSON result) |
+| F13 | Ephemeral FS blob + `--artifacts-out` | `done` | `webdot plugin run EchoPlugin --seed StateMachine --set emitArtifact=true --artifacts-out _artifacts` |
 
 **Phase 2½ — Meta representations** — `done` (merged to `main` 2026-07-10, branch `feature/F16-meta-representations`)
 
@@ -155,11 +155,11 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 ### Phase 3 — Plugin run
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F9 | `plugin info` (configStructure) | `pending` | |
-| F10 | `plugin run` context flags | `pending` | `--seed`, `--at`, `--select` |
-| F11 | Config validation + `--set` | `pending` | metadata.json driven |
-| F12 | Message / result routing | `pending` | Logger + pluginResult.messages |
-| F13 | Ephemeral FS blob + `--artifacts-out` | `pending` | Warn when not persisted |
+| F9 | `plugin info` (configStructure) | `done` | JSON: metadata + defaults from `metadata.json` |
+| F10 | `plugin run` context flags | `done` | `--seed`, `--at`, `--select`, `--branch` |
+| F11 | Config validation + `--set` | `done` | `--config-file`, read-only enforcement |
+| F12 | Message / result routing | `done` | Plugin logger → stderr; messages in JSON + stderr |
+| F13 | Ephemeral FS blob + `--artifacts-out` | `done` | Warn when artifacts produced but not saved |
 
 ### Phase 4 — Generator & consumer
 | ID | Feature | Status | Notes |
@@ -247,6 +247,8 @@ npx @kecso/webgme-domain-tools tree repo
 webdot tree --seed StateMachine --cwd c:/Work/StaMS
 webdot tree --seed StateMachine --at /1 --cwd c:/Work/StaMS
 webdot seed meta --seed StateMachine --cwd c:/Work/StaMS
+webdot plugin info EchoPlugin --cwd test/fixtures/sample-project
+webdot plugin run EchoPlugin --seed StateMachine --cwd test/fixtures/sample-project --set message=hi
 ```
 
 ---

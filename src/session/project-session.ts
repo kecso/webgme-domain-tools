@@ -3,6 +3,7 @@ import type { CatalogEntry } from "../catalog/types.js";
 import {
   createMemoryGmeAuth,
   createSessionLogger,
+  loadGmeConfigForProject,
   loadGmeRuntime,
   type GmeCore,
   type GmeImportResult,
@@ -15,6 +16,8 @@ export interface ProjectSessionOptions {
   seed: CatalogEntry;
   branchName?: string;
   projectNamePrefix?: string;
+  /** When true, adds {cwd}/src/plugins to gmeConfig.plugin.basePaths */
+  useProjectPlugins?: boolean;
 }
 
 export interface LoadedSeedContext {
@@ -43,6 +46,9 @@ export async function openProjectSession(
 
   const { bridge } = loadGmeRuntime();
   const webgmexPath = primaryWebgmexPath(options.seed);
+  const sessionConfig = options.useProjectPlugins
+    ? loadGmeConfigForProject(options.cwd)
+    : bridge.loadGmeConfig();
   const projectName =
     (options.projectNamePrefix ?? "file_project") +
     "_" +
@@ -51,7 +57,7 @@ export async function openProjectSession(
     Date.now();
   const branchName = options.branchName ?? "master";
 
-  const { gmeConfig, gmeAuth } = await createMemoryGmeAuth(projectName);
+  const { gmeConfig, gmeAuth } = await createMemoryGmeAuth(projectName, sessionConfig);
   const logger = createSessionLogger(gmeConfig);
   const storage = bridge.createMemoryStorage(logger, gmeConfig, gmeAuth);
   await storage.openDatabase();

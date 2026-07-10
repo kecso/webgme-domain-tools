@@ -73,6 +73,15 @@ interface WebgmeImportBridge {
     createProject: (data: Record<string, unknown>) => Promise<unknown>;
   };
   loadGmeConfig: () => Record<string, unknown>;
+  withProjectPluginPaths: (
+    gmeConfig: Record<string, unknown>,
+    cwd: string,
+  ) => Record<string, unknown>;
+  registerRequireJsPaths: (gmeConfig: Record<string, unknown>) => void;
+  executePlugin: (parameters: Record<string, unknown>) => Promise<{
+    err: string | null;
+    result: Record<string, unknown>;
+  }>;
 }
 
 export type SessionLogger = {
@@ -139,12 +148,29 @@ export function createSessionLogger(gmeConfig: Record<string, unknown>): Session
   return Logger.create("webdot", server.log, false);
 }
 
-export async function createMemoryGmeAuth(projectName: string): Promise<{
+export function loadGmeConfigForProject(cwd: string): Record<string, unknown> {
+  const { bridge } = loadGmeRuntime();
+  const gmeConfig = bridge.loadGmeConfig();
+  return bridge.withProjectPluginPaths(gmeConfig, cwd);
+}
+
+export function registerProjectRequireJsPaths(cwd: string): Record<string, unknown> {
+  const { bridge } = loadGmeRuntime();
+  const gmeConfig = loadGmeConfigForProject(cwd);
+  bridge.registerRequireJsPaths(gmeConfig);
+  return gmeConfig;
+}
+
+export async function createMemoryGmeAuth(
+  projectName: string,
+  gmeConfigOverride?: Record<string, unknown>,
+): Promise<{
   gmeConfig: Record<string, unknown>;
   gmeAuth: GmeAuthLike;
   projectIdSep: string;
 }> {
-  const { gmeConfig, projectIdSep } = loadGmeRuntime();
+  const { gmeConfig: baseConfig, projectIdSep } = loadGmeRuntime();
+  const gmeConfig = gmeConfigOverride ?? baseConfig;
   if (!usesMemoryGmeAuth(gmeConfig)) {
     throw new Error("Expected memory GME auth in config/gme-config.cjs");
   }

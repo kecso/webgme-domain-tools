@@ -29,11 +29,13 @@ Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-sepa
 |------------|------------|--------|
 | Meta IR | `seed meta --seed <name>` | MetaAspectSet JSON (`getJsonMeta` per meta node); see [`docs/meta/`](meta/README.md) |
 
-## Plugin execution (planned)
+## Plugin execution
 
+- **Info:** `plugin info <name>` — `metadata.json` configStructure + defaults
+- **Run:** `plugin run <name> --seed <seed>` — headless `PluginCliManager` on memory file-project
 - Context: `--seed`, `--at`, `--select`, `--branch`
 - Config: `metadata.json` `configStructure` + `--set` / `--config-file`
-- Blobs: ephemeral FS per session; `--artifacts-out` saves to disk; otherwise explicit non-persistence warning
+- Blobs: ephemeral FS per session; `--artifacts-out` saves to disk (relative to `-C cwd`); otherwise stderr warning
 
 ## Generators (planned)
 

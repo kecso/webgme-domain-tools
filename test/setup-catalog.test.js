@@ -19,7 +19,7 @@ test("loadSetupCatalog throws when webgme-setup.json is missing", () => {
 test("loadSetupCatalog reads all component kinds", () => {
   const catalog = loadSetupCatalog(fixture);
   assert.equal(catalog.seeds.length, 3);
-  assert.equal(catalog.plugins.length, 4);
+  assert.equal(catalog.plugins.length, 5);
   assert.equal(catalog.visualizers.length, 1);
   assert.equal(catalog.routers.length, 1);
 });

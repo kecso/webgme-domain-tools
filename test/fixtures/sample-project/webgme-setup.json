@@ -4,6 +4,9 @@
       "SamplePlugin": {
         "src": "src/plugins/SamplePlugin"
       },
+      "EchoPlugin": {
+        "src": "src/plugins/EchoPlugin"
+      },
       "ModelToVerification": {
         "src": "src/plugins/ModelToVerification"
       },

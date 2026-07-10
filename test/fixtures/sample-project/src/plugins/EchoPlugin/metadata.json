@@ -1,0 +1,43 @@
+{
+  "id": "EchoPlugin",
+  "name": "EchoPlugin",
+  "version": "0.1.0",
+  "description": "Fixture plugin for webdot plugin run tests",
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "writeAccessRequired": false,
+  "configStructure": [
+    {
+      "name": "message",
+      "displayName": "Message",
+      "description": "Message returned in plugin result.",
+      "value": "hello",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "shouldFail",
+      "displayName": "Should fail",
+      "description": "If true the plugin exits with an error.",
+      "value": false,
+      "valueType": "boolean",
+      "readOnly": false
+    },
+    {
+      "name": "emitArtifact",
+      "displayName": "Emit artifact",
+      "description": "If true writes a blob artifact.",
+      "value": false,
+      "valueType": "boolean",
+      "readOnly": false
+    },
+    {
+      "name": "readonlyFlag",
+      "displayName": "Read-only flag",
+      "description": "Cannot be overridden from CLI.",
+      "value": "fixed",
+      "valueType": "string",
+      "readOnly": true
+    }
+  ]
+}
