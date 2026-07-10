@@ -20,8 +20,8 @@
   "scripts": {
     "build": "tsc",
     "test": "npm run build && npm run test:coverage",
-    "test:run": "node --test test/**/*.test.js",
-    "test:coverage": "c8 --include \"dist/**/*.js\" --exclude \"dist/**/*.d.ts\" --reporter=text-summary --reporter=text --check-coverage=false node --enable-source-maps --test test/**/*.test.js"
+    "test:run": "node --test \"test/**/*.test.js\"",
+    "test:coverage": "c8 --include \"dist/**/*.js\" --exclude \"dist/**/*.d.ts\" --reporter=text-summary --reporter=text --check-coverage=false node --enable-source-maps --test \"test/**/*.test.js\""
   },
   "engines": {
     "node": ">=20"
