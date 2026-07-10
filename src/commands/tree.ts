@@ -1,6 +1,7 @@
 import type { ComponentKind } from "../catalog/types.js";
 import { COMPONENT_KINDS } from "../catalog/types.js";
 import { loadSetupCatalog } from "../catalog/setup-catalog.js";
+import { runSeedTreeCommand, parseSelect } from "./seed-tree.js";
 import {
   renderRepoTree,
   type RepoTreeFormat,
@@ -24,14 +25,13 @@ export interface TreeCommandOptions {
   seed?: string;
   kind?: string;
   format?: RepoTreeFormat;
+  at?: string;
+  select?: string[];
 }
 
-export function runTreeCommand(options: TreeCommandOptions): string {
+export async function runTreeCommand(options: TreeCommandOptions): Promise<string> {
   if (options.seed) {
-    throw new Error(
-      "Seed model tree is not implemented yet (feature F6). " +
-        "Use: domain-tools tree repo --kind seeds",
-    );
+    return runSeedTreeCommand(options);
   }
   const catalog = loadSetupCatalog(options.cwd);
   return renderRepoTree(catalog, {

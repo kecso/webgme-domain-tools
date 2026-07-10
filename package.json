@@ -1,19 +1,35 @@
-﻿{
+{
   "name": "@kecso/webgme-domain-tools",
   "version": "0.1.0",
   "description": "Minimal-footprint CLI for WebGME domain studios",
-  "repository": { "type": "git", "url": "https://github.com/kecso/webgme-domain-tools.git" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kecso/webgme-domain-tools.git"
+  },
   "license": "MIT",
   "type": "module",
-  "bin": { "domain-tools": "./dist/cli.js" },
+  "bin": {
+    "domain-tools": "./dist/cli.js"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "config"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "npm run build && node --test test/**/*.test.js"
   },
-  "engines": { "node": ">=20" },
-  "dependencies": { "commander": "^13.1.0" },
-  "devDependencies": { "@types/node": "^22.15.3", "typescript": "^5.8.3" }
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "webgme-engine": "github:webgme/webgme-engine#6227890"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3"
+  }
 }

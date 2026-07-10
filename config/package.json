@@ -1,0 +1,6 @@
+{
+  "name": "domain-tools-gme-config",
+  "private": true,
+  "type": "commonjs",
+  "main": "index.cjs"
+}

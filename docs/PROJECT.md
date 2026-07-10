@@ -39,6 +39,17 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
+**Phase 2 — Seed model tree & session** — `review` on branch `feature/phase2-seed-model`
+
+> **Combined branch:** F5–F8 are tightly coupled (session → tree → resolution → meta), so they land together on one branch for review. Split into separate branches next phase if you prefer finer-grained review.
+
+| ID | Feature | Status | Review |
+|----|---------|--------|--------|
+| F5 | ProjectSession (memory storage + import) | `review` | `npm test` — project-session tests |
+| F6 | `tree --seed` model walk | `review` | `node dist/cli.js tree --seed StateMachine --cwd test/fixtures/sample-project` |
+| F7 | Multi-seed resolution rules | `review` | `npm test` — seed-resolution tests; ambiguous name → exit 2 |
+| F8 | `seed meta` | `review` | `node dist/cli.js seed meta --seed StateMachine --cwd test/fixtures/sample-project` |
+
 **M0 — Foundation** — `done` (merged to `main` 2026-07-10)
 
 | ID | Feature | Status | Review |
@@ -48,8 +59,6 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | F2 | `tree repo` (plugins, seeds, viz, routers) | `done` | `npm test` — repo-tree tests (all kinds × formats) |
 | F3 | `ls` compact listing | `done` | `npm test` — ls tests; see [ls vs tree](#ls-vs-tree) |
 | F4 | Test fixtures + CI on push | `done` | GitHub Actions tab after push |
-
-**Next:** Phase 2 — `feature/F5-project-session` (or next feature branch from `main`).
 
 ### M0 review notes (2026-07-09)
 
@@ -83,10 +92,10 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 ### Phase 2 — Seed model tree & session
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F5 | ProjectSession (memory storage + import) | `pending` | No HTTP server |
-| F6 | `tree --seed` model walk | `pending` | Paths for `--at` / `--select` |
-| F7 | Multi-seed resolution rules | `pending` | Exit 2 + list when ambiguous |
-| F8 | `seed meta` | `pending` | MetaAspectSet IR |
+| F5 | ProjectSession (memory storage + import) | `review` | MemoryGMEAuth + webgmex import; no HTTP server |
+| F6 | `tree --seed` model walk | `review` | `--at`, `--select`; tree / flat / json |
+| F7 | Multi-seed resolution rules | `review` | Ambiguous prefix → exit 2 + candidate list |
+| F8 | `seed meta` | `review` | MetaAspectSet IR (`seed meta --seed`) |
 
 ### Phase 3 — Plugin run
 | ID | Feature | Status | Notes |
@@ -142,7 +151,8 @@ Record of completed reviews (newest first).
 - M0 review: StateMachine fixture, catalog error tests, seed webgmex selection
 
 ### Unreleased
-- *(next: Phase 2 — ProjectSession, `tree --seed`)*
+- Phase 2 (F5–F8): ProjectSession, `tree --seed`, seed resolution, `seed meta`
+- `webgme-engine` git dep (MemoryGMEAuth); install with `npm install --ignore-scripts` if postinstall fails
 
 ---
 
@@ -158,6 +168,9 @@ node dist/cli.js tree repo --cwd c:/Work/StaMS --kind seeds,plugins --format jso
 
 # After link / global install
 domain-tools tree repo
+domain-tools tree --seed StateMachine --cwd c:/Work/StaMS
+domain-tools tree --seed StateMachine --at /1 --cwd c:/Work/StaMS
+domain-tools seed meta --seed StateMachine --cwd c:/Work/StaMS
 ```
 
 ---

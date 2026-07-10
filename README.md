@@ -11,9 +11,11 @@ Minimal-footprint CLI for WebGME domain studios. Complements [webgme-cli](https:
 ```bash
 npm install @kecso/webgme-domain-tools
 # or from a checkout:
-npm install && npm run build
+npm install --ignore-scripts && npm run build
 npm link
 ```
+
+> `webgme-engine` is installed from GitHub (MemoryGMEAuth). Use `--ignore-scripts` if the engine postinstall fails on your platform.
 
 ## Quick start
 
@@ -30,7 +32,10 @@ domain-tools ls plugins
 | Command | Description |
 |---------|-------------|
 | `tree [repo]` | Repository component tree from `webgme-setup.json` (default) |
-| `tree --seed <name>` | Model tree from an in-memory seed *(planned)* |
+| `tree --seed <name>` | Model tree from an in-memory seed |
+| `tree --seed <name> --at <path>` | Subtree from a node path |
+| `tree --seed <name> --select <paths>` | Comma-separated node paths |
+| `seed meta --seed <name>` | MetaAspectSet IR (json) |
 | `ls [kind]` | Compact component listing |
 
 More commands (`plugin run`, `generate meta-ts`, …) are tracked in [docs/PROJECT.md](docs/PROJECT.md).

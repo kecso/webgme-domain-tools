@@ -19,6 +19,14 @@ Stable refs: `seed:StateMachine`, `plugin:TextToModel`, `viz:MonacoEditor`, `rou
 | Repo (default) | `tree` / `tree repo` | SetupCatalog only |
 | Seed model | `tree --seed <name>` | In-memory import of `.webgmex` |
 
+Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-separated). Ambiguous seed names exit 2 with candidates.
+
+## seed command
+
+| Subcommand | Invocation | Output |
+|------------|------------|--------|
+| Meta IR | `seed meta --seed <name>` | MetaAspectSet JSON (`getJsonMeta` per meta node) |
+
 ## Plugin execution (planned)
 
 - Context: `--seed`, `--at`, `--select`, `--branch`

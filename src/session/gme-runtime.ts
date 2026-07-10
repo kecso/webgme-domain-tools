@@ -1,0 +1,166 @@
+import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const require = createRequire(import.meta.url);
+
+export interface GmeImportResult {
+  project: {
+    projectId: string;
+    createBranch: (name: string, hash: string) => Promise<unknown>;
+    getBranchHash: (name: string) => Promise<string>;
+    loadObject: (hash: string) => Promise<{ root: string }>;
+  };
+  core: GmeCore;
+  rootNode: GmeNode;
+  commitHash: string;
+  branchName: string;
+  rootHash: string;
+  webgmexPath: string;
+}
+
+export interface GmeNode {
+  // opaque webgme core node
+}
+
+export interface GmeCore {
+  loadRoot: (rootHash: string) => Promise<GmeNode>;
+  loadSubTree: (node: GmeNode) => Promise<GmeNode[]>;
+  loadByPath: (root: GmeNode, nodePath: string) => Promise<GmeNode | null>;
+  getPath: (node: GmeNode) => string;
+  getAttribute: (node: GmeNode, name: string) => unknown;
+  getMetaType: (node: GmeNode) => GmeNode | null;
+  isMetaNode: (node: GmeNode) => boolean;
+  getAllMetaNodes: (root: GmeNode) => Record<string, GmeNode>;
+  getJsonMeta: (node: GmeNode) => Record<string, unknown>;
+  getChildrenRelids: (node: GmeNode) => string[];
+  getChild: (node: GmeNode, relid: string) => GmeNode | null;
+}
+
+interface GmeAuthLike {
+  connect: () => Promise<void>;
+  addUser: (
+    id: string,
+    email: string,
+    password: string,
+    canCreate: boolean,
+    opts: Record<string, unknown>,
+  ) => Promise<unknown>;
+  authorizer: {
+    ENTITY_TYPES: { PROJECT: string };
+    setAccessRights: (
+      userId: string,
+      projectId: string,
+      rights: Record<string, boolean>,
+      params: Record<string, unknown>,
+    ) => Promise<unknown>;
+  };
+}
+
+interface WebgmeImportBridge {
+  importSeedProject: (
+    storage: unknown,
+    parameters: Record<string, unknown>,
+  ) => Promise<GmeImportResult>;
+  createMemoryStorage: (
+    logger: SessionLogger,
+    gmeConfig: Record<string, unknown>,
+    gmeAuth: unknown,
+  ) => {
+    openDatabase: () => Promise<void>;
+    closeDatabase: () => Promise<void>;
+    createProject: (data: Record<string, unknown>) => Promise<unknown>;
+  };
+  loadGmeConfig: () => Record<string, unknown>;
+}
+
+export type SessionLogger = {
+  info: (...args: unknown[]) => void;
+  error: (...args: unknown[]) => void;
+  debug?: (...args: unknown[]) => void;
+  warn?: (...args: unknown[]) => void;
+  fork: (name: string) => SessionLogger;
+};
+
+let cached: {
+  bridge: WebgmeImportBridge;
+  gmeConfig: Record<string, unknown>;
+  projectIdSep: string;
+} | null = null;
+
+function usesMemoryGmeAuth(gmeConfig: Record<string, unknown>): boolean {
+  const auth = gmeConfig.authentication as { gmeAuth?: { path?: string } } | undefined;
+  return (auth?.gmeAuth?.path ?? "").includes("memorygmeauth");
+}
+
+async function authorizeProject(
+  gmeAuth: GmeAuthLike,
+  gmeConfig: Record<string, unknown>,
+  projectIdSep: string,
+  projectName: string,
+): Promise<void> {
+  const guestAccount = (gmeConfig.authentication as { guestAccount: string }).guestAccount;
+  const projectId = guestAccount + projectIdSep + projectName;
+  await gmeAuth.authorizer.setAccessRights(
+    guestAccount,
+    projectId,
+    { read: true, write: true, delete: true },
+    { entityType: gmeAuth.authorizer.ENTITY_TYPES.PROJECT },
+  );
+}
+
+export function loadGmeRuntime(): {
+  bridge: WebgmeImportBridge;
+  gmeConfig: Record<string, unknown>;
+  projectIdSep: string;
+} {
+  if (cached) return cached;
+
+  const bridgePath = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "../../config/webgme-import.cjs",
+  );
+  const bridge = require(bridgePath) as WebgmeImportBridge;
+  const gmeConfig = bridge.loadGmeConfig();
+  const constants = require("webgme-engine/src/common/storage/constants") as {
+    PROJECT_ID_SEP: string;
+  };
+
+  cached = { bridge, gmeConfig, projectIdSep: constants.PROJECT_ID_SEP };
+  return cached;
+}
+
+export function createSessionLogger(gmeConfig: Record<string, unknown>): SessionLogger {
+  const Logger = require("webgme-engine/src/server/logger") as {
+    create: (name: string, config: unknown, useStdout: boolean) => SessionLogger;
+  };
+  const server = gmeConfig.server as { log: unknown };
+  return Logger.create("domain-tools", server.log, false);
+}
+
+export async function createMemoryGmeAuth(projectName: string): Promise<{
+  gmeConfig: Record<string, unknown>;
+  gmeAuth: GmeAuthLike;
+  projectIdSep: string;
+}> {
+  const { gmeConfig, projectIdSep } = loadGmeRuntime();
+  if (!usesMemoryGmeAuth(gmeConfig)) {
+    throw new Error("Expected memory GME auth in config/gme-config.cjs");
+  }
+
+  const authPath = (gmeConfig.authentication as { gmeAuth: { path: string } }).gmeAuth.path;
+  const GmeAuthClass = require(authPath) as new (
+    session: null,
+    gmeConfig: Record<string, unknown>,
+  ) => GmeAuthLike;
+
+  const gmeAuth = new GmeAuthClass(null, gmeConfig);
+  await gmeAuth.connect();
+  const guestAccount = (gmeConfig.authentication as { guestAccount: string }).guestAccount;
+  await Promise.all([
+    gmeAuth.addUser(guestAccount, guestAccount + "@example.com", guestAccount, true, { overwrite: true }),
+    gmeAuth.addUser("admin", "admin@example.com", "admin", true, { overwrite: true, siteAdmin: true }),
+  ]);
+  await authorizeProject(gmeAuth, gmeConfig, projectIdSep, projectName);
+  return { gmeConfig, gmeAuth, projectIdSep };
+}
