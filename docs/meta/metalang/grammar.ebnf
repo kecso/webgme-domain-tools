@@ -1,5 +1,6 @@
 ; MetaLang v0 grammar (EBNF) — pointer-first
 ; Connections are NOT primitive; src/dst are pointer names. See CONNECTIONS.md.
+; Cardinality: see CARDINALITY.md
 
 document     = { statement } ;
 
@@ -22,17 +23,39 @@ member       = attribute_decl
 
 attribute_decl = identifier , ":" , type_expr , ";" ;
 
-pointer_decl   = identifier , "->" , type_ref_list , [ "?" ] , ";" ;
+pointer_decl   = identifier , "->" , type_ref_list , pointer_cardinality , ";" ;
 
-set_decl       = "set" , identifier , "->" , type_ref_list , [ cardinality ] , ";" ;
+set_decl       = "set" , identifier , "->" , type_ref_list , contains_cardinality , ";" ;
 
 contains_decl  = "contains" , contains_list , ";" ;
 
 contains_list  = contains_item , { "," , contains_item } ;
 
-contains_item  = identifier , [ cardinality ] ;
+contains_item  = identifier , contains_cardinality ;
 
 type_ref_list  = type_ref , { "|" , type_ref } ;
+
+pointer_cardinality = [ pointer_cardinality_suffix ] ;
+
+pointer_cardinality_suffix = cardinality_shorthand_suffix
+                           | "[" , cardinality_token , "]" ;
+
+contains_cardinality = [ contains_cardinality_suffix ] ;
+
+contains_cardinality_suffix = cardinality_shorthand_suffix
+                            | ":" , cardinality_token ;
+
+cardinality_shorthand_suffix = "*" | "+" | "?" ;
+
+cardinality_token = exact_card
+                  | range_card
+                  | list_card ;
+
+exact_card      = integer ;
+
+range_card      = integer , ".." , integer ;
+
+list_card       = integer , { "," , integer } ;
 
 type_expr    = scalar_type | enum_type ;
 
@@ -44,11 +67,11 @@ enum_value   = identifier | string_literal ;
 
 type_ref     = identifier ;
 
-cardinality  = "*" | "+" | "?" | "1" | "0..1" ;
-
 qualified_name = identifier , { "." , identifier } ;
 
 identifier     = letter , { letter | digit | "_" } ;
+
+integer        = digit , { digit } ;
 
 string_literal = '"' , { character - '"' } , '"' ;
 

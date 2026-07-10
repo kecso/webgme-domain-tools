@@ -26,7 +26,9 @@
     },
     "cardinality": {
       "type": "string",
-      "enum": ["*", "+", "?", "1", "0..1"]
+      "minLength": 1,
+      "description": "Containment/set/pointer count. Shorthand: *, +, ?. Exact: n. Range: min..max (e.g. 2..5). Discrete allowed counts: n,m,k (e.g. 1,2,4).",
+      "pattern": "^(\\*|\\+|\\?|\\d+(\\.\\.\\d+)?|\\d+(,\\d+)+)$"
     },
     "attributeType": {
       "type": "string",

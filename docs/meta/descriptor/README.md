@@ -10,7 +10,7 @@
 - Concept **names** only (no `/G/z` paths).
 - **`extends`** when base ≠ FCO (omitted for FCO — default in MetaLang).
 - **Connection** types: empty concept body + `relationships.{Name}.from|to` (maps to WebGME `src`/`dst`).
-- **Containment** cardinality on the container's `contains` map (`*`, `+`, `?`, `1`, `0..1`).
+- **Containment** cardinality on `contains` / `sets` — see [`CARDINALITY.md`](../CARDINALITY.md) (`*`, `2..5`, `1,2,4`, …).
 - **Pointers** for non-connection refs (`event -> Event`).
 - **Sets**, **mixins**, **constraints**, meta sheets: not in v1 — add via IR or future rules.
 

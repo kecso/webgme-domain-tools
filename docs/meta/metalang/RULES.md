@@ -80,13 +80,14 @@ concept State {
 }
 ```
 
-Maps to `concepts.State.pointers.{entry,run,exit} = "Action"`. Required vs optional (`?`) is preserved when round-tripping through IR; descriptor stores target type name only.
+Maps to `concepts.State.pointers.{entry,run,exit} = "Action"`. Cardinality: `?` suffix = `0..1`; `[n]`, `[min..max]`, `[n,m,k]` for other counts — see [`../CARDINALITY.md`](../CARDINALITY.md).
 
 ## add-containment
 
 ```metalang
 concept Machine {
   contains State*, Event*, Guard*, Action*, Constraint*;
+  contains Port:2..5;
   description: string;
 }
 ```
@@ -101,12 +102,25 @@ concept Machine {
       "Event": "*",
       "Guard": "*",
       "Action": "*",
-      "Constraint": "*"
+      "Constraint": "*",
+      "Port": "2..5"
     },
     "attributes": { "description": "string" }
   }
 }
 ```
+
+Discrete allowed counts:
+
+```metalang
+contains Slot:1,2,4;
+```
+
+```json
+{ "op": "add", "path": "/concepts/Container/contains/Slot", "value": "1,2,4" }
+```
+
+See [`../CARDINALITY.md`](../CARDINALITY.md).
 
 ## add-relationship (descriptor projection only)
 
