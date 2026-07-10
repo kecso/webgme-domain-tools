@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://webgme.org/schemas/webdot/meta-descriptor/v1.json",
   "title": "MetaDescriptor",
-  "description": "Compact metamodel (webdot). Canonical definition shared with webgme/mcp MetaDescriptor v1.",
+  "description": "Compact metamodel (webdot v1). Pointer-first: no connection/relationship layer — src/dst are ordinary pointers. Contains and sets share the same member-rule shape (optional global + per-type members).",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "concepts"],
@@ -12,11 +12,6 @@
       "type": "object",
       "propertyNames": { "$ref": "#/$defs/conceptName" },
       "additionalProperties": { "$ref": "#/$defs/conceptBody" }
-    },
-    "relationships": {
-      "type": "object",
-      "propertyNames": { "$ref": "#/$defs/conceptName" },
-      "additionalProperties": { "$ref": "#/$defs/relationshipBody" }
     }
   },
   "$defs": {
@@ -27,7 +22,7 @@
     "cardinality": {
       "type": "string",
       "minLength": 1,
-      "description": "Count constraint. Shorthand: *, +, ?. Exact non-negative integer n. Inclusive range min..max for any non-negative integers with min <= max (e.g. 0..1, 2..5, 10..999).",
+      "description": "Count constraint. Shorthand: *, +, ?. Exact non-negative integer n. Inclusive range min..max (e.g. 0..1, 2..5).",
       "pattern": "^(\\*|\\+|\\?|\\d+|\\d+\\.\\.\\d+)$"
     },
     "attributeType": {
@@ -58,33 +53,40 @@
         { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/typeRef" } }
       ]
     },
-    "containsMap": {
+    "membersMap": {
       "type": "object",
       "propertyNames": { "$ref": "#/$defs/conceptName" },
-      "additionalProperties": { "$ref": "#/$defs/cardinality" }
+      "additionalProperties": { "$ref": "#/$defs/cardinality" },
+      "description": "Per-type member cardinality (child type or set member type → constraint string)."
     },
-    "relationshipBody": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["from", "to"],
-      "properties": {
-        "from": { "$ref": "#/$defs/typeRefOrList" },
-        "to": { "$ref": "#/$defs/typeRefOrList" }
-      }
+    "memberRule": {
+      "description": "Mirrors MetaLang contains[global] / set name[global] -> members. Flat map when no global limit.",
+      "oneOf": [
+        { "$ref": "#/$defs/membersMap" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["members"],
+          "properties": {
+            "global": { "$ref": "#/$defs/cardinality" },
+            "members": { "$ref": "#/$defs/membersMap" }
+          }
+        }
+      ]
     },
     "conceptBody": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "extends": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
-        "contains": { "$ref": "#/$defs/containsMap" },
+        "contains": { "$ref": "#/$defs/memberRule" },
         "pointers": {
           "type": "object",
           "additionalProperties": { "$ref": "#/$defs/typeRefOrList" }
         },
         "sets": {
           "type": "object",
-          "additionalProperties": { "$ref": "#/$defs/containsMap" }
+          "additionalProperties": { "$ref": "#/$defs/memberRule" }
         },
         "attributes": {
           "type": "object",

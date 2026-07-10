@@ -32,7 +32,7 @@
         },
         "meta": {
           "type": "object",
-          "description": "Opaque getJsonMeta payload: children, attributes, pointers, aspects, constraints, etc.",
+          "description": "Opaque getJsonMeta payload. Children/pointers include global min/max and per-type minItems/maxItems when set (see metacore.js getJsonMeta).",
           "additionalProperties": true
         }
       }

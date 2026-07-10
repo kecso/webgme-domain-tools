@@ -1,5 +1,5 @@
 // webgme-dss ModelicaBaseSeed — MetaLang v0 (pointer-first)
-// See docs/meta/CONNECTIONS.md — src/dst are pointers; relationships in JSON are projected.
+// See docs/meta/CONNECTIONS.md — src/dst are ordinary pointers; no connection layer in descriptor JSON.
 
 domain DSS.ModelicaBase
 

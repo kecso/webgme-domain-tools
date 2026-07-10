@@ -7,17 +7,17 @@ domain StaMS.StateMachine
 concept State {
   isInitial: bool;
   isFinal: bool;
-  entry -> Action?;
-  run -> Action?;
-  exit -> Action?;
+  entry -> Action;
+  run -> Action;
+  exit -> Action;
 }
 
 concept Transition {
   src -> State;
   dst -> State;
   event -> Event;
-  guard -> Guard?;
-  action -> Action?;
+  guard -> Guard;
+  action -> Action;
 }
 
 concept Machine {

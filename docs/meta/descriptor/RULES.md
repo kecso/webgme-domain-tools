@@ -22,7 +22,7 @@ With base type (omit when base is FCO):
 { "op": "remove", "path": "/concepts/OldType" }
 ```
 
-Also remove from any `contains` maps and `relationships` referencing the name.
+Also remove from any `contains` / `sets` member maps referencing the name.
 
 ## add-attribute
 
@@ -46,21 +46,31 @@ Rich attribute:
 
 ## add-pointer
 
-Non-connection pointer on a concept:
+All pointers (including `src` / `dst`):
 
 ```json
 {
   "op": "add",
-  "path": "/concepts/State/pointers/entry",
-  "value": "Action"
+  "path": "/concepts/Transition/pointers/src",
+  "value": "State"
 }
 ```
 
-Optional pointer (MetaLang `?`) is represented in WebGME meta min/max — descriptor uses target name; optionality round-trips via IR.
+Multi-target:
+
+```json
+{
+  "op": "add",
+  "path": "/concepts/RealValueFlow/pointers/dst",
+  "value": ["RealInput", "RealVectorInput"]
+}
+```
+
+Pointer IR uses structural global **`1..1`** and per-target **`-1`/`1`**. Descriptor stores target type name(s) only.
 
 ## add-containment
 
-On container concept:
+Per child type (flat map):
 
 ```json
 {
@@ -70,41 +80,52 @@ On container concept:
 }
 ```
 
+With global total-child limit:
+
+```json
+{
+  "op": "add",
+  "path": "/concepts/Machine/contains",
+  "value": {
+    "global": "0..100",
+    "members": { "State": "*", "Event": "*" }
+  }
+}
+```
+
 If `contains` is missing, add the map first:
 
 ```json
 { "op": "add", "path": "/concepts/Machine/contains", "value": { "State": "*" } }
 ```
 
-## add-relationship
-
-Connection concept + endpoints (typical pattern):
-
-```json
-[
-  { "op": "add", "path": "/concepts/Transition", "value": {} },
-  {
-    "op": "add",
-    "path": "/relationships/Transition",
-    "value": { "from": "State", "to": "State" }
-  }
-]
-```
-
-Include connection type in container `contains` when instances must be created on the canvas.
-
 ## add-set
 
-(v1 schema supports; StaMS StateMachine seed does not use sets in descriptor view yet.)
+Flat member map (no global limit):
 
 ```json
 {
   "op": "add",
   "path": "/concepts/Component/sets/ports",
-  "value": { "Pin": "*" }
+  "value": { "Pin": "*", "HeatPort": "1", "FlowPort": "0..2" }
 }
 ```
 
+With global limit (`set_pointer_meta_limits` on the set):
+
+```json
+{
+  "op": "add",
+  "path": "/concepts/Component/sets/ports",
+  "value": {
+    "global": "0..8",
+    "members": { "Pin": "*", "HeatPort": "1", "FlowPort": "0..2" }
+  }
+}
+```
+
+Each key in `members` (or in a flat map) is a member type; each value is that member's cardinality string.
+
 ## Validation
 
-After any patch batch: validate against [`schema.json`](schema.json). mcp `normalizeMetaDescriptor` applies naming and FCO attribute stripping rules.
+After any patch batch: validate against [`schema.json`](schema.json).

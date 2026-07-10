@@ -41,20 +41,78 @@
     "IntegerVectorInput": { "extends": "PortBase" },
     "ComplexInput": { "extends": "PortBase" },
     "ComplexOutput": { "extends": "PortBase" },
+    "RealValueFlow": {
+      "extends": "ConnectionBase",
+      "pointers": {
+        "src": "RealOutput",
+        "dst": ["RealInput", "RealVectorInput"]
+      }
+    },
+    "BooleanValueFlow": {
+      "extends": "ConnectionBase",
+      "pointers": {
+        "src": "BooleanOutput",
+        "dst": ["BooleanInput", "BooleanVectorInput"]
+      }
+    },
+    "IntegerValueFlow": {
+      "extends": "ConnectionBase",
+      "pointers": {
+        "src": "IntegerOutput",
+        "dst": ["IntegerInput", "IntegerVectorInput"]
+      }
+    },
+    "ComplexValueFlow": {
+      "extends": "ConnectionBase",
+      "pointers": {
+        "src": "ComplexOutput",
+        "dst": "ComplexInput"
+      }
+    },
+    "ElectricalConnection": {
+      "extends": "ConnectionBase",
+      "pointers": {
+        "src": "Pin",
+        "dst": "Pin"
+      }
+    },
+    "MechanicsRotationalConnection": {
+      "extends": "ConnectionBase",
+      "pointers": {
+        "src": "Rotational_Flange",
+        "dst": "Rotational_Flange"
+      }
+    },
+    "MechanicsTranslationalConnection": {
+      "extends": "ConnectionBase",
+      "pointers": {
+        "src": "Translational_Flange",
+        "dst": "Translational_Flange"
+      }
+    },
+    "MechanicalConnection": {
+      "extends": "ConnectionBase",
+      "pointers": {
+        "src": "Mechanical_Frame",
+        "dst": "Mechanical_Frame"
+      }
+    },
+    "HeatFlow": {
+      "extends": "ConnectionBase",
+      "pointers": {
+        "src": "HeatPort",
+        "dst": "HeatPort"
+      }
+    },
+    "FluidHeatFlow": {
+      "extends": "ConnectionBase",
+      "pointers": {
+        "src": "FlowPort",
+        "dst": "FlowPort"
+      }
+    },
     "Documentation": {},
     "SimulationResult": {},
     "SimulationResults": {}
-  },
-  "relationships": {
-    "RealValueFlow": { "from": "RealOutput", "to": ["RealInput", "RealVectorInput"] },
-    "BooleanValueFlow": { "from": "BooleanOutput", "to": ["BooleanInput", "BooleanVectorInput"] },
-    "IntegerValueFlow": { "from": "IntegerOutput", "to": ["IntegerInput", "IntegerVectorInput"] },
-    "ComplexValueFlow": { "from": "ComplexOutput", "to": "ComplexInput" },
-    "ElectricalConnection": { "from": "Pin", "to": "Pin" },
-    "MechanicsRotationalConnection": { "from": "Rotational_Flange", "to": "Rotational_Flange" },
-    "MechanicsTranslationalConnection": { "from": "Translational_Flange", "to": "Translational_Flange" },
-    "MechanicalConnection": { "from": "Mechanical_Frame", "to": "Mechanical_Frame" },
-    "HeatFlow": { "from": "HeatPort", "to": "HeatPort" },
-    "FluidHeatFlow": { "from": "FlowPort", "to": "FlowPort" }
   }
 }

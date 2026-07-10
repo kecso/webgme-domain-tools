@@ -36,7 +36,7 @@ concept InitialState extends State;
 ]
 ```
 
-**Source of truth:** `core.getBase(metaNode)`; compare base concept name to `"FCO"`. Same rule as mcp `buildMetaDescriptorFromCore` (`extends` field omitted for FCO).
+**Source of truth:** `core.getBase(metaNode)`; emit `extends` only when base name ≠ `FCO`.
 
 ## set-base / change-inheritance
 
@@ -72,23 +72,47 @@ concept State {
 
 ## add-pointer
 
+Pointers name allowed target type(s). **No cardinality** in MetaLang. IR pointer global is **`1..1`**, per-target **`min: -1`, `max: 1`** (core + StaMS seeds); translators emit type names only.
+
 ```metalang
 concept State {
-  entry -> Action?;
-  run -> Action?;
-  exit -> Action?;
+  entry -> Action;
+  run -> Action;
+  exit -> Action;
+}
+
+concept Transition {
+  src -> State;
+  dst -> State;
+  event -> Event;
+  guard -> Guard;
+  action -> Action;
+}
+
+concept RealValueFlow extends ConnectionBase {
+  src -> RealOutput;
+  dst -> RealInput | RealVectorInput;
 }
 ```
 
-Maps to `concepts.State.pointers.{entry,run,exit} = "Action"`. Cardinality: `?` suffix = `0..1`; `[n]`, `[min..max]`, `[n,m,k]` for other counts — see [`../CARDINALITY.md`](../CARDINALITY.md).
+Maps to `concepts.*.pointers` (type string or string array). No separate connection type — see [`../CONNECTIONS.md`](../CONNECTIONS.md).
 
 ## add-containment
+
+Optional **global** total-child limit — brackets on `contains`:
+
+```metalang
+concept Machine {
+  contains[0..100] State*, Event*, Guard*, Action*, Constraint*, Port:2..5;
+  description: string;
+}
+```
+
+Per-type only (no global cap):
 
 ```metalang
 concept Machine {
   contains State*, Event*, Guard*, Action*, Constraint*;
-  contains Port:2..5;
-  description: string;
 }
 ```
 
@@ -98,63 +122,82 @@ concept Machine {
   "path": "/concepts/Machine",
   "value": {
     "contains": {
-      "State": "*",
-      "Event": "*",
-      "Guard": "*",
-      "Action": "*",
-      "Constraint": "*",
-      "Port": "2..5"
+      "global": "0..100",
+      "members": {
+        "State": "*",
+        "Event": "*",
+        "Guard": "*",
+        "Action": "*",
+        "Constraint": "*",
+        "Port": "2..5"
+      }
     },
     "attributes": { "description": "string" }
   }
 }
 ```
 
-Discrete allowed counts:
+Per-type patch on flat map:
+
+```json
+{ "op": "add", "path": "/concepts/Machine/contains/Port", "value": "2..5" }
+```
+
+Any non-negative `min..max` with `min ≤ max` is valid. See [`../CARDINALITY.md`](../CARDINALITY.md).
+
+## add-set
+
+Per-member cardinality; optional **global** limit — brackets on set name:
 
 ```metalang
-contains Port:2..5, Label:0..1, Slot:10..100;
+concept Component {
+  set ports[0..8] -> Pin*, HeatPort:1, FlowPort:0..2;
+}
+```
+
+Flat map (no global):
+
+```metalang
+concept Component {
+  set ports -> Pin*, HeatPort:1;
+}
 ```
 
 ```json
 {
   "op": "add",
-  "path": "/concepts/Machine/contains/Port",
-  "value": "2..5"
+  "path": "/concepts/Component/sets/ports",
+  "value": {
+    "global": "0..8",
+    "members": { "Pin": "*", "HeatPort": "1", "FlowPort": "0..2" }
+  }
 }
 ```
 
-Any non-negative `min..max` with `min ≤ max` is valid. See [`../CARDINALITY.md`](../CARDINALITY.md).
-
-## add-relationship (descriptor projection only)
-
-In **descriptor JSON**, `relationships` is a compact projection of `src`/`dst` pointers — not a separate meta primitive. See [`../CONNECTIONS.md`](../CONNECTIONS.md).
-
-**MetaLang** defines pointers instead:
+## Transition example (pointers only)
 
 ```metalang
 concept Transition {
   src -> State;
   dst -> State;
   event -> Event;
-  guard -> Guard?;
-  action -> Action?;
+  guard -> Guard;
+  action -> Action;
 }
 ```
-
-Descriptor equivalent (mcp):
 
 ```json
 [
   { "op": "add", "path": "/concepts/Transition", "value": {} },
-  { "op": "add", "path": "/relationships/Transition", "value": { "from": "State", "to": "State" } },
+  { "op": "add", "path": "/concepts/Transition/pointers/src", "value": "State" },
+  { "op": "add", "path": "/concepts/Transition/pointers/dst", "value": "State" },
   { "op": "add", "path": "/concepts/Transition/pointers/event", "value": "Event" },
   { "op": "add", "path": "/concepts/Transition/pointers/guard", "value": "Guard" },
   { "op": "add", "path": "/concepts/Transition/pointers/action", "value": "Action" }
 ]
 ```
 
-Multi-target pointer (Modelica `RealValueFlow`):
+Multi-target `dst` (Modelica `RealValueFlow`):
 
 ```metalang
 concept RealValueFlow extends ConnectionBase {
@@ -166,8 +209,8 @@ concept RealValueFlow extends ConnectionBase {
 ```json
 {
   "op": "add",
-  "path": "/relationships/RealValueFlow",
-  "value": { "from": "RealOutput", "to": ["RealInput", "RealVectorInput"] }
+  "path": "/concepts/RealValueFlow/pointers/dst",
+  "value": ["RealInput", "RealVectorInput"]
 }
 ```
 
@@ -179,7 +222,6 @@ Parser/editor emits the inverse JSON Patch operations (`remove`, `replace`) per 
 
 | Rule | WebGME feature |
 |------|----------------|
-| `add-set` | Meta sets |
 | `add-mixin` | Mixins |
 | `add-constraint` | Meta constraints |
 | `add-aspect` | Aspects |

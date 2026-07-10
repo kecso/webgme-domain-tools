@@ -132,9 +132,9 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 ### Phase 2½ — Meta presentation
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F16a | Meta specs + examples | `in progress` | `docs/meta/` — IR schema, descriptor (mcp-aligned), MetaLang EBNF + RULES |
+| F16a | Meta specs + examples | `review` | `docs/meta/` — pointer-first descriptor (no `relationships`), MetaLang EBNF + RULES |
 | F16b | `seed meta --format descriptor` | `pending` | `irToDescriptor` |
-| F16c | `seed meta --format metalang` | `pending` | Human-readable; rules separate from grammar |
+| F16c | `seed meta --format metalang` | `pending` | `descriptorToMetalang` |
 | F16d | MetaLang parser (Langium optional) | `deferred` | Authoring path metalang → descriptor |
 
 ### Phase 3 — Plugin run

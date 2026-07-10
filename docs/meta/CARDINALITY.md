@@ -1,99 +1,139 @@
 # Cardinality
 
-How many instances of a contained child, set member, or pointer target are allowed. WebGME core stores **min** and **max** per slot in `getJsonMeta` (`minItems` / `maxItems`, or pointer `min` / `max`). **`max = -1`** means unbounded (no upper limit).
+WebGME relational meta rules — **containment**, **set membership**, and (structurally) **pointers** — use a **two-level** limit model. **`-1` in IR means “no bound”** (unset).
 
-MetaLang and descriptor JSON use a **string** that maps to those integers. **Any inclusive range of non-negative integers** is valid.
+Verified in [`webgme-engine` `metacore.js`](https://github.com/webgme/webgme-engine/blob/6227890/src/common/core/metacore.js): `getJsonMeta` reads global `min`/`max` and per-type `minItems`/`maxItems` from the same meta-node attributes.
 
-## Primary form: `min..max`
+## Two levels: global and per-type
 
-Any pair of non-negative integers with `min ≤ max`:
+| Level | Core API | Meaning |
+|-------|----------|---------|
+| **Global** | `set_children_meta_limits`, `set_pointer_meta_limits` | Total count across **all** types in that rule |
+| **Per-type** | `set_child_meta`, `set_pointer_meta_target` | Count for **each** allowed child/member/target type |
 
-| String | Core |
-|--------|------|
-| `0..1` | min=0, max=1 |
-| `2..5` | min=2, max=5 |
-| `10..100` | min=10, max=100 |
-| `0..0` | min=0, max=0 (none allowed) |
-| `3..3` | min=3, max=3 (same as exact `3`) |
+When reading or writing meta, apply **both** levels.
 
-MetaLang:
+### Sentinel: `-1`
 
-```metalang
-contains Port:2..5;
-guard -> Guard[0..1];
-set terminals -> Pin[1..8];
-```
+At any level in IR, **`-1`** (or omitted attribute) means no rule at that bound. Per-type defaults from `set_child_meta` / `set_pointer_meta_target` use `-1` when not specified.
 
-Descriptor JSON:
+## IR (`getJsonMeta`) shape
+
+| Rule | Global in IR | Per-type in IR |
+|------|--------------|----------------|
+| `meta.children` | `min`, `max` (omitted when unset) | `items[]`, `minItems[]`, `maxItems[]` |
+| `meta.pointers.{name}` | `min`, `max` | `items[]`, `minItems[]`, `maxItems[]` |
+
+Sets are stored under `meta.pointers` in IR; core treats `max === 1` as a pointer, otherwise a set ([`metarules.js` `filterPointerRules`](https://github.com/webgme/webgme-engine/blob/6227890/src/common/core/users/metarules.js)).
+
+### Pointer global limits (structural)
+
+StaMS `Transition.src` (actual seed):
 
 ```json
-"contains": { "Port": "2..5", "Label": "0..1" }
+"src": {
+  "min": 1,
+  "max": 1,
+  "items": ["/G/z"],
+  "minItems": [-1],
+  "maxItems": [1]
+}
 ```
 
-**F16b rule:** parse `min..max` with `parseInt`; pass `min` and `max` to `setChildMeta` / pointer meta as-is. Reject only when `min > max` or values are not finite non-negative integers.
+Core [`getPointerMeta` example](https://github.com/webgme/webgme-engine/blob/6227890/src/common/core/core.js): global **`min: 1`, `max: 1`**; per-target **`min: -1`, `max: 1`**. Global `max: 1` is what distinguishes a pointer from a set. Pointers are **not** surfaced in descriptor/MetaLang cardinality; rebuild with `setPointerMetaLimits(…, 1, 1)` and per-target `-1`/`1` defaults.
 
-## Exact count: `n`
+### Containment example
 
-A lone non-negative integer is shorthand for `n..n`:
+StaMS `Machine` (no global cap set — `min`/`max` absent):
 
-| String | Core |
-|--------|------|
-| `1` | min=1, max=1 |
-| `0` | min=0, max=0 |
+```json
+"children": {
+  "items": ["/G/g", "/G/z", "/G/v", "/G/p", "/G/W"],
+  "minItems": [-1, -1, -1, -1, -1],
+  "maxItems": [-1, -1, -1, -1, -1]
+}
+```
 
-## Unbounded shorthand
+## Descriptor / MetaLang — global + per-type (contains / sets)
 
-When the upper bound is unlimited, use suffix or bracket forms (maps to `max = -1`):
+**Domain cardinality** for containment and sets is modeled at **both** levels in descriptor v1 and MetaLang v0.
 
-| String | Core |
-|--------|------|
-| `*` | min=0, max=-1 |
-| `+` | min=1, max=-1 |
-| `?` | min=0, max=1 (same as `0..1`) |
+### Containment
 
 ```metalang
-contains State*, Item:2..*;   ; 2..* optional sugar for min=2, max=-1 (F16d)
-guard -> Guard?;
+contains[0..100] State*, Event*, Guard*, Action*, Constraint*;
 ```
 
-`2..*` is optional sugar for `min=2, max=-1` — implement when rendering open lower-bounded ranges from IR.
-
-## Surface syntax (MetaLang)
-
-| Location | Examples |
-|----------|----------|
-| Containment suffix | `State*`, `Port+` |
-| Containment colon | `Port:2..5`, `Slot:1`, `Label:0..1` |
-| Pointer suffix | `guard -> Guard?` |
-| Pointer bracket | `entry -> Action[1]`, `items -> Node[2..5]` |
-
-## Descriptor schema
-
-[`descriptor/schema.json`](descriptor/schema.json) — `$defs/cardinality` accepts:
-
-- `*`, `+`, `?`
-- `n` (exact)
-- `min..max` (any non-negative integers)
-
-No fixed enum; no upper limit on numeric magnitude in the string.
-
-## Optional: discrete lists (`1,2,4`)
-
-Not required for core round-trip. Authors may use comma-separated counts for documentation; **F16b** may map to spanning range `min..max` over the listed values or defer to constraints. Prefer **`min..max`** when the intent is a contiguous allowed band.
-
-## mcp alignment
-
-mcp documents a small enum subset (`*`, `+`, `?`, `1`, `0..1`) for prompts. **webdot** accepts the full range grammar; subset values remain valid mcp documents.
-
-## Parser (F16b reference)
-
-```text
-cardinality :=
-    "*" | "+" | "?"
-  | NONNEG_INT                    → min=max=N
-  | NONNEG_INT ".." NONNEG_INT    → min, max (require min ≤ max)
+```json
+"contains": {
+  "global": "0..100",
+  "members": {
+    "State": "*",
+    "Event": "*",
+    "Guard": "*",
+    "Action": "*",
+    "Constraint": "*"
+  }
+}
 ```
 
-`NONNEG_INT` = one or more ASCII digits, value ≥ 0.
+Flat map when no global cap (same as MetaLang `contains State*, …`):
 
-IR → string: use mcp `cardinalityFromParsed` logic (`min`/`max` → `*`, `+`, `n`, or `min..max`).
+```json
+"contains": { "State": "*", "Event": "*" }
+```
+
+### Sets
+
+Flat member map when no global limit:
+
+```json
+"sets": { "ports": { "Pin": "*", "HeatPort": "1" } }
+```
+
+With global limit:
+
+```metalang
+set ports[0..8] -> Pin*, HeatPort:1, FlowPort:0..2;
+```
+
+```json
+"sets": {
+  "ports": {
+    "global": "0..8",
+    "members": { "Pin": "*", "HeatPort": "1", "FlowPort": "0..2" }
+  }
+}
+```
+
+### Per-type only (unchanged)
+
+```metalang
+contains State*, Port:2..5, Label:0..1;
+set ports -> Pin*, HeatPort:1;
+```
+
+## String form
+
+| String | Core (per bound) |
+|--------|------------------|
+| `0..1` | min=0, max=1 |
+| `2..5` | min=2, max=5 |
+| `3` | min=max=3 |
+| `*` | min=0, max=-1 |
+| `+` | min=1, max=-1 |
+| `?` | min=0, max=1 |
+
+IR → string: map **`-1`** to unbounded at that bound, then mcp-style `cardinalityFromParsed`.
+
+## Translator checklist (F16b+)
+
+| IR field | Descriptor / MetaLang |
+|----------|------------------------|
+| `children.min/max` | `contains.global` (omit if unset) |
+| `children.minItems[i]` / `maxItems[i]` | `contains` flat map or `contains.members` |
+| `pointers.{set}.min/max` (set, max≠1) | `sets.{name}.global` |
+| `pointers.{set}.minItems/maxItems` | `sets.{name}` flat map or `.members` |
+| `pointers.{ptr}` (max=1) | target types only; rebuild global `1..1` |
+
+Details: [`ir/README.md`](ir/README.md).
