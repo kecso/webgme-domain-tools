@@ -113,14 +113,18 @@ concept Machine {
 Discrete allowed counts:
 
 ```metalang
-contains Slot:1,2,4;
+contains Port:2..5, Label:0..1, Slot:10..100;
 ```
 
 ```json
-{ "op": "add", "path": "/concepts/Container/contains/Slot", "value": "1,2,4" }
+{
+  "op": "add",
+  "path": "/concepts/Machine/contains/Port",
+  "value": "2..5"
+}
 ```
 
-See [`../CARDINALITY.md`](../CARDINALITY.md).
+Any non-negative `min..max` with `min ≤ max` is valid. See [`../CARDINALITY.md`](../CARDINALITY.md).
 
 ## add-relationship (descriptor projection only)
 

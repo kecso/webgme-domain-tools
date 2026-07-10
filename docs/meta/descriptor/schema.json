@@ -27,8 +27,8 @@
     "cardinality": {
       "type": "string",
       "minLength": 1,
-      "description": "Containment/set/pointer count. Shorthand: *, +, ?. Exact: n. Range: min..max (e.g. 2..5). Discrete allowed counts: n,m,k (e.g. 1,2,4).",
-      "pattern": "^(\\*|\\+|\\?|\\d+(\\.\\.\\d+)?|\\d+(,\\d+)+)$"
+      "description": "Count constraint. Shorthand: *, +, ?. Exact non-negative integer n. Inclusive range min..max for any non-negative integers with min <= max (e.g. 0..1, 2..5, 10..999).",
+      "pattern": "^(\\*|\\+|\\?|\\d+|\\d+\\.\\.\\d+)$"
     },
     "attributeType": {
       "type": "string",

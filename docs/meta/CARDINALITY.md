@@ -1,50 +1,99 @@
 # Cardinality
 
-How many instances of a contained child, set member, or pointer target are allowed. WebGME core stores **min** and **max** per child/pointer/set slot in `getJsonMeta` (`minItems` / `maxItems` arrays, or `min` / `max` on pointer defs). `max = -1` means unbounded.
+How many instances of a contained child, set member, or pointer target are allowed. WebGME core stores **min** and **max** per slot in `getJsonMeta` (`minItems` / `maxItems`, or pointer `min` / `max`). **`max = -1`** means unbounded (no upper limit).
 
-MetaLang and descriptor JSON use a **string** form that round-trips through `irToDescriptor` / `descriptorToCore`.
+MetaLang and descriptor JSON use a **string** that maps to those integers. **Any inclusive range of non-negative integers** is valid.
 
-## Forms
+## Primary form: `min..max`
 
-| Form | Meaning | Core (typical) |
-|------|---------|----------------|
-| `*` | Zero or more | min=0, max=-1 |
-| `+` | One or more | min=1, max=-1 |
-| `?` | Zero or one | min=0, max=1 |
-| `n` | Exactly *n* | min=max=n |
-| `min..max` | Inclusive range | min, max |
-| `n,m,k` | Exactly **one of** these counts (discrete set) | see below |
+Any pair of non-negative integers with `min ≤ max`:
 
-**Examples:** `*`, `+`, `?`, `1`, `0..1`, `2..5`, `1,2,4`
+| String | Core |
+|--------|------|
+| `0..1` | min=0, max=1 |
+| `2..5` | min=2, max=5 |
+| `10..100` | min=10, max=100 |
+| `0..0` | min=0, max=0 (none allowed) |
+| `3..3` | min=3, max=3 (same as exact `3`) |
 
-Shorthand `*`, `+`, `?` may appear as a **suffix** on containment (`State*`) or after pointers (`guard -> Guard?`).
-
-Colon or bracket form is used when the shorthand is not enough:
+MetaLang:
 
 ```metalang
-contains State:2..5, Port:1,2,4;
-entry -> Action[1];
+contains Port:2..5;
+guard -> Guard[0..1];
+set terminals -> Pin[1..8];
 ```
 
-Descriptor JSON uses the same strings as values in `contains`, `sets`, and (future) pointer cardinality metadata.
+Descriptor JSON:
 
-## Discrete lists (`1,2,4`)
+```json
+"contains": { "Port": "2..5", "Label": "0..1" }
+```
 
-WebGME core meta is **min/max only** — it cannot express “exactly 1 or 2 or 4 instances” in one slot without constraints. The **language** allows discrete lists so:
+**F16b rule:** parse `min..max` with `parseInt`; pass `min` and `max` to `setChildMeta` / pointer meta as-is. Reject only when `min > max` or values are not finite non-negative integers.
 
-- Authors can write intent in MetaLang / descriptor.
-- Tools may map to core using the spanning range (`1..4`) plus optional **constraints** (IR layer), or reject until constraints are supported.
+## Exact count: `n`
 
-Document the mapping in F16b when we hit a seed that needs it.
+A lone non-negative integer is shorthand for `n..n`:
+
+| String | Core |
+|--------|------|
+| `1` | min=1, max=1 |
+| `0` | min=0, max=0 |
+
+## Unbounded shorthand
+
+When the upper bound is unlimited, use suffix or bracket forms (maps to `max = -1`):
+
+| String | Core |
+|--------|------|
+| `*` | min=0, max=-1 |
+| `+` | min=1, max=-1 |
+| `?` | min=0, max=1 (same as `0..1`) |
+
+```metalang
+contains State*, Item:2..*;   ; 2..* optional sugar for min=2, max=-1 (F16d)
+guard -> Guard?;
+```
+
+`2..*` is optional sugar for `min=2, max=-1` — implement when rendering open lower-bounded ranges from IR.
+
+## Surface syntax (MetaLang)
+
+| Location | Examples |
+|----------|----------|
+| Containment suffix | `State*`, `Port+` |
+| Containment colon | `Port:2..5`, `Slot:1`, `Label:0..1` |
+| Pointer suffix | `guard -> Guard?` |
+| Pointer bracket | `entry -> Action[1]`, `items -> Node[2..5]` |
+
+## Descriptor schema
+
+[`descriptor/schema.json`](descriptor/schema.json) — `$defs/cardinality` accepts:
+
+- `*`, `+`, `?`
+- `n` (exact)
+- `min..max` (any non-negative integers)
+
+No fixed enum; no upper limit on numeric magnitude in the string.
+
+## Optional: discrete lists (`1,2,4`)
+
+Not required for core round-trip. Authors may use comma-separated counts for documentation; **F16b** may map to spanning range `min..max` over the listed values or defer to constraints. Prefer **`min..max`** when the intent is a contiguous allowed band.
 
 ## mcp alignment
 
-[webgme/mcp `meta-descriptor.schema.json`](https://github.com/webgme/mcp/blob/main/docs/schemas/meta-descriptor.schema.json) documents an **enum subset** (`*`, `+`, `?`, `1`, `0..1`) for GMEBot prompts. **webdot** uses the full string grammar above; values in the subset remain valid mcp documents.
+mcp documents a small enum subset (`*`, `+`, `?`, `1`, `0..1`) for prompts. **webdot** accepts the full range grammar; subset values remain valid mcp documents.
 
-## Schema
+## Parser (F16b reference)
 
-See [`descriptor/schema.json`](descriptor/schema.json) — `$defs/cardinality` is a string matching the grammar, not a fixed enum.
+```text
+cardinality :=
+    "*" | "+" | "?"
+  | NONNEG_INT                    → min=max=N
+  | NONNEG_INT ".." NONNEG_INT    → min, max (require min ≤ max)
+```
 
-## MetaLang grammar
+`NONNEG_INT` = one or more ASCII digits, value ≥ 0.
 
-See [`metalang/grammar.ebnf`](metalang/grammar.ebnf) — `cardinality_token`, suffix and bracket forms on pointers and containment.
+IR → string: use mcp `cardinalityFromParsed` logic (`min`/`max` → `*`, `+`, `n`, or `min..max`).

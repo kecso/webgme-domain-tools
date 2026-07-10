@@ -14,7 +14,7 @@ Human-readable metamodel surface syntax. **Target semantics:** MetaDescriptor v1
 1. **Concise** — omit FCO/META system nodes; `name` attribute is implicit on all concepts.
 2. **Inheritance explicit** — when a concept’s base is **not FCO**, MetaLang **must** show `extends Base` (see below).
 3. **Pointer-first** — meta has pointers and sets, not connections. `src`/`dst` are pointer names; “connection” is a [projection](../CONNECTIONS.md). MetaLang lists pointers explicitly; descriptor `relationships` is derived for compact JSON.
-4. **Readable** — `contains Child*` for containment; `contains Child:2..5` or `Child:1,2,4` for arbitrary counts; `dst -> A | B` for multi-target pointers.
+4. **Readable** — `contains Child*` or `contains Port:2..5` (any integer range); `dst -> A | B` for multi-target pointers.
 5. **Rules separate from grammar** — grammar defines parsing; RULES define meaning and mapping to JSON Patch / descriptor ops.
 
 ## Inheritance (`extends`)

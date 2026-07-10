@@ -38,7 +38,7 @@ webdot seed meta --seed StateMachine --format metalang
 |-------|------|-------------|
 | IR | [`ir/schema.json`](ir/schema.json) | Implicit: one node per meta concept, full `getJsonMeta` blob |
 | Descriptor | [`descriptor/schema.json`](descriptor/schema.json) | [`descriptor/RULES.md`](descriptor/RULES.md) — JSON Patch on descriptor (RFC 6902) |
-| Cardinality | [`CARDINALITY.md`](CARDINALITY.md) | String forms: `*`, `2..5`, `1,2,4`, … (not limited to mcp enum subset) |
+| Cardinality | [`CARDINALITY.md`](CARDINALITY.md) | Any `min..max` range + `*`, `+`, `?`, exact `n` |
 | MetaLang | [`metalang/grammar.ebnf`](metalang/grammar.ebnf) | [`metalang/RULES.md`](metalang/RULES.md) — statement-level edit rules |
 
 Descriptor schema is **aligned with webgme/mcp** for interchange; **cardinality** is a superset string (mcp’s five shorthand values remain valid).

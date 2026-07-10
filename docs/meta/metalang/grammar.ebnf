@@ -48,14 +48,11 @@ contains_cardinality_suffix = cardinality_shorthand_suffix
 cardinality_shorthand_suffix = "*" | "+" | "?" ;
 
 cardinality_token = exact_card
-                  | range_card
-                  | list_card ;
+                  | range_card ;
 
 exact_card      = integer ;
 
 range_card      = integer , ".." , integer ;
-
-list_card       = integer , { "," , integer } ;
 
 type_expr    = scalar_type | enum_type ;
 
