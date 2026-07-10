@@ -18,7 +18,7 @@ test("loadSetupCatalog throws when webgme-setup.json is missing", () => {
 
 test("loadSetupCatalog reads all component kinds", () => {
   const catalog = loadSetupCatalog(fixture);
-  assert.equal(catalog.seeds.length, 2);
+  assert.equal(catalog.seeds.length, 3);
   assert.equal(catalog.plugins.length, 4);
   assert.equal(catalog.visualizers.length, 1);
   assert.equal(catalog.routers.length, 1);
@@ -31,6 +31,15 @@ test("StateMachine seed uses matching webgmex only", () => {
   assert.equal(seed.artifacts.length, 1);
   assert.match(seed.artifacts[0], /StateMachine\.webgmex$/);
   assert.ok(seed.notes.some((n) => n.startsWith("ignored .webgmex: _StateMachine_")));
+});
+
+test("StateModel seed uses matching webgmex only", () => {
+  const catalog = loadSetupCatalog(fixture);
+  const seed = catalog.seeds.find((s) => s.name === "StateModel");
+  assert.ok(seed);
+  assert.equal(seed.artifacts.length, 1);
+  assert.match(seed.artifacts[0], /StateModel\.webgmex$/);
+  assert.ok(seed.notes.some((n) => n.startsWith("ignored .webgmex: _StateModel_")));
 });
 
 test("EmptySeed notes missing webgmex", () => {

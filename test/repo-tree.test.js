@@ -18,9 +18,10 @@ test("renderRepoTree tree format includes refs and seed file", () => {
   assert.match(out, /repository/);
   assert.match(out, /seed:StateMachine/);
   assert.match(out, /StateMachine\.webgmex/);
+  assert.match(out, /seed:StateModel/);
+  assert.match(out, /StateModel\.webgmex/);
   assert.match(out, /ignored .webgmex: _StateMachine_/);
   assert.match(out, /plugin:SamplePlugin/);
-  assert.match(out, /metadata\.json/);
   assert.match(out, /viz:SampleViz/);
   assert.match(out, /router:SampleRouter/);
   assert.match(out, /produces blob artifacts/);

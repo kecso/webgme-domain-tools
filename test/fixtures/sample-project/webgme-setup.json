@@ -18,6 +18,9 @@
       "StateMachine": {
         "src": "src/seeds/StateMachine"
       },
+      "StateModel": {
+        "src": "src/seeds/StateModel"
+      },
       "EmptySeed": {
         "src": "src/seeds/EmptySeed"
       }

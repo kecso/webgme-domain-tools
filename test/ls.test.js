@@ -9,7 +9,7 @@ const fixture = path.join(__dirname, "fixtures", "sample-project");
 
 test("runLsCommand lists all kinds by default", () => {
   const out = runLsCommand(fixture);
-  assert.match(out, /seeds:\n  local: .*StateMachine/);
+  assert.match(out, /seeds:\n  local: .*StateMachine.*StateModel/);
   assert.match(out, /plugins:\n  local: .*SamplePlugin/);
   assert.match(out, /visualizers:\n  local: SampleViz/);
   assert.match(out, /routers:\n  local: SampleRouter/);
