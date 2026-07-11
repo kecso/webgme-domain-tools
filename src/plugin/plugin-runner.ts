@@ -8,7 +8,7 @@ import {
 import { createSessionLogger, loadGmeConfigForProject, loadGmeRuntime, type SessionLogger } from "../session/gme-runtime.js";
 import { resolvePluginConfig } from "./config.js";
 import { buildPluginInfo, loadPluginMetadataFromPath, renderPluginInfo } from "./metadata.js";
-import { buildPluginRunContext } from "./run-context.js";
+import { buildPluginRunContext, formatPluginRunContext } from "./run-context.js";
 import { artifactWarnings, serializePluginResult } from "./result-format.js";
 import {
   createCatalogLoader,
@@ -167,11 +167,7 @@ export async function runPluginRunCommand(
       const payload: PluginRunOutput = {
         success,
         plugin: pluginSource.name,
-        seed: modelSource.name,
-        branch: runContext.branchName,
-        activeNode: runContext.activeNode,
-        activeSelection: runContext.activeSelection,
-        config,
+        context: formatPluginRunContext(modelSource, runContext, config),
         result: serialized,
         warnings,
         persisted,

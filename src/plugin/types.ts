@@ -1,3 +1,5 @@
+import type { PluginRunContextOutput } from "./run-context.js";
+
 export type PluginValueType = "string" | "boolean" | "number" | "integer";
 
 export interface PluginConfigEntry {
@@ -54,11 +56,7 @@ export interface PluginInfo {
 export interface PluginRunOutput {
   success: boolean;
   plugin: string;
-  seed: string;
-  branch: string;
-  activeNode: string;
-  activeSelection: string[];
-  config: Record<string, unknown>;
+  context: PluginRunContextOutput;
   result: SerializedPluginResult;
   warnings: string[];
   persisted: boolean;

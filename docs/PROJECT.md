@@ -53,6 +53,13 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 **Review gate:** `npm test` (99 tests, ~95% line coverage) · `docs/DESIGN.md` plugin + session sections
 
+### Phase 3 review notes (2026-07-11)
+
+| ID | Feedback | Action |
+|----|----------|--------|
+| F9–F19 | CLI flag surface growing; long commands hard to compose | **B8** backlog — trim rarely used flags or add tutorial recipes / `webdot examples` (future) |
+| F12 | Plugin output should reflect full context, not just seed name | JSON `context`: `project`, `activeNode`, `activeSelection`, `branch`, `config` with explicit defaults (`/`, `[]`, `master`) |
+
 **Next: Phase 3½ — Stateful session shell** — `pending` (planned **before Phase 4**)
 
 | ID | Feature | Status | Review |
@@ -230,6 +237,7 @@ Tasks not tied to a single milestone — pick up anytime.
 | B5 | refactor | Metadata convention `domainTools.producesArtifacts` | low |
 | B6 | optimize | Cache SetupCatalog per process for multi-subcommand REPL (future) | low |
 | B7 | meta | See **F17** (Phase 4) — library/namespace in IR, descriptor, MetaLang, traversal | medium |
+| B8 | streamline | CLI complexity: trim rare flags or `webdot examples` tutorial recipes / scenario printouts | medium |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
 

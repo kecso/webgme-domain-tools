@@ -137,6 +137,8 @@ test("cli plugin run NoOpPlugin succeeds with dry-run", () => {
   const payload = JSON.parse(result.stdout);
   assert.equal(payload.success, true);
   assert.equal(payload.plugin, "NoOpPlugin");
+  assert.equal(payload.context.project.name, "StateMachine");
+  assert.equal(payload.context.activeNode, "/");
 });
 
 test("cli plugin run ThrowPlugin exits 1", () => {

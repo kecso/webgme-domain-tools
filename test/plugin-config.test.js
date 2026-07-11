@@ -10,7 +10,7 @@ import {
   parseSetPairs,
   resolvePluginConfig,
 } from "../dist/plugin/config.js";
-import { buildPluginRunContext } from "../dist/plugin/run-context.js";
+import { buildPluginRunContext, formatPluginRunContext } from "../dist/plugin/run-context.js";
 import { artifactWarnings } from "../dist/plugin/result-format.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -80,6 +80,21 @@ test("buildPluginRunContext uses first selection as active node", () => {
   assert.equal(ctx.activeNode, "/1");
   assert.deepEqual(ctx.activeSelection, ["/1", "/2"]);
   assert.equal(ctx.branchName, "dev");
+});
+
+test("formatPluginRunContext shows project and default active node", () => {
+  const ctx = buildPluginRunContext({});
+  const out = formatPluginRunContext(
+    { name: "StateMachine", webgmexPath: "/tmp/StateMachine.webgmex" },
+    ctx,
+    { message: "hi" },
+  );
+  assert.equal(out.project.name, "StateMachine");
+  assert.equal(out.project.webgmex, "/tmp/StateMachine.webgmex");
+  assert.equal(out.activeNode, "/");
+  assert.deepEqual(out.activeSelection, []);
+  assert.equal(out.branch, "master");
+  assert.deepEqual(out.config, { message: "hi" });
 });
 
 test("artifactWarnings when blobs are not persisted", () => {

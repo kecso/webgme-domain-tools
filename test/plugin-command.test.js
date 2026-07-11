@@ -56,6 +56,10 @@ test("runPluginRunCommand executes EchoPlugin successfully", async () => {
   });
   assert.equal(result.success, true);
   const payload = JSON.parse(result.output);
+  assert.equal(payload.context.project.name, "StateMachine");
+  assert.equal(payload.context.activeNode, "/");
+  assert.deepEqual(payload.context.activeSelection, []);
+  assert.equal(payload.context.branch, "master");
   assert.equal(payload.result.messages[0].message, "test-run");
   assert.equal(result.persisted, false);
   assert.equal(result.warnings.length, 0);
@@ -190,6 +194,7 @@ test("runPluginRunCommand runs via --plugin-dir and --webgmex without a catalog"
     assert.equal(result.success, true);
     const payload = JSON.parse(result.output);
     assert.equal(payload.plugin, "EchoPlugin");
+    assert.equal(payload.context.project.name, "StateMachine");
     assert.equal(payload.result.messages[0].message, "direct");
   } finally {
     fs.rmSync(emptyCwd, { recursive: true, force: true });
