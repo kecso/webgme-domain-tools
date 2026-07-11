@@ -39,16 +39,20 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 3½ — Stateful session shell** — `pending` (planned **before Phase 4**)
+**Phase 4 — Generator & consumer** — `pending` (next up after Phase 3½ merge)
+
+**Phase 3½ — Stateful session shell** — `done` (merged to `main` 2026-07-11, branch `feature/phase3.5-session-shell`)
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F20 | Session workspace + state file | `pending` | — |
-| F21 | `session open` / `status` / `close` | `pending` | — |
-| F22 | Commands default to open session | `pending` | — |
-| F23 | `session save` / `session discard` | `pending` | — |
-| F24 | Optional REPL / long-lived shell | `pending` | — |
-| F25 | `.webgmex` repository import/export | `pending` | — |
+| F20 | Session workspace + state file | `done` | `webdot session open --seed StateMachine -C test/fixtures/sample-project` |
+| F21 | `session open` / `status` / `close` | `done` | `webdot session status` (execution dir; no repeated `-C`) |
+| F22 | Commands default to open session | `done` | `plugin run`, `tree`, `seed meta`, `ls` in session scope |
+| F23 | `session save` / `session discard` | `done` | `npm test` — `session-workspace.test.js` |
+| F24 | Optional REPL / long-lived shell | `done` | `webdot session repl` |
+| F25 | `.webgmex` repository import/export | `deferred` | Use engine `getProjectWithHistory` / `insertProjectWithHistory` (later) |
+
+**Review gate:** `npm test` · `docs/DESIGN.md` stateful session section
 
 **Phase 3 — Plugin run** — `done` (merged to `main` 2026-07-11, branch `feature/phase3-plugin-run`)
 
@@ -187,25 +191,21 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 ### Phase 3½ — Stateful session shell
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F20 | Session workspace + state file | `pending` | `.webdot/session.json` + working `.webgmex` copy |
-| F21 | `session open` / `session status` / `session close` | `pending` | Bind cwd, model path, branch, dirty flag |
-| F22 | Commands default to open session | `pending` | `plugin run`, `tree --seed`, etc. when session active |
-| F23 | `session save` / `session discard` | `pending` | Explicit write-back to user-chosen target |
-| F24 | Optional REPL / long-lived shell | `pending` | Single Node process; avoids re-import per command |
-| F25 | `.webgmex` repository import/export | `pending` | Use `getProjectWithHistory` / `insertProjectWithHistory` for commits, branch pointers, tags; enables branch/tag-aware context |
+| F20 | Session workspace + state file | `done` | `.webdot/session.json` + `.webdot/workspace/*.webgmex` |
+| F21 | `session open` / `session status` / `session close` | `done` | Bind cwd, model path, dirty flag |
+| F22 | Commands default to open session | `done` | `plugin run`, `tree --seed`, `seed meta` when session active |
+| F23 | `session save` / `session discard` | `done` | Explicit write-back to source (or `--out`) |
+| F24 | Optional REPL / long-lived shell | `done` | `webdot session repl` (workspace-file backed) |
+| F25 | `.webgmex` repository import/export | `deferred` | Full commit/branch/tag packages (engine helpers exist) |
 
-**Phase 3½ — Stateful session (planned before Phase 4)**  
-Follow-up commands reuse an **opened** project; the user explicitly **saves** (or discards) instead of one-shot import/run/export per invocation.
+**Phase 3½ — Stateful session**  
+Follow-up commands reuse an **opened** project workspace; the user explicitly **saves** (or discards) instead of one-shot import/run/export per invocation.
 
-**Feasibility (2026-07-11):** **Yes, with the right model.**
+**Implementation (2026-07-11):** Workspace file model (Approach A). `.webdot/session.json` tracks execution cwd, project root, source path, working `.webgmex`, and dirty flag. Commands re-import the working copy; `session save` writes to the save target. `session repl` provides an interactive shell over the same model. **F25 deferred** — repository `.webgmex` import/export when needed.
 
-- **Constraint:** `webgme-engine` memory storage is **in-process**. A normal one-shot `webdot` CLI cannot keep a live `ProjectSession` across separate shell invocations.
-- **Approach A — workspace file:** On `session open`, import seed/webgmex, export a **working copy** under `.webdot/workspace/`, record paths + dirty flag in `session.json`. Later commands re-import the working copy. `session save` writes to user target. Works with existing subprocess CLI.
-- **Approach B — session REPL:** `webdot session` keeps one Node process and in-memory `ProjectSession` until exit. Best UX for iterative plugin runs.
-- **Future alignment — repository packages:** Current WebGME engine has full-history project helpers (`getProjectWithHistory` / `insertProjectWithHistory`) for commits, branch pointers, and tags, not just one root snapshot. Add format detection/import/export before exposing branch/tag options in CLI context.
-- **Synergy with F18:** `exportProjectToFile` and direct `--webgmex` already exist; session layer composes on top.
+**Session location fix (2026-07-11):** `.webdot/` now lives in the **execution directory** (`process.cwd()`), not under `-C`. `-C` only selects the project to open; `session.json` records that project root (`projectCwd`) so `status`, `save`, `plugin run`, `tree`, `seed meta` work from the same directory without repeating `-C`. This supports driving multiple projects from one working directory. Also fixed a latent bug where running `webdot` outside its own repo root failed because `webgme-engine/src/bin/import.js` loads `require(process.cwd()/config)` at import time — the bridge now loads that module with the package root as cwd.
 
-Priority: **medium** — after Phase 3 merge; **before Phase 4** generators.
+**Session scope (2026-07-11):** All catalog commands (`ls`, `plugin info`, `plugin run`, `tree`, `seed meta`) now default to the open session's project scope instead of looking for `webgme-setup.json` in the current dir. Each emits a `note: session open …` block on stderr (session source `.webgmex` + project root); explicit `-C` overrides per-command. `webdot tree` with no scope defaults to the session **model** tree when a session is open (`tree repo` for the catalog).
 
 ### Phase 4 — Generator & consumer
 | ID | Feature | Status | Notes |
@@ -252,6 +252,7 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
+| 2026-07-11 | Phase 3½ (F20–F24) | maintainer | Approved | Stateful session shell; execution-dir `.webdot`; session scope for all commands; merged `feature/phase3.5-session-shell` → `main` |
 | 2026-07-11 | Phase 3 (F9–F13, F18–F19) | maintainer | Approved | Plugin run, write-back, direct paths; dropped `--branch` (snapshot import); F25/B9 for repository `.webgmex`; merged `feature/phase3-plugin-run` → `main` |
 | 2026-07-10 | Phase 2½ (F16a–c) | maintainer | Approved | Meta specs + `seed meta` descriptor/metalang; F17 deferred to Phase 4; merged `feature/F16-meta-representations` → `main` |
 | 2026-07-10 | Phase 2 (F5–F8) | maintainer | Approved | `webdot` CLI, F7 fixture, tree-command tests; merged `feature/phase2-seed-model` → `main` |
@@ -261,6 +262,15 @@ Record of completed reviews (newest first).
 ---
 
 ## Changelog
+
+### 0.5.0 (2026-07-11) — merged to `main`
+- Phase 3½: `session open` / `status` / `save` / `discard` / `close` / `repl`
+- Workspace file: `.webdot/session.json` + working `.webgmex` copy
+- Session state lives in the execution dir and records the project root, so follow-up commands need no repeated `-C`
+- All catalog commands (`ls`, `plugin info`, `plugin run`, `tree`, `seed meta`) run in the open session's scope (note on stderr; `-C` overrides)
+- `tree` defaults to session model when a session is open; `tree repo` for catalog; seed filter flag renamed to `--nodes`
+- Fixed running `webdot` from outside its repo root (engine `bin/import.js` config load)
+- F25 repository `.webgmex` deferred
 
 ### 0.4.0 (2026-07-11) — merged to `main`
 - Phase 3: `plugin info`, `plugin run` (headless PluginCliManager)

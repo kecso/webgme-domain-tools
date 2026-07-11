@@ -6,13 +6,30 @@ const fs = require("fs");
 global.WebGMEGlobal = global.WebGMEGlobal || {};
 require("webgme-engine");
 
+// The webdot package root holds the `config` folder that webgme-engine's bin/import.js
+// loads via require(path.join(process.cwd(), 'config')) at module-load time. webdot may be
+// run from any directory, so load that module once with the package root as the cwd.
+const PACKAGE_ROOT = path.resolve(__dirname, "..");
+let cliImportModule = null;
+function loadCliImport() {
+  if (cliImportModule) return cliImportModule;
+  const previousCwd = process.cwd();
+  try {
+    process.chdir(PACKAGE_ROOT);
+    cliImportModule = require("webgme-engine/src/bin/import");
+  } finally {
+    process.chdir(previousCwd);
+  }
+  return cliImportModule;
+}
+
 /**
  * Import a .webgmex seed into memory storage (production path — no test fixture / chai).
  */
 async function importSeedProject(storage, parameters) {
   const requireJS = global.requireJS;
   const BC = require("webgme-engine/src/server/middleware/blob/BlobClientWithFSBackend");
-  const cliImport = require("webgme-engine/src/bin/import");
+  const cliImport = loadCliImport();
   const Core = requireJS("common/core/coreQ");
 
   const projectName = parameters.projectName;

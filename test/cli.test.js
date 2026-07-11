@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import { runCli } from "../dist/cli-program.js";
 import { AmbiguousSeedError } from "../dist/session/seed-resolution.js";
 
@@ -95,15 +96,21 @@ test("cli plugin run --help documents plugin context defaults", () => {
   assert.match(help, /Plugin context/);
   assert.match(help, /active node.*default:.*\/ \(root\)/i);
   assert.match(help, /selection.*default:.*\(none\)/i);
-  assert.match(help, /single-snapshot import/i);
+  assert.match(help, /open session/i);
+  assert.match(help, /session save/i);
   assert.match(help, /--seed/);
   assert.match(help, /--webgmex/);
 });
 
 test("cli tree seed without --seed exits 2", () => {
-  const result = runWebdot(["tree", "seed", "-C", fixture]);
-  assert.equal(result.status, 2);
-  assert.match(result.stderr, /tree seed requires --seed/);
+  const execDir = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-cli-"));
+  try {
+    const result = runWebdot(["tree", "seed", "-C", fixture], { cwd: execDir });
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /tree --seed.*required.*open a session/i);
+  } finally {
+    fs.rmSync(execDir, { recursive: true, force: true });
+  }
 });
 
 test("cli seed meta prints JSON IR", () => {
@@ -236,5 +243,84 @@ test("cli plugin run writes model message when persisted", () => {
     assert.equal(payload.persisted, true);
   } finally {
     fs.rmSync(outFile, { force: true });
+  }
+});
+
+test("cli session state lives in the execution dir, status/close need no -C", () => {
+  const execDir = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-cli-"));
+  try {
+    // Open from execDir, pointing at the project via -C.
+    const open = runWebdot(["session", "open", "--seed", "StateMachine", "-C", fixture], {
+      cwd: execDir,
+    });
+    assert.equal(open.status, 0);
+    const opened = JSON.parse(open.stdout);
+    assert.equal(opened.opened, true);
+    assert.equal(opened.project.name, "StateMachine");
+    // .webdot is created in the execution dir, not under the project.
+    assert.equal(fs.existsSync(path.join(execDir, ".webdot")), true);
+    assert.equal(fs.existsSync(path.join(fixture, ".webdot")), false);
+
+    // status without -C, run from the same execution dir.
+    const status = runWebdot(["session", "status"], { cwd: execDir });
+    assert.equal(status.status, 0);
+    const state = JSON.parse(status.stdout);
+    assert.equal(state.open, true);
+    assert.equal(state.dirty, false);
+    assert.equal(state.project.root, fs.realpathSync(fixture));
+  } finally {
+    fs.rmSync(execDir, { recursive: true, force: true });
+  }
+});
+
+test("cli catalog commands run in the open session scope without -C", () => {
+  const execDir = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-cli-"));
+  try {
+    runWebdot(["session", "open", "--seed", "StateMachine", "-C", fixture], { cwd: execDir });
+
+    const ls = runWebdot(["ls", "plugins"], { cwd: execDir });
+    assert.equal(ls.status, 0);
+    assert.match(ls.stdout, /NoOpPlugin/);
+    assert.match(ls.stderr, /session open.*running in its scope/i);
+
+    const info = runWebdot(["plugin", "info", "NoOpPlugin"], { cwd: execDir });
+    assert.equal(info.status, 0);
+    assert.equal(JSON.parse(info.stdout).id, "NoOpPlugin");
+
+    // No scope + open session => session model tree (seed scope).
+    const tree = runWebdot(["tree"], { cwd: execDir });
+    assert.equal(tree.status, 0);
+    assert.match(tree.stdout, /seed:StateMachine/);
+    assert.match(tree.stderr, /source:/i);
+
+    // Explicit repo scope still shows the catalog.
+    const repo = runWebdot(["tree", "repo"], { cwd: execDir });
+    assert.equal(repo.status, 0);
+    assert.match(repo.stdout, /repository/);
+    assert.match(repo.stdout, /StateMachine/);
+  } finally {
+    fs.rmSync(execDir, { recursive: true, force: true });
+  }
+});
+
+test("cli session close requires save or discard when dirty (no -C after open)", () => {
+  const execDir = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-cli-"));
+  try {
+    runWebdot(["session", "open", "--seed", "StateMachine", "-C", fixture], { cwd: execDir });
+    // plugin run needs no -C: catalog resolves from the session's recorded project root.
+    const run = runWebdot(["plugin", "run", "EchoPlugin", "--set", "addNode=true"], {
+      cwd: execDir,
+    });
+    assert.equal(run.status, 0);
+
+    const close = runWebdot(["session", "close"], { cwd: execDir });
+    assert.equal(close.status, 1);
+    assert.match(close.stderr, /unsaved changes/i);
+
+    const discardClose = runWebdot(["session", "close", "--discard"], { cwd: execDir });
+    assert.equal(discardClose.status, 0);
+    assert.equal(fs.existsSync(path.join(execDir, ".webdot")), false);
+  } finally {
+    fs.rmSync(execDir, { recursive: true, force: true });
   }
 });

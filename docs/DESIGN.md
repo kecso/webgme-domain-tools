@@ -39,14 +39,22 @@ Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-sepa
 - **Write-back:** the seed `.webgmex` is imported into memory; a plugin that calls `self.save()` produces a new commit, and the resulting model is written back to the source file by default. `--out <file>` redirects; `--dry-run` runs without writing. Read-only runs (no `save`) never rewrite the source.
 - **Source resolution:** catalog shorthand OR direct `--plugin-dir` / `--webgmex` (no `webgme-setup.json` required)
 
-## Stateful session (proposed — Phase 3½)
+## Stateful session (Phase 3½)
 
-Today each `webdot` command is a **one-shot** process: open memory project → run → close. A **stateful** workflow (open project, run several plugins, then save) is feasible in two ways:
+Each one-shot `webdot` command still runs in its own process, but an **open session** keeps editable state on disk:
 
-1. **Workspace file** — `.webdot/session.json` points at a working `.webgmex`; commands re-import it; `session save` writes to the user's target. Works across separate shell invocations.
-2. **Session shell** — `webdot session` keeps one Node process and in-memory `ProjectSession` until `close`/`save`. Best for tight edit-run loops.
+**Session location.** The session always lives in the **execution directory** — `.webdot/` is created under the directory you run `webdot` from (`process.cwd()`), never under `-C`. `-C` only points at the project to open. The session records that project root (`projectCwd`) in `session.json`, so later commands (`status`, `save`, `plugin run`, `tree`, …) resolve seeds/plugins against it **without repeating `-C`**. This lets a single working directory drive multiple projects: `cd` where you want the state, `session open --seed X -C ../projectA`, then run everything from there.
 
-See [PROJECT.md](PROJECT.md) F20–F24 for the roadmap sketch. **Planned before Phase 4** (generators).
+**Session scope.** When a session is open, **every** catalog command (`ls`, `plugin info`, `plugin run`, `tree`, `seed meta`) runs in that session's project scope and prints a `note: session open …` block on stderr showing the session **source** (the loaded `.webgmex`) and **project** root. An explicit `-C <dir>` always overrides the session scope for that one command; `session close` exits it. With a session open, `webdot tree` (no scope) defaults to the **session model** tree; use `webdot tree repo` for the catalog.
+
+1. **`session open`** — copies the source `.webgmex` into `.webdot/workspace/` and writes `.webdot/session.json` (execution cwd, project root, source path, working copy, dirty flag).
+2. **Commands** — `plugin run`, `tree --seed`, and `seed meta` use the working copy when no `--seed` / `--webgmex` is given, and resolve plugins/catalog against the session's recorded project root. Plugin edits update the working copy and set `dirty`; the original file is untouched until save.
+3. **`session save`** — writes the working copy to the save target (original source by default, or `--out`).
+4. **`session discard`** — resets the working copy from the source.
+5. **`session close`** — removes `.webdot/` (blocks when dirty unless `--discard`).
+6. **`session repl`** — interactive shell for open / plugin run / save / close (same workspace file model).
+
+**F25 (deferred):** repository `.webgmex` packages with full commit/branch/tag history via engine `getProjectWithHistory` / `insertProjectWithHistory`.
 
 ## Generators (planned)
 

@@ -1,4 +1,3 @@
-import { loadSetupCatalog } from "../catalog/setup-catalog.js";
 import {
   collectSeedNodes,
   renderSeedTree,
@@ -8,10 +7,11 @@ import {
   closeProjectSession,
   openProjectSession,
 } from "../session/project-session.js";
-import { resolveSeedSelection } from "../session/seed-resolution.js";
+import { resolveSessionModelSource } from "../session/workspace-state.js";
 
 export interface TreeCommandOptions {
   cwd: string;
+  sessionCwd?: string;
   seed?: string;
   kind?: string;
   format?: SeedTreeFormat;
@@ -26,20 +26,22 @@ function parseSelect(raw: string | undefined): string[] | undefined {
 }
 
 export async function runSeedTreeCommand(options: TreeCommandOptions): Promise<string> {
-  if (!options.seed) {
-    throw new Error("tree --seed <name> is required for seed model tree");
-  }
-
-  const catalog = loadSetupCatalog(options.cwd);
-  const entry = resolveSeedSelection(catalog, options.seed);
+  const model = resolveSessionModelSource(options.sessionCwd ?? options.cwd, {
+    seed: options.seed,
+    projectCwd: options.cwd,
+  });
 
   try {
-    const context = await openProjectSession({ cwd: options.cwd, seed: entry });
+    const context = await openProjectSession({
+      cwd: options.cwd,
+      webgmexPath: model.webgmexPath,
+      seedName: model.name,
+    });
     const rows = await collectSeedNodes(context.core, context.rootNode, {
       at: options.at,
       select: options.select,
     });
-    return renderSeedTree(entry.name, context.webgmexPath, rows, {
+    return renderSeedTree(model.name, context.webgmexPath, rows, {
       format: options.format,
       at: options.at,
       select: options.select,

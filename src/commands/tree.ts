@@ -23,7 +23,10 @@ function parseKinds(raw: string | undefined): ComponentKind[] | undefined {
 
 export interface TreeCommandOptions {
   cwd: string;
+  sessionCwd?: string;
   seed?: string;
+  /** When true, load a seed model tree (seed name from --seed or open session). */
+  seedModel?: boolean;
   kind?: string;
   format?: RepoTreeFormat | SeedTreeFormat;
   at?: string;
@@ -31,7 +34,7 @@ export interface TreeCommandOptions {
 }
 
 export async function runTreeCommand(options: TreeCommandOptions): Promise<string> {
-  if (options.seed) {
+  if (options.seedModel || options.seed !== undefined) {
     return runSeedTreeCommand({
       ...options,
       format: options.format as SeedTreeFormat | undefined,

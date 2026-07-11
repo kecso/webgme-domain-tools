@@ -11,8 +11,11 @@ import { buildPluginInfo, loadPluginMetadataFromPath, renderPluginInfo } from ".
 import { buildPluginRunContext, formatPluginRunContext } from "./run-context.js";
 import { artifactWarnings, serializePluginResult } from "./result-format.js";
 import {
+  markSessionDirty,
+  resolveSessionModelSource,
+} from "../session/workspace-state.js";
+import {
   createCatalogLoader,
-  resolveModelSource,
   resolvePluginSource,
 } from "./sources.js";
 import type { PluginRunOutput, SerializedPluginResult } from "./types.js";
@@ -23,7 +26,10 @@ export interface PluginInfoCommandOptions {
 }
 
 export interface PluginRunCommandOptions {
+  /** Project root for catalog/plugin resolution and gmeConfig. */
   cwd: string;
+  /** Execution directory that owns the session (defaults to cwd). */
+  sessionCwd?: string;
   /** Catalog plugin name (or use pluginDir). */
   plugin?: string;
   /** Direct path to a plugin directory ({dir}/{dir}.js), bypassing catalog. */
@@ -60,9 +66,14 @@ export async function runPluginInfoCommand(options: PluginInfoCommandOptions): P
 export async function runPluginRunCommand(
   options: PluginRunCommandOptions,
 ): Promise<PluginRunCommandResult> {
+  const sessionCwd = options.sessionCwd ?? options.cwd;
   const getCatalog = createCatalogLoader(options.cwd);
   const pluginSource = resolvePluginSource(options, getCatalog);
-  const modelSource = resolveModelSource(options, getCatalog);
+  const modelSource = resolveSessionModelSource(sessionCwd, {
+    seed: options.seed,
+    webgmex: options.webgmex,
+    projectCwd: options.cwd,
+  });
   const metadata = loadPluginMetadataFromPath(pluginSource.metadataPath);
   const configStructure = metadata.configStructure ?? [];
   const config = resolvePluginConfig(configStructure, {
@@ -147,6 +158,9 @@ export async function runPluginRunCommand(
             process.chdir(previousCwd);
           }
           persisted = true;
+          if (modelSource.fromSession && changedModel) {
+            markSessionDirty(sessionCwd);
+          }
         }
       }
 
@@ -157,7 +171,8 @@ export async function runPluginRunCommand(
         !options.dryRun &&
         !changedModel &&
         !options.out &&
-        !producedArtifacts
+        !producedArtifacts &&
+        !modelSource.fromSession
       ) {
         warnings.push("plugin did not modify the model; nothing written back");
       }
