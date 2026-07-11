@@ -58,7 +58,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | ID | Feedback | Action |
 |----|----------|--------|
 | F9–F19 | CLI flag surface growing; long commands hard to compose | **B8** backlog — trim rarely used flags or add tutorial recipes / `webdot examples` (future) |
-| F12 | Plugin output should reflect full context, not just seed name | JSON `context`: `project`, `activeNode`, `activeSelection`, `branch`, `config` with explicit defaults (`/`, `[]`, `master`) |
+| F12 | Plugin output should reflect full context, not just seed name | JSON `context` block + `plugin run --help` documents project / active node / selection / branch / config with defaults |
 
 **Next: Phase 3½ — Stateful session shell** — `pending` (planned **before Phase 4**)
 

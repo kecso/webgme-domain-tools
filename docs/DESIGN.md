@@ -33,12 +33,10 @@ Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-sepa
 
 - **Info:** `plugin info <name>` — `metadata.json` configStructure + defaults
 - **Run:** `plugin run <name> --seed <seed>` — headless `PluginCliManager` on memory file-project
-- **Source resolution:** catalog shorthand (`<name>` / `--seed`) OR direct paths (`--plugin-dir <dir>`, `--webgmex <file>`). Direct paths need no `webgme-setup.json`, so any plugin can run on any model.
-- Context: `--seed` / `--webgmex`, `--at`, `--select`, `--branch`
-- Config: `metadata.json` `configStructure` + `--set` / `--config-file`; read-only params rejected
-- **Run output:** JSON includes a `context` block — `project` (name + `.webgmex` path), `activeNode` (default `/` = root), `activeSelection` (default `[]`), `branch` (default `master`), and resolved `config`
+- **Plugin context:** project (`--seed` or `--webgmex`) + active node (`--at`, default `/`) + selection (`--select`, default none) + branch (default `master`) + config (`metadata.json` + `--set` / `--config-file`). `webdot plugin run --help` lists defaults; JSON output echoes resolved `context`.
 - Blobs: ephemeral FS per session; `--artifacts-out` saves to disk (relative to `-C cwd`); otherwise stderr warning
 - **Write-back:** the seed `.webgmex` is imported into memory; a plugin that calls `self.save()` produces a new commit, and the resulting model is written back to the source file by default. `--out <file>` redirects; `--dry-run` runs without writing. Read-only runs (no `save`) never rewrite the source.
+- **Source resolution:** catalog shorthand OR direct `--plugin-dir` / `--webgmex` (no `webgme-setup.json` required)
 
 ## Stateful session (proposed — Phase 3½)
 

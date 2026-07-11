@@ -10,6 +10,11 @@ import type { RepoTreeFormat } from "./introspection/repo-tree.js";
 import type { SeedTreeFormat } from "./introspection/seed-tree.js";
 import { CLI_NAME } from "./cli-brand.js";
 import { formatPluginMessages } from "./plugin/result-format.js";
+import {
+  DEFAULT_PLUGIN_ACTIVE_NODE_LABEL,
+  DEFAULT_PLUGIN_BRANCH,
+  DEFAULT_PLUGIN_SELECTION_LABEL,
+} from "./plugin/run-context.js";
 
 export async function runCli(action: () => Promise<string>): Promise<void> {
   try {
@@ -113,19 +118,38 @@ export function createProgram(): Command {
 
   pluginCmd
     .command("run")
-    .description("Run a plugin headlessly against a .webgmex model")
+    .description(
+      "Run a plugin headlessly. Plugin context = project + active node + selection + branch + config.",
+    )
     .argument("[name]", "Plugin name from webgme-setup.json (or use --plugin-dir)")
     .option("--plugin-dir <path>", "Plugin directory ({dir}/{dir}.js), bypasses catalog")
-    .option("--seed <name>", "Seed to load as plugin context")
-    .option("--webgmex <path>", "Direct .webgmex model path, bypasses catalog")
-    .option("--at <path>", "Active node path (e.g. /1)")
-    .option("--select <paths>", "Comma-separated selected node paths")
-    .option("--branch <name>", "Branch name", "master")
-    .option("--config-file <path>", "JSON file with plugin config overrides")
-    .option("--set <pair...>", "Config override name=value (repeatable)")
+    .option("--seed <name>", "Project: seed name from webgme-setup.json (or use --webgmex)")
+    .option("--webgmex <path>", "Project: direct .webgmex path (or use --seed)")
+    .option(
+      "--at <path>",
+      "Active (main) node path [default: " + DEFAULT_PLUGIN_ACTIVE_NODE_LABEL + "]",
+    )
+    .option(
+      "--select <paths>",
+      "Selected node paths, comma-separated [default: " + DEFAULT_PLUGIN_SELECTION_LABEL + "]",
+    )
+    .option("--branch <name>", "Branch name", DEFAULT_PLUGIN_BRANCH)
+    .option("--config-file <path>", "Plugin config overrides (JSON object)")
+    .option("--set <pair...>", "Plugin config override name=value (repeatable; merges over defaults)")
     .option("--artifacts-out <dir>", "Directory (relative to -C cwd) for blob artifacts")
     .option("--out <file>", "Write resulting model to this .webgmex instead of the source")
     .option("--dry-run", "Run without writing model changes back to disk")
+    .addHelpText(
+      "after",
+      `
+Plugin context (what the plugin receives):
+  project     --seed <name>  or  --webgmex <path>  (one required)
+  active node --at <path>     [default: ${DEFAULT_PLUGIN_ACTIVE_NODE_LABEL}]
+  selection   --select <paths> [default: ${DEFAULT_PLUGIN_SELECTION_LABEL}]
+  branch      --branch <name>  [default: ${DEFAULT_PLUGIN_BRANCH}]
+  config      metadata.json defaults, overridden by --config-file and --set
+`,
+    )
     .action(async (name: string | undefined, opts: {
       pluginDir?: string;
       seed?: string;

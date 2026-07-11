@@ -1,6 +1,11 @@
 import { displayPath } from "../introspection/seed-tree.js";
 
 export const DEFAULT_PLUGIN_BRANCH = "master";
+/** WebGME root path passed to PluginCliManager when --at is omitted. */
+export const DEFAULT_PLUGIN_ACTIVE_NODE = "";
+/** Human-readable labels for CLI help and JSON output. */
+export const DEFAULT_PLUGIN_ACTIVE_NODE_LABEL = "/ (root)";
+export const DEFAULT_PLUGIN_SELECTION_LABEL = "(none)";
 
 export interface PluginRunContext {
   activeNode: string;

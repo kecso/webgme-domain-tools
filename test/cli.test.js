@@ -88,6 +88,18 @@ test("runCli exits 2 on AmbiguousSeedError", async () => {
   }
 });
 
+test("cli plugin run --help documents plugin context defaults", () => {
+  const result = runWebdot(["plugin", "run", "--help"]);
+  assert.equal(result.status, 0);
+  const help = result.stdout;
+  assert.match(help, /Plugin context/);
+  assert.match(help, /active node.*default:.*\/ \(root\)/i);
+  assert.match(help, /selection.*default:.*\(none\)/i);
+  assert.match(help, /branch.*default:.*master/i);
+  assert.match(help, /--seed/);
+  assert.match(help, /--webgmex/);
+});
+
 test("cli tree seed without --seed exits 2", () => {
   const result = runWebdot(["tree", "seed", "-C", fixture]);
   assert.equal(result.status, 2);
