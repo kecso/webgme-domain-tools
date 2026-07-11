@@ -39,7 +39,18 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 3 — Plugin run** — `review` on branch `feature/phase3-plugin-run`
+**Phase 3½ — Stateful session shell** — `pending` (planned **before Phase 4**)
+
+| ID | Feature | Status | Review |
+|----|---------|--------|--------|
+| F20 | Session workspace + state file | `pending` | — |
+| F21 | `session open` / `status` / `close` | `pending` | — |
+| F22 | Commands default to open session | `pending` | — |
+| F23 | `session save` / `session discard` | `pending` | — |
+| F24 | Optional REPL / long-lived shell | `pending` | — |
+| F25 | `.webgmex` repository import/export | `pending` | — |
+
+**Phase 3 — Plugin run** — `done` (merged to `main` 2026-07-11, branch `feature/phase3-plugin-run`)
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
@@ -51,24 +62,13 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | F18 | Model write-back + `--dry-run` / `--out` | `done` | `webdot plugin run EchoPlugin --seed StateMachine --set addNode=true --out out.webgmex` |
 | F19 | Direct `--plugin-dir` / `--webgmex` (no catalog) | `done` | `webdot plugin run --plugin-dir src/plugins/EchoPlugin --webgmex src/seeds/StateMachine/StateMachine.webgmex -C test/fixtures/sample-project --dry-run` |
 
-**Review gate:** `npm test` (99 tests, ~95% line coverage) · `docs/DESIGN.md` plugin + session sections
-
 ### Phase 3 review notes (2026-07-11)
 
 | ID | Feedback | Action |
 |----|----------|--------|
 | F9–F19 | CLI flag surface growing; long commands hard to compose | **B8** backlog — trim rarely used flags or add tutorial recipes / `webdot examples` (future) |
-| F12 | Plugin output should reflect full context, not just seed name | JSON `context` block + `plugin run --help` documents project / active node / selection / branch / config with defaults |
-
-**Next: Phase 3½ — Stateful session shell** — `pending` (planned **before Phase 4**)
-
-| ID | Feature | Status | Review |
-|----|---------|--------|--------|
-| F20 | Session workspace + state file | `pending` | — |
-| F21 | `session open` / `status` / `close` | `pending` | — |
-| F22 | Commands default to open session | `pending` | — |
-| F23 | `session save` / `session discard` | `pending` | — |
-| F24 | Optional REPL / long-lived shell | `pending` | — |
+| F12 | Plugin output should reflect full context, not just seed name | JSON `context` block + `plugin run --help` documents project / active node / selection / config with defaults |
+| F10 | `--branch` is meaningless: `.webgmex` import is single-snapshot (one commit, one branch) | Dropped `--branch` flag; branch fixed to `master` internally. Re-expose via **F25** when repository import lands |
 
 **Phase 2½ — Meta representations** — `done` (merged to `main` 2026-07-10, branch `feature/F16-meta-representations`)
 
@@ -177,7 +177,7 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
 | F9 | `plugin info` (configStructure) | `done` | JSON: metadata + defaults from `metadata.json` |
-| F10 | `plugin run` context flags | `done` | `--seed`, `--at`, `--select`, `--branch` |
+| F10 | `plugin run` context flags | `done` | `--seed`, `--at`, `--select` (no `--branch`: single-snapshot import → always `master`) |
 | F11 | Config validation + `--set` | `done` | `--config-file`, read-only enforcement |
 | F12 | Message / result routing | `done` | Plugin logger → stderr; messages in JSON + stderr |
 | F13 | Ephemeral FS blob + `--artifacts-out` | `done` | Warn when artifacts produced but not saved |
@@ -192,6 +192,7 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 | F22 | Commands default to open session | `pending` | `plugin run`, `tree --seed`, etc. when session active |
 | F23 | `session save` / `session discard` | `pending` | Explicit write-back to user-chosen target |
 | F24 | Optional REPL / long-lived shell | `pending` | Single Node process; avoids re-import per command |
+| F25 | `.webgmex` repository import/export | `pending` | Use `getProjectWithHistory` / `insertProjectWithHistory` for commits, branch pointers, tags; enables branch/tag-aware context |
 
 **Phase 3½ — Stateful session (planned before Phase 4)**  
 Follow-up commands reuse an **opened** project; the user explicitly **saves** (or discards) instead of one-shot import/run/export per invocation.
@@ -201,6 +202,7 @@ Follow-up commands reuse an **opened** project; the user explicitly **saves** (o
 - **Constraint:** `webgme-engine` memory storage is **in-process**. A normal one-shot `webdot` CLI cannot keep a live `ProjectSession` across separate shell invocations.
 - **Approach A — workspace file:** On `session open`, import seed/webgmex, export a **working copy** under `.webdot/workspace/`, record paths + dirty flag in `session.json`. Later commands re-import the working copy. `session save` writes to user target. Works with existing subprocess CLI.
 - **Approach B — session REPL:** `webdot session` keeps one Node process and in-memory `ProjectSession` until exit. Best UX for iterative plugin runs.
+- **Future alignment — repository packages:** Current WebGME engine has full-history project helpers (`getProjectWithHistory` / `insertProjectWithHistory`) for commits, branch pointers, and tags, not just one root snapshot. Add format detection/import/export before exposing branch/tag options in CLI context.
 - **Synergy with F18:** `exportProjectToFile` and direct `--webgmex` already exist; session layer composes on top.
 
 Priority: **medium** — after Phase 3 merge; **before Phase 4** generators.
@@ -238,6 +240,7 @@ Tasks not tied to a single milestone — pick up anytime.
 | B6 | optimize | Cache SetupCatalog per process for multi-subcommand REPL (future) | low |
 | B7 | meta | See **F17** (Phase 4) — library/namespace in IR, descriptor, MetaLang, traversal | medium |
 | B8 | streamline | CLI complexity: trim rare flags or `webdot examples` tutorial recipes / scenario printouts | medium |
+| B9 | compatibility | Track/adopt WebGME repository `.webgmex` support; replace snapshot-only assumptions with full commit/branch/tag import where available | medium |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
 
@@ -249,6 +252,7 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
+| 2026-07-11 | Phase 3 (F9–F13, F18–F19) | maintainer | Approved | Plugin run, write-back, direct paths; dropped `--branch` (snapshot import); F25/B9 for repository `.webgmex`; merged `feature/phase3-plugin-run` → `main` |
 | 2026-07-10 | Phase 2½ (F16a–c) | maintainer | Approved | Meta specs + `seed meta` descriptor/metalang; F17 deferred to Phase 4; merged `feature/F16-meta-representations` → `main` |
 | 2026-07-10 | Phase 2 (F5–F8) | maintainer | Approved | `webdot` CLI, F7 fixture, tree-command tests; merged `feature/phase2-seed-model` → `main` |
 | 2026-07-10 | M0 (F0–F4) | maintainer | Approved | Retroactive review on branch `M0`; merged to `main` |
@@ -258,13 +262,14 @@ Record of completed reviews (newest first).
 
 ## Changelog
 
-### 0.4.0 (2026-07-11) — review on `feature/phase3-plugin-run`
+### 0.4.0 (2026-07-11) — merged to `main`
 - Phase 3: `plugin info`, `plugin run` (headless PluginCliManager)
 - Config: `--set`, `--config-file`, read-only validation
 - Model write-back (default), `--dry-run`, `--out`; direct `--plugin-dir` / `--webgmex`
 - Blob artifacts: `--artifacts-out` + non-persistence warning
-- CLI refactor (`cli-program.ts`); fixture plugins EchoPlugin, NoOpPlugin, ThrowPlugin
-- 99 tests, ~95% line coverage
+- CLI refactor (`cli-program.ts`); plugin context in `--help` and JSON output
+- No `--branch` flag (v1 snapshot import); F25 tracks repository `.webgmex` support
+- 101 tests, ~95% line coverage
 
 ### 0.3.0 (2026-07-10)
 - Phase 2½: meta specs (`docs/meta/`), `seed meta --format descriptor|metalang|tree|tree-verbose`

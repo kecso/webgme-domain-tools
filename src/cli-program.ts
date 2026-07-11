@@ -12,7 +12,6 @@ import { CLI_NAME } from "./cli-brand.js";
 import { formatPluginMessages } from "./plugin/result-format.js";
 import {
   DEFAULT_PLUGIN_ACTIVE_NODE_LABEL,
-  DEFAULT_PLUGIN_BRANCH,
   DEFAULT_PLUGIN_SELECTION_LABEL,
 } from "./plugin/run-context.js";
 
@@ -133,7 +132,6 @@ export function createProgram(): Command {
       "--select <paths>",
       "Selected node paths, comma-separated [default: " + DEFAULT_PLUGIN_SELECTION_LABEL + "]",
     )
-    .option("--branch <name>", "Branch name", DEFAULT_PLUGIN_BRANCH)
     .option("--config-file <path>", "Plugin config overrides (JSON object)")
     .option("--set <pair...>", "Plugin config override name=value (repeatable; merges over defaults)")
     .option("--artifacts-out <dir>", "Directory (relative to -C cwd) for blob artifacts")
@@ -146,8 +144,10 @@ Plugin context (what the plugin receives):
   project     --seed <name>  or  --webgmex <path>  (one required)
   active node --at <path>     [default: ${DEFAULT_PLUGIN_ACTIVE_NODE_LABEL}]
   selection   --select <paths> [default: ${DEFAULT_PLUGIN_SELECTION_LABEL}]
-  branch      --branch <name>  [default: ${DEFAULT_PLUGIN_BRANCH}]
   config      metadata.json defaults, overridden by --config-file and --set
+
+Note: .webgmex is a single-snapshot import (one branch); branch selection is
+not exposed until a multi-branch import is supported.
 `,
     )
     .action(async (name: string | undefined, opts: {
@@ -156,7 +156,6 @@ Plugin context (what the plugin receives):
       webgmex?: string;
       at?: string;
       select?: string;
-      branch?: string;
       configFile?: string;
       set?: string[];
       artifactsOut?: string;
@@ -173,7 +172,6 @@ Plugin context (what the plugin receives):
           webgmex: opts.webgmex,
           at: opts.at,
           select: parseSelect(opts.select),
-          branch: opts.branch,
           configFile: opts.configFile,
           set: opts.set,
           artifactsOut: opts.artifactsOut,

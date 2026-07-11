@@ -34,7 +34,6 @@ export interface PluginRunCommandOptions {
   webgmex?: string;
   at?: string;
   select?: string[];
-  branch?: string;
   configFile?: string;
   set?: string[];
   artifactsOut?: string;
@@ -73,7 +72,6 @@ export async function runPluginRunCommand(
   const runContext = buildPluginRunContext({
     at: options.at,
     select: options.select,
-    branch: options.branch,
   });
 
   const previousCwd = process.cwd();

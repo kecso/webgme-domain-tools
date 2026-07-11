@@ -76,10 +76,10 @@ test("resolvePluginConfig rejects read-only overrides", () => {
 });
 
 test("buildPluginRunContext uses first selection as active node", () => {
-  const ctx = buildPluginRunContext({ select: ["/1", "/2"], branch: "dev" });
+  const ctx = buildPluginRunContext({ select: ["/1", "/2"] });
   assert.equal(ctx.activeNode, "/1");
   assert.deepEqual(ctx.activeSelection, ["/1", "/2"]);
-  assert.equal(ctx.branchName, "dev");
+  assert.equal(ctx.branchName, "master");
 });
 
 test("formatPluginRunContext shows project and default active node", () => {
@@ -93,7 +93,7 @@ test("formatPluginRunContext shows project and default active node", () => {
   assert.equal(out.project.webgmex, "/tmp/StateMachine.webgmex");
   assert.equal(out.activeNode, "/");
   assert.deepEqual(out.activeSelection, []);
-  assert.equal(out.branch, "master");
+  assert.equal(out.branch, undefined);
   assert.deepEqual(out.config, { message: "hi" });
 });
 

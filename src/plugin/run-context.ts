@@ -1,5 +1,8 @@
 import { displayPath } from "../introspection/seed-tree.js";
 
+// A .webgmex is a single-snapshot package: importSeedProject inserts one commit
+// and creates one branch. Branch selection is meaningless until a multi-branch
+// import lands, so the branch is fixed internally and not exposed on the CLI.
 export const DEFAULT_PLUGIN_BRANCH = "master";
 /** WebGME root path passed to PluginCliManager when --at is omitted. */
 export const DEFAULT_PLUGIN_ACTIVE_NODE = "";
@@ -20,14 +23,12 @@ export interface PluginRunContextOutput {
   };
   activeNode: string;
   activeSelection: string[];
-  branch: string;
   config: Record<string, unknown>;
 }
 
 export function buildPluginRunContext(options: {
   at?: string;
   select?: string[];
-  branch?: string;
 }): PluginRunContext {
   const activeSelection = [...(options.select ?? [])];
   let activeNode = options.at ?? "";
@@ -37,7 +38,7 @@ export function buildPluginRunContext(options: {
   return {
     activeNode,
     activeSelection,
-    branchName: options.branch ?? DEFAULT_PLUGIN_BRANCH,
+    branchName: DEFAULT_PLUGIN_BRANCH,
   };
 }
 
@@ -54,7 +55,6 @@ export function formatPluginRunContext(
     },
     activeNode: displayPath(runContext.activeNode),
     activeSelection: runContext.activeSelection.map(displayPath),
-    branch: runContext.branchName,
     config,
   };
 }

@@ -95,7 +95,7 @@ test("cli plugin run --help documents plugin context defaults", () => {
   assert.match(help, /Plugin context/);
   assert.match(help, /active node.*default:.*\/ \(root\)/i);
   assert.match(help, /selection.*default:.*\(none\)/i);
-  assert.match(help, /branch.*default:.*master/i);
+  assert.match(help, /single-snapshot import/i);
   assert.match(help, /--seed/);
   assert.match(help, /--webgmex/);
 });

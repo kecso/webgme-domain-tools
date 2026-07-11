@@ -33,7 +33,8 @@ Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-sepa
 
 - **Info:** `plugin info <name>` — `metadata.json` configStructure + defaults
 - **Run:** `plugin run <name> --seed <seed>` — headless `PluginCliManager` on memory file-project
-- **Plugin context:** project (`--seed` or `--webgmex`) + active node (`--at`, default `/`) + selection (`--select`, default none) + branch (default `master`) + config (`metadata.json` + `--set` / `--config-file`). `webdot plugin run --help` lists defaults; JSON output echoes resolved `context`.
+- **Plugin context:** project (`--seed` or `--webgmex`) + active node (`--at`, default `/`) + selection (`--select`, default none) + config (`metadata.json` + `--set` / `--config-file`). `webdot plugin run --help` lists defaults; JSON output echoes resolved `context`.
+- **Branch:** not exposed for the current import path. v1 `.webgmex` packages are single-snapshot imports: `importSeedProject` inserts one commit and creates one branch (`master`). Current `webgme-engine` also has repository-package helpers (`getProjectWithHistory` / `insertProjectWithHistory`) for full project collections (commits, branch pointers, tags); future support should detect/import that format and then reintroduce branch/tag-aware context options.
 - Blobs: ephemeral FS per session; `--artifacts-out` saves to disk (relative to `-C cwd`); otherwise stderr warning
 - **Write-back:** the seed `.webgmex` is imported into memory; a plugin that calls `self.save()` produces a new commit, and the resulting model is written back to the source file by default. `--out <file>` redirects; `--dry-run` runs without writing. Read-only runs (no `save`) never rewrite the source.
 - **Source resolution:** catalog shorthand OR direct `--plugin-dir` / `--webgmex` (no `webgme-setup.json` required)
