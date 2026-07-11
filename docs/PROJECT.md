@@ -48,6 +48,8 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | F11 | Config validation + `--set` | `done` | `npm test` — `plugin-config.test.js` |
 | F12 | Message / result routing | `done` | `npm test` — `plugin-command.test.js` (stderr messages + JSON result) |
 | F13 | Ephemeral FS blob + `--artifacts-out` | `done` | `webdot plugin run EchoPlugin --seed StateMachine --set emitArtifact=true --artifacts-out _artifacts` |
+| F18 | Model write-back + `--dry-run` / `--out` | `done` | `webdot plugin run EchoPlugin --seed StateMachine --set addNode=true --out out.webgmex` |
+| F19 | Direct `--plugin-dir` / `--webgmex` (no catalog) | `done` | `webdot plugin run --plugin-dir <dir> --webgmex <file> -C <anydir>` |
 
 **Phase 2½ — Meta representations** — `done` (merged to `main` 2026-07-10, branch `feature/F16-meta-representations`)
 
@@ -160,6 +162,8 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 | F11 | Config validation + `--set` | `done` | `--config-file`, read-only enforcement |
 | F12 | Message / result routing | `done` | Plugin logger → stderr; messages in JSON + stderr |
 | F13 | Ephemeral FS blob + `--artifacts-out` | `done` | Warn when artifacts produced but not saved |
+| F18 | Model write-back + `--dry-run` / `--out` | `done` | Writes back to source `.webgmex` when the plugin edits the model (detected via extra commit); `--dry-run` skips, `--out` redirects |
+| F19 | Direct `--plugin-dir` / `--webgmex` | `done` | Run any plugin dir on any `.webgmex`; catalog is optional shorthand |
 
 ### Phase 4 — Generator & consumer
 | ID | Feature | Status | Notes |

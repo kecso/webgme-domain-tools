@@ -39,22 +39,41 @@
       return;
     }
 
-    if (config.emitArtifact) {
-      self.blobClient
-        .putFile("echo.txt", config.message)
-        .then(function (hash) {
-          self.result.addArtifact(hash);
-          self.result.setSuccess(true);
-          callback(null, self.result);
-        })
-        .catch(function (err) {
+    function finish() {
+      if (config.emitArtifact) {
+        self.blobClient
+          .putFile("echo.txt", config.message)
+          .then(function (hash) {
+            self.result.addArtifact(hash);
+            self.result.setSuccess(true);
+            callback(null, self.result);
+          })
+          .catch(function (err) {
+            callback(err, self.result);
+          });
+        return;
+      }
+      self.result.setSuccess(true);
+      callback(null, self.result);
+    }
+
+    if (config.addNode) {
+      var node = self.core.createNode({
+        parent: self.rootNode,
+        base: self.core.getFCO(self.rootNode),
+      });
+      self.core.setAttribute(node, "name", config.message || "EchoNode");
+      self.save("EchoPlugin added a node", function (err) {
+        if (err) {
           callback(err, self.result);
-        });
+          return;
+        }
+        finish();
+      });
       return;
     }
 
-    self.result.setSuccess(true);
-    callback(null, self.result);
+    finish();
   };
 
   return EchoPlugin;

@@ -1,9 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   coerceConfigValue,
+  loadConfigFile,
   parseSetPairs,
   resolvePluginConfig,
 } from "../dist/plugin/config.js";
@@ -22,7 +25,32 @@ test("coerceConfigValue parses booleans and numbers", () => {
   assert.equal(coerceConfigValue("true", "boolean"), true);
   assert.equal(coerceConfigValue("0", "boolean"), false);
   assert.equal(coerceConfigValue("42", "integer"), 42);
+  assert.equal(coerceConfigValue("3.5", "number"), 3.5);
+  assert.equal(coerceConfigValue("anything", "string"), "anything");
   assert.throws(() => coerceConfigValue("nope", "boolean"));
+  assert.throws(() => coerceConfigValue("x", "number"), /Invalid numeric/);
+  assert.throws(() => coerceConfigValue("3.5", "integer"), /Invalid integer/);
+});
+
+test("loadConfigFile validates existence and shape", () => {
+  assert.deepEqual(loadConfigFile(undefined), {});
+  assert.throws(() => loadConfigFile("/no/such/file.json"), /does not exist/);
+});
+
+test("resolvePluginConfig rejects wrong-typed value from a config file", () => {
+  const badFile = path.join(os.tmpdir(), "webdot-badconfig-" + Date.now() + ".json");
+  fs.writeFileSync(badFile, JSON.stringify({ shouldFail: "not-a-boolean" }));
+  try {
+    assert.throws(
+      () =>
+        resolvePluginConfig([{ name: "shouldFail", value: false, valueType: "boolean" }], {
+          configFile: badFile,
+        }),
+      /must be a boolean/,
+    );
+  } finally {
+    fs.rmSync(badFile, { force: true });
+  }
 });
 
 test("parseSetPairs rejects malformed entries", () => {

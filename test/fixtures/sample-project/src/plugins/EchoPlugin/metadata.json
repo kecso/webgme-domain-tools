@@ -32,6 +32,14 @@
       "readOnly": false
     },
     {
+      "name": "addNode",
+      "displayName": "Add a node",
+      "description": "If true creates a child node under root and saves the model.",
+      "value": false,
+      "valueType": "boolean",
+      "readOnly": false
+    },
+    {
       "name": "readonlyFlag",
       "displayName": "Read-only flag",
       "description": "Cannot be overridden from CLI.",

@@ -113,42 +113,57 @@ pluginCmd
 
 pluginCmd
   .command("run")
-  .description("Run a plugin headlessly against a file-project seed")
-  .argument("<name>", "Plugin name from webgme-setup.json")
-  .requiredOption("--seed <name>", "Seed to load as plugin context")
+  .description("Run a plugin headlessly against a .webgmex model")
+  .argument("[name]", "Plugin name from webgme-setup.json (or use --plugin-dir)")
+  .option("--plugin-dir <path>", "Plugin directory ({dir}/{dir}.js), bypasses catalog")
+  .option("--seed <name>", "Seed to load as plugin context")
+  .option("--webgmex <path>", "Direct .webgmex model path, bypasses catalog")
   .option("--at <path>", "Active node path (e.g. /1)")
   .option("--select <paths>", "Comma-separated selected node paths")
   .option("--branch <name>", "Branch name", "master")
   .option("--config-file <path>", "JSON file with plugin config overrides")
   .option("--set <pair...>", "Config override name=value (repeatable)")
   .option("--artifacts-out <dir>", "Directory (relative to -C cwd) for blob artifacts")
-  .action(async (name: string, opts: {
-    seed: string;
+  .option("--out <file>", "Write resulting model to this .webgmex instead of the source")
+  .option("--dry-run", "Run without writing model changes back to disk")
+  .action(async (name: string | undefined, opts: {
+    pluginDir?: string;
+    seed?: string;
+    webgmex?: string;
     at?: string;
     select?: string;
     branch?: string;
     configFile?: string;
     set?: string[];
     artifactsOut?: string;
+    out?: string;
+    dryRun?: boolean;
   }, cmd) => {
     const cwd = path.resolve(cmd.optsWithGlobals().cwd ?? process.cwd());
     try {
       const result = await runPluginRunCommand({
         cwd,
         plugin: name,
+        pluginDir: opts.pluginDir,
         seed: opts.seed,
+        webgmex: opts.webgmex,
         at: opts.at,
         select: parseSelect(opts.select),
         branch: opts.branch,
         configFile: opts.configFile,
         set: opts.set,
         artifactsOut: opts.artifactsOut,
+        out: opts.out,
+        dryRun: opts.dryRun,
       });
       for (const line of formatPluginMessages(JSON.parse(result.output).result)) {
         console.error(line);
       }
       for (const warning of result.warnings) {
         console.error("warning:", warning);
+      }
+      if (result.persisted && result.outFile) {
+        console.error("wrote model:", result.outFile);
       }
       console.log(result.output);
       if (!result.success) process.exit(1);

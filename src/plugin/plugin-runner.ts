@@ -6,11 +6,15 @@ import {
   openProjectSession,
 } from "../session/project-session.js";
 import { createSessionLogger, loadGmeConfigForProject, loadGmeRuntime, type SessionLogger } from "../session/gme-runtime.js";
-import { resolveSeedSelection } from "../session/seed-resolution.js";
 import { resolvePluginConfig } from "./config.js";
-import { buildPluginInfo, loadPluginMetadata, renderPluginInfo } from "./metadata.js";
+import { buildPluginInfo, loadPluginMetadataFromPath, renderPluginInfo } from "./metadata.js";
 import { buildPluginRunContext } from "./run-context.js";
 import { artifactWarnings, serializePluginResult } from "./result-format.js";
+import {
+  createCatalogLoader,
+  resolveModelSource,
+  resolvePluginSource,
+} from "./sources.js";
 import type { PluginRunOutput, SerializedPluginResult } from "./types.js";
 
 export interface PluginInfoCommandOptions {
@@ -20,20 +24,32 @@ export interface PluginInfoCommandOptions {
 
 export interface PluginRunCommandOptions {
   cwd: string;
-  plugin: string;
-  seed: string;
+  /** Catalog plugin name (or use pluginDir). */
+  plugin?: string;
+  /** Direct path to a plugin directory ({dir}/{dir}.js), bypassing catalog. */
+  pluginDir?: string;
+  /** Catalog seed name (or use webgmex). */
+  seed?: string;
+  /** Direct path to a .webgmex model, bypassing catalog. */
+  webgmex?: string;
   at?: string;
   select?: string[];
   branch?: string;
   configFile?: string;
   set?: string[];
   artifactsOut?: string;
+  /** Do not write model changes back to disk. */
+  dryRun?: boolean;
+  /** Write the resulting model to this .webgmex instead of the source. */
+  out?: string;
 }
 
 export interface PluginRunCommandResult {
   output: string;
   warnings: string[];
   success: boolean;
+  persisted: boolean;
+  outFile: string | null;
 }
 
 export async function runPluginInfoCommand(options: PluginInfoCommandOptions): Promise<string> {
@@ -45,10 +61,10 @@ export async function runPluginInfoCommand(options: PluginInfoCommandOptions): P
 export async function runPluginRunCommand(
   options: PluginRunCommandOptions,
 ): Promise<PluginRunCommandResult> {
-  const catalog = loadSetupCatalog(options.cwd);
-  const pluginEntry = resolvePlugin(catalog, options.plugin);
-  const seedEntry = resolveSeedSelection(catalog, options.seed);
-  const metadata = loadPluginMetadata(pluginEntry);
+  const getCatalog = createCatalogLoader(options.cwd);
+  const pluginSource = resolvePluginSource(options, getCatalog);
+  const modelSource = resolveModelSource(options, getCatalog);
+  const metadata = loadPluginMetadataFromPath(pluginSource.metadataPath);
   const configStructure = metadata.configStructure ?? [];
   const config = resolvePluginConfig(configStructure, {
     configFile: options.configFile ? path.resolve(options.cwd, options.configFile) : undefined,
@@ -65,9 +81,11 @@ export async function runPluginRunCommand(
   try {
     const context = await openProjectSession({
       cwd: options.cwd,
-      seed: seedEntry,
+      webgmexPath: modelSource.webgmexPath,
+      seedName: modelSource.name,
       branchName: runContext.branchName,
       useProjectPlugins: true,
+      pluginBasePaths: [pluginSource.basePath],
     });
 
     try {
@@ -78,7 +96,7 @@ export async function runPluginRunCommand(
         await loadNodeAt(context, nodePath);
       }
 
-      const gmeConfig = loadGmeConfigForProject(options.cwd);
+      const gmeConfig = loadGmeConfigForProject(options.cwd, [pluginSource.basePath]);
       const { bridge } = loadGmeRuntime();
       const blobOpts = options.artifactsOut ? { writeBlobFilesDir: options.artifactsOut } : {};
 
@@ -89,7 +107,7 @@ export async function runPluginRunCommand(
           project: context.importResult.project,
           logger: createPluginRunLogger(gmeConfig),
           gmeConfig,
-          pluginName: pluginEntry.name,
+          pluginName: pluginSource.name,
           pluginConfig: config,
           blobOpts,
           context: {
@@ -106,16 +124,59 @@ export async function runPluginRunCommand(
       const serialized = serializePluginResult(execution.result as unknown as SerializedPluginResult);
       const warnings = artifactWarnings(serialized, options.artifactsOut);
       const success = serialized.success === true && !execution.err;
+      // PluginBase.configure always records one baseline (SYNCED) commit; a real
+      // model edit via self.save() adds at least one more.
+      const changedModel = (serialized.commits ?? []).length > 1;
+      const producedArtifacts = (serialized.artifacts ?? []).length > 0;
+
+      let persisted = false;
+      let outFile: string | null = null;
+      if (success && !options.dryRun) {
+        const target = options.out
+          ? path.resolve(options.cwd, options.out)
+          : modelSource.webgmexPath;
+        if (changedModel || options.out) {
+          process.chdir(options.cwd);
+          try {
+            outFile = await bridge.exportProjectToFile({
+              project: context.importResult.project,
+              branchName: runContext.branchName,
+              gmeConfig,
+              logger: createPluginRunLogger(gmeConfig),
+              outFile: target,
+            });
+          } finally {
+            process.chdir(previousCwd);
+          }
+          persisted = true;
+        }
+      }
+
+      if (options.dryRun && changedModel) {
+        warnings.push("dry-run: model changes were not written to disk");
+      } else if (
+        success &&
+        !options.dryRun &&
+        !changedModel &&
+        !options.out &&
+        !producedArtifacts
+      ) {
+        warnings.push("plugin did not modify the model; nothing written back");
+      }
+
       const payload: PluginRunOutput = {
         success,
-        plugin: pluginEntry.name,
-        seed: seedEntry.name,
+        plugin: pluginSource.name,
+        seed: modelSource.name,
         branch: runContext.branchName,
         activeNode: runContext.activeNode,
         activeSelection: runContext.activeSelection,
         config,
         result: serialized,
         warnings,
+        persisted,
+        outFile,
+        dryRun: options.dryRun === true,
       };
       if (execution.err) {
         payload.result.error = payload.result.error ?? execution.err;
@@ -125,6 +186,8 @@ export async function runPluginRunCommand(
         output: JSON.stringify(payload, null, 2),
         warnings,
         success,
+        persisted,
+        outFile,
       };
     } finally {
       await closeProjectSession();
@@ -141,7 +204,6 @@ function createPluginRunLogger(gmeConfig: Record<string, unknown>): SessionLogge
     console.error("[" + level + "]", ...args);
     if (level === "error" && base.error) base.error(...args);
     else if (level === "warn" && base.warn) base.warn(...args);
-    else if (level === "debug" && base.debug) base.debug(...args);
     else if (base.info) base.info(...args);
   };
   return {

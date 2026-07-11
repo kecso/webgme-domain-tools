@@ -76,12 +76,14 @@ interface WebgmeImportBridge {
   withProjectPluginPaths: (
     gmeConfig: Record<string, unknown>,
     cwd: string,
+    extraBasePaths?: string[],
   ) => Record<string, unknown>;
   registerRequireJsPaths: (gmeConfig: Record<string, unknown>) => void;
   executePlugin: (parameters: Record<string, unknown>) => Promise<{
     err: string | null;
     result: Record<string, unknown>;
   }>;
+  exportProjectToFile: (parameters: Record<string, unknown>) => Promise<string>;
 }
 
 export type SessionLogger = {
@@ -148,15 +150,21 @@ export function createSessionLogger(gmeConfig: Record<string, unknown>): Session
   return Logger.create("webdot", server.log, false);
 }
 
-export function loadGmeConfigForProject(cwd: string): Record<string, unknown> {
+export function loadGmeConfigForProject(
+  cwd: string,
+  extraBasePaths?: string[],
+): Record<string, unknown> {
   const { bridge } = loadGmeRuntime();
   const gmeConfig = bridge.loadGmeConfig();
-  return bridge.withProjectPluginPaths(gmeConfig, cwd);
+  return bridge.withProjectPluginPaths(gmeConfig, cwd, extraBasePaths);
 }
 
-export function registerProjectRequireJsPaths(cwd: string): Record<string, unknown> {
+export function registerProjectRequireJsPaths(
+  cwd: string,
+  extraBasePaths?: string[],
+): Record<string, unknown> {
   const { bridge } = loadGmeRuntime();
-  const gmeConfig = loadGmeConfigForProject(cwd);
+  const gmeConfig = loadGmeConfigForProject(cwd, extraBasePaths);
   bridge.registerRequireJsPaths(gmeConfig);
   return gmeConfig;
 }

@@ -58,10 +58,17 @@ function loadGmeConfig() {
   return JSON.parse(JSON.stringify(require(configPath)));
 }
 
-function withProjectPluginPaths(gmeConfig, cwd) {
+function withProjectPluginPaths(gmeConfig, cwd, extraBasePaths) {
+  const bases = [];
+  (extraBasePaths || []).forEach((p) => {
+    if (p && bases.indexOf(p) === -1 && fs.existsSync(p)) bases.push(p);
+  });
   const pluginBase = path.join(cwd, "src", "plugins");
-  if (fs.existsSync(pluginBase)) {
-    gmeConfig.plugin.basePaths = [pluginBase].concat(gmeConfig.plugin.basePaths || []);
+  if (fs.existsSync(pluginBase) && bases.indexOf(pluginBase) === -1) {
+    bases.push(pluginBase);
+  }
+  if (bases.length > 0) {
+    gmeConfig.plugin.basePaths = bases.concat(gmeConfig.plugin.basePaths || []);
   }
   return gmeConfig;
 }
@@ -115,6 +122,34 @@ async function executePlugin(parameters) {
   });
 }
 
+/**
+ * Serialize the current branch state back into a .webgmex package on disk.
+ * Mirrors webgme-engine/src/bin/export.js (getProjectJson → buildProjectPackage → write).
+ */
+async function exportProjectToFile(parameters) {
+  const requireJS = global.requireJS;
+  const BC = require("webgme-engine/src/server/middleware/blob/BlobClientWithFSBackend");
+  const storageUtils = requireJS("common/storage/util");
+  const blobUtil = requireJS("blob/util");
+
+  const project = parameters.project;
+  const branchName = parameters.branchName || "master";
+  const gmeConfig = parameters.gmeConfig;
+  const logger = parameters.logger;
+  const outFile = parameters.outFile;
+
+  if (typeof outFile !== "string" || !outFile.toLowerCase().includes(".webgmex")) {
+    throw new Error("outFile must be a path to a .webgmex file");
+  }
+
+  const blobClient = new BC(gmeConfig, logger);
+  const jsonExport = await storageUtils.getProjectJson(project, { branchName });
+  const blobHash = await blobUtil.buildProjectPackage(logger, blobClient, jsonExport, true);
+  const buffer = await blobClient.getObject(blobHash);
+  fs.writeFileSync(outFile, Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer));
+  return outFile;
+}
+
 module.exports = {
   importSeedProject,
   createMemoryStorage,
@@ -122,4 +157,5 @@ module.exports = {
   withProjectPluginPaths,
   registerRequireJsPaths,
   executePlugin,
+  exportProjectToFile,
 };

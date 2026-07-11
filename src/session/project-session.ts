@@ -13,11 +13,18 @@ import { primaryWebgmexPath } from "./seed-resolution.js";
 
 export interface ProjectSessionOptions {
   cwd: string;
-  seed: CatalogEntry;
+  /** Catalog seed entry. Provide this OR webgmexPath. */
+  seed?: CatalogEntry;
+  /** Direct path to a .webgmex file, bypassing the catalog. */
+  webgmexPath?: string;
+  /** Display/project name when opening via webgmexPath. */
+  seedName?: string;
   branchName?: string;
   projectNamePrefix?: string;
-  /** When true, adds {cwd}/src/plugins to gmeConfig.plugin.basePaths */
+  /** When true, adds {cwd}/src/plugins (and pluginBasePaths) to gmeConfig.plugin.basePaths */
   useProjectPlugins?: boolean;
+  /** Extra plugin base directories to register (parent dirs of plugin folders). */
+  pluginBasePaths?: string[];
 }
 
 export interface LoadedSeedContext {
@@ -45,16 +52,17 @@ export async function openProjectSession(
   await closeProjectSession();
 
   const { bridge } = loadGmeRuntime();
-  const webgmexPath = primaryWebgmexPath(options.seed);
+  const webgmexPath = options.webgmexPath ?? primaryWebgmexPath(options.seed!);
+  const seedName =
+    options.seedName ??
+    options.seed?.name ??
+    path.basename(webgmexPath).replace(/\.webgmex$/i, "");
   const sessionConfig = options.useProjectPlugins
-    ? loadGmeConfigForProject(options.cwd)
+    ? loadGmeConfigForProject(options.cwd, options.pluginBasePaths)
     : bridge.loadGmeConfig();
+  const safeName = seedName.replace(/[^a-zA-Z0-9_]/g, "_");
   const projectName =
-    (options.projectNamePrefix ?? "file_project") +
-    "_" +
-    options.seed.name +
-    "_" +
-    Date.now();
+    (options.projectNamePrefix ?? "file_project") + "_" + safeName + "_" + Date.now();
   const branchName = options.branchName ?? "master";
 
   const { gmeConfig, gmeAuth } = await createMemoryGmeAuth(projectName, sessionConfig);
@@ -76,7 +84,7 @@ export async function openProjectSession(
     };
 
     return {
-      seedName: options.seed.name,
+      seedName,
       branchName,
       webgmexPath: path.resolve(webgmexPath),
       core: importResult.core,

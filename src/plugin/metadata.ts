@@ -2,6 +2,13 @@ import fs from "node:fs";
 import type { CatalogEntry } from "../catalog/types.js";
 import type { PluginConfigEntry, PluginInfo, PluginMetadata } from "./types.js";
 
+export function loadPluginMetadataFromPath(metadataPath: string): PluginMetadata {
+  if (!fs.existsSync(metadataPath)) {
+    throw new Error("Plugin metadata.json not found at: " + metadataPath);
+  }
+  return JSON.parse(fs.readFileSync(metadataPath, "utf8")) as PluginMetadata;
+}
+
 export function loadPluginMetadata(entry: CatalogEntry): PluginMetadata {
   if (!entry.metadataPath) {
     throw new Error(
@@ -11,7 +18,7 @@ export function loadPluginMetadata(entry: CatalogEntry): PluginMetadata {
   if (!entry.exists) {
     throw new Error('Plugin "' + entry.name + '" src path is missing: ' + entry.src);
   }
-  return JSON.parse(fs.readFileSync(entry.metadataPath, "utf8")) as PluginMetadata;
+  return loadPluginMetadataFromPath(entry.metadataPath);
 }
 
 export function configDefaults(configStructure: PluginConfigEntry[] | undefined): Record<string, unknown> {

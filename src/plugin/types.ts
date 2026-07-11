@@ -61,4 +61,7 @@ export interface PluginRunOutput {
   config: Record<string, unknown>;
   result: SerializedPluginResult;
   warnings: string[];
+  persisted: boolean;
+  outFile: string | null;
+  dryRun: boolean;
 }
