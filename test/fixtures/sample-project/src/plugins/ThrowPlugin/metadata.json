@@ -1,0 +1,7 @@
+{
+  "id": "ThrowPlugin",
+  "name": "ThrowPlugin",
+  "version": "0.1.0",
+  "description": "Fixture plugin that always fails",
+  "configStructure": []
+}

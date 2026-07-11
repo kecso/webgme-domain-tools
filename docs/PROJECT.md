@@ -44,12 +44,24 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
 | F9 | `plugin info` (configStructure) | `done` | `webdot plugin info EchoPlugin --cwd test/fixtures/sample-project` |
-| F10 | `plugin run` context flags | `done` | `webdot plugin run EchoPlugin --seed StateMachine --at /G` |
+| F10 | `plugin run` context flags | `done` | `webdot plugin run EchoPlugin --seed StateMachine --at /G --dry-run` |
 | F11 | Config validation + `--set` | `done` | `npm test` — `plugin-config.test.js` |
-| F12 | Message / result routing | `done` | `npm test` — `plugin-command.test.js` (stderr messages + JSON result) |
+| F12 | Message / result routing | `done` | `npm test` — `plugin-command.test.js`, `cli.test.js` |
 | F13 | Ephemeral FS blob + `--artifacts-out` | `done` | `webdot plugin run EchoPlugin --seed StateMachine --set emitArtifact=true --artifacts-out _artifacts` |
 | F18 | Model write-back + `--dry-run` / `--out` | `done` | `webdot plugin run EchoPlugin --seed StateMachine --set addNode=true --out out.webgmex` |
-| F19 | Direct `--plugin-dir` / `--webgmex` (no catalog) | `done` | `webdot plugin run --plugin-dir <dir> --webgmex <file> -C <anydir>` |
+| F19 | Direct `--plugin-dir` / `--webgmex` (no catalog) | `done` | `webdot plugin run --plugin-dir src/plugins/EchoPlugin --webgmex src/seeds/StateMachine/StateMachine.webgmex -C test/fixtures/sample-project --dry-run` |
+
+**Review gate:** `npm test` (99 tests, ~95% line coverage) · `docs/DESIGN.md` plugin + session sections
+
+**Next: Phase 3½ — Stateful session shell** — `pending` (planned **before Phase 4**)
+
+| ID | Feature | Status | Review |
+|----|---------|--------|--------|
+| F20 | Session workspace + state file | `pending` | — |
+| F21 | `session open` / `status` / `close` | `pending` | — |
+| F22 | Commands default to open session | `pending` | — |
+| F23 | `session save` / `session discard` | `pending` | — |
+| F24 | Optional REPL / long-lived shell | `pending` | — |
 
 **Phase 2½ — Meta representations** — `done` (merged to `main` 2026-07-10, branch `feature/F16-meta-representations`)
 
@@ -162,8 +174,29 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 | F11 | Config validation + `--set` | `done` | `--config-file`, read-only enforcement |
 | F12 | Message / result routing | `done` | Plugin logger → stderr; messages in JSON + stderr |
 | F13 | Ephemeral FS blob + `--artifacts-out` | `done` | Warn when artifacts produced but not saved |
-| F18 | Model write-back + `--dry-run` / `--out` | `done` | Writes back to source `.webgmex` when the plugin edits the model (detected via extra commit); `--dry-run` skips, `--out` redirects |
+| F18 | Model write-back + `--dry-run` / `--out` | `done` | Writes back to source `.webgmex` when the plugin edits the model; `--dry-run` skips; `--out` redirects |
 | F19 | Direct `--plugin-dir` / `--webgmex` | `done` | Run any plugin dir on any `.webgmex`; catalog is optional shorthand |
+
+### Phase 3½ — Stateful session shell
+| ID | Feature | Status | Notes |
+|----|---------|--------|-------|
+| F20 | Session workspace + state file | `pending` | `.webdot/session.json` + working `.webgmex` copy |
+| F21 | `session open` / `session status` / `session close` | `pending` | Bind cwd, model path, branch, dirty flag |
+| F22 | Commands default to open session | `pending` | `plugin run`, `tree --seed`, etc. when session active |
+| F23 | `session save` / `session discard` | `pending` | Explicit write-back to user-chosen target |
+| F24 | Optional REPL / long-lived shell | `pending` | Single Node process; avoids re-import per command |
+
+**Phase 3½ — Stateful session (planned before Phase 4)**  
+Follow-up commands reuse an **opened** project; the user explicitly **saves** (or discards) instead of one-shot import/run/export per invocation.
+
+**Feasibility (2026-07-11):** **Yes, with the right model.**
+
+- **Constraint:** `webgme-engine` memory storage is **in-process**. A normal one-shot `webdot` CLI cannot keep a live `ProjectSession` across separate shell invocations.
+- **Approach A — workspace file:** On `session open`, import seed/webgmex, export a **working copy** under `.webdot/workspace/`, record paths + dirty flag in `session.json`. Later commands re-import the working copy. `session save` writes to user target. Works with existing subprocess CLI.
+- **Approach B — session REPL:** `webdot session` keeps one Node process and in-memory `ProjectSession` until exit. Best UX for iterative plugin runs.
+- **Synergy with F18:** `exportProjectToFile` and direct `--webgmex` already exist; session layer composes on top.
+
+Priority: **medium** — after Phase 3 merge; **before Phase 4** generators.
 
 ### Phase 4 — Generator & consumer
 | ID | Feature | Status | Notes |
@@ -180,7 +213,7 @@ WebGME seeds may embed or reference **libraries** (`addLibrary`, library roots, 
 - Adjust **seed traversal** (`tree --seed`) to mark library-sourced nodes vs owned meta
 - Align **F16 translators** once representation rules are settled
 
-Priority: **medium** — part of Phase 4 alongside F14–F15; not blocking Phase 3.
+Priority: **medium** — part of Phase 4 alongside F14–F15; not blocking Phase 3½.
 
 ---
 
@@ -216,6 +249,14 @@ Record of completed reviews (newest first).
 ---
 
 ## Changelog
+
+### 0.4.0 (2026-07-11) — review on `feature/phase3-plugin-run`
+- Phase 3: `plugin info`, `plugin run` (headless PluginCliManager)
+- Config: `--set`, `--config-file`, read-only validation
+- Model write-back (default), `--dry-run`, `--out`; direct `--plugin-dir` / `--webgmex`
+- Blob artifacts: `--artifacts-out` + non-persistence warning
+- CLI refactor (`cli-program.ts`); fixture plugins EchoPlugin, NoOpPlugin, ThrowPlugin
+- 99 tests, ~95% line coverage
 
 ### 0.3.0 (2026-07-10)
 - Phase 2½: meta specs (`docs/meta/`), `seed meta --format descriptor|metalang|tree|tree-verbose`

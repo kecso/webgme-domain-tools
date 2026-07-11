@@ -29,7 +29,7 @@ webdot tree repo --kind seeds,plugins
 webdot ls plugins
 ```
 
-## Commands (v0.1)
+## Commands
 
 | Command | Description |
 |---------|-------------|
@@ -37,10 +37,12 @@ webdot ls plugins
 | `tree --seed <name>` | Model tree from a file-project seed |
 | `tree --seed <name> --at <path>` | Subtree from a node path |
 | `tree --seed <name> --select <paths>` | Comma-separated node paths |
-| `seed meta --seed <name>` | MetaAspectSet IR (`--format json`), descriptor, or metalang |
+| `seed meta --seed <name>` | MetaAspectSet IR (`--format json`, descriptor, metalang, tree) |
+| `plugin info <name>` | Plugin `metadata.json` + config defaults |
+| `plugin run <name> --seed <seed>` | Headless plugin execution; `--dry-run`, `--out`, `--plugin-dir`, `--webgmex` |
 | `ls [kind]` | Compact component listing |
 
-More commands (`plugin run`, `generate meta-ts`, …) are tracked in [docs/PROJECT.md](docs/PROJECT.md).
+More commands (`session`, `generate meta-ts`, …) are tracked in [docs/PROJECT.md](docs/PROJECT.md).
 
 ## Development
 

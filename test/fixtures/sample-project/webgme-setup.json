@@ -7,6 +7,12 @@
       "EchoPlugin": {
         "src": "src/plugins/EchoPlugin"
       },
+      "NoOpPlugin": {
+        "src": "src/plugins/NoOpPlugin"
+      },
+      "ThrowPlugin": {
+        "src": "src/plugins/ThrowPlugin"
+      },
       "ModelToVerification": {
         "src": "src/plugins/ModelToVerification"
       },

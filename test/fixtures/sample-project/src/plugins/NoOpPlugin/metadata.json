@@ -1,0 +1,7 @@
+{
+  "id": "NoOpPlugin",
+  "name": "NoOpPlugin",
+  "version": "0.1.0",
+  "description": "Fixture plugin that succeeds immediately without side effects",
+  "configStructure": []
+}
