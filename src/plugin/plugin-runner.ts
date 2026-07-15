@@ -68,7 +68,10 @@ export async function runPluginRunCommand(
 ): Promise<PluginRunCommandResult> {
   const sessionCwd = options.sessionCwd ?? options.cwd;
   const getCatalog = createCatalogLoader(options.cwd);
-  const pluginSource = resolvePluginSource(options, getCatalog);
+  const pluginSource = resolvePluginSource(
+    { ...options, pluginDirCwd: sessionCwd },
+    getCatalog,
+  );
   const modelSource = resolveSessionModelSource(sessionCwd, {
     seed: options.seed,
     webgmex: options.webgmex,
@@ -107,7 +110,17 @@ export async function runPluginRunCommand(
 
       const gmeConfig = loadGmeConfigForProject(options.cwd, [pluginSource.basePath]);
       const { bridge } = loadGmeRuntime();
-      const blobOpts = options.artifactsOut ? { writeBlobFilesDir: options.artifactsOut } : {};
+      // Resolve against the execution directory (sessionCwd), not project -C —
+      // same rule as --plugin-dir. BlobRunPluginClient always does
+      // path.join(process.cwd(), writeBlobFilesDir), and we chdir to the project
+      // for plugin execution, so pass a path relative to the project cwd.
+      const artifactsOutAbs = options.artifactsOut
+        ? path.resolve(sessionCwd, options.artifactsOut)
+        : undefined;
+      const writeBlobFilesDir = artifactsOutAbs
+        ? path.relative(options.cwd, artifactsOutAbs) || "."
+        : undefined;
+      const blobOpts = writeBlobFilesDir ? { writeBlobFilesDir } : {};
 
       process.chdir(options.cwd);
       let execution;
@@ -131,7 +144,7 @@ export async function runPluginRunCommand(
       }
 
       const serialized = serializePluginResult(execution.result as unknown as SerializedPluginResult);
-      const warnings = artifactWarnings(serialized, options.artifactsOut);
+      const warnings = artifactWarnings(serialized, artifactsOutAbs);
       const success = serialized.success === true && !execution.err;
       // PluginBase.configure always records one baseline (SYNCED) commit; a real
       // model edit via self.save() adds at least one more.

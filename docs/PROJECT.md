@@ -45,11 +45,17 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F14 | `generate meta-ts` | `review` | `webdot generate meta-ts --seed StateMachine -C test/fixtures/sample-project` · `npm test` — `generate-meta-ts.test.js` |
+| F14 | GenerateMetaTs plugin | `review` | `webdot plugin run --plugin-dir plugins/GenerateMetaTs --seed StateMachine -C test/fixtures/sample-project --artifacts-out _meta` · `npm test` — `generate-meta-ts.test.js` |
 | F15 | StaMS devDependency + scripts | `pending` | Dogfood in StaMS after package publish / link — see Phase 4 notes |
 | F17 | Library & namespace meta (IR) | `review` | IR `libraries` + per-node namespace/FQN; `docs/meta/LIBRARIES.md`. Descriptor/tree/FQN generator follow-ups need a library `.webgmex` fixture |
 
-**Review gate:** `npm test` · `webdot generate meta-ts --seed StateMachine -C test/fixtures/sample-project --out /tmp/meta.ts`
+**Review gate:** `npm test` · `webdot plugin run --plugin-dir plugins/GenerateMetaTs --seed StateMachine -C test/fixtures/sample-project --artifacts-out _meta` (from repo root; `--plugin-dir` and `--artifacts-out` are relative to shell cwd)
+
+### Phase 4 review notes (2026-07-15)
+
+| ID | Feedback | Action |
+|----|----------|--------|
+| F14 | Generator as separate CLI is architectural noise; should be a plain plugin | Dropped `webdot generate`; self-contained `plugins/GenerateMetaTs` via `--plugin-dir` / `--artifacts-out` (shell cwd). Emit is concept-centric `Meta` (not `*ByConcept` listings). Phase 5 covers install/toolbox. |
 
 **Phase 3½ — Stateful session shell** — `done` (merged to `main` 2026-07-11, branch `feature/phase3.5-session-shell`)
 
@@ -72,7 +78,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | F12 | Message / result routing | `done` | `npm test` — `plugin-command.test.js`, `cli.test.js` |
 | F13 | Ephemeral FS blob + `--artifacts-out` | `done` | `webdot plugin run EchoPlugin --seed StateMachine --set emitArtifact=true --artifacts-out _artifacts` |
 | F18 | Model write-back + `--dry-run` / `--out` | `done` | `webdot plugin run EchoPlugin --seed StateMachine --set addNode=true --out out.webgmex` |
-| F19 | Direct `--plugin-dir` / `--webgmex` (no catalog) | `done` | `webdot plugin run --plugin-dir src/plugins/EchoPlugin --webgmex src/seeds/StateMachine/StateMachine.webgmex -C test/fixtures/sample-project --dry-run` |
+| F19 | Direct `--plugin-dir` / `--webgmex` (no catalog) | `done` | `webdot plugin run --plugin-dir test/fixtures/sample-project/src/plugins/EchoPlugin --seed StateMachine -C test/fixtures/sample-project --dry-run` (`--plugin-dir` is relative to shell cwd, not `-C`) |
 
 ### Phase 3 review notes (2026-07-11)
 
@@ -218,7 +224,7 @@ Follow-up commands reuse an **opened** project workspace; the user explicitly **
 ### Phase 4 — Generator & consumer
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F14 | `generate meta-ts` | `review` | `descriptorToMetaTs` + CLI; session / `--webgmex` / `--out` / `--namespace` |
+| F14 | GenerateMetaTs (plain plugin) | `review` | `plugins/GenerateMetaTs` — concept-centric `Meta` table via `--plugin-dir` + `--artifacts-out`; config `namespace` / `fileName` / `seedName`. No `generate` CLI. |
 | F15 | StaMS devDependency + scripts | `pending` | Companion change in StaMS after this package is linkable/published |
 | F17 | Library & namespace meta | `review` | IR fields + `docs/meta/LIBRARIES.md`; descriptor/tree/FQN emit need library fixture |
 
@@ -228,8 +234,8 @@ After Phase 4 merges:
 ```bash
 # In StaMS
 npm install --save-dev github:kecso/webgme-domain-tools#main
-# package.json scripts example:
-#   "gen:meta": "webdot generate meta-ts --seed StateMachine --out src/generated/meta.ts"
+# package.json scripts example (path to plugin may change after Phase 5 install):
+#   "gen:meta": "webdot plugin run --plugin-dir <path-to>/plugins/GenerateMetaTs --seed StateMachine --artifacts-out src/generated --set seedName=StateMachine"
 ```
 
 Accept when StaMS builds against generated types and CI runs `gen:meta`.
@@ -239,7 +245,7 @@ IR now records `libraries[]` and per-node `namespace` / `fullyQualifiedName` / `
 
 - Descriptor + MetaLang qualified names / `library` blocks when simple names collide
 - `tree --seed` markers for library-sourced nodes
-- Optional FQN mode in `generate meta-ts`
+- Optional FQN mode in GenerateMetaTs
 
 Blocked on a **library-bearing `.webgmex` fixture** (none in-repo yet). See [`docs/meta/LIBRARIES.md`](meta/LIBRARIES.md).
 
@@ -312,7 +318,8 @@ Record of completed reviews (newest first).
 ### Changelog
 
 ### 0.6.0 (unreleased) — branch `feature/phase4-generator`
-- Phase 4: `generate meta-ts` (TypeScript types from seed meta descriptor)
+- Phase 4: GenerateMetaTs plain plugin (`plugins/GenerateMetaTs`) via `plugin run --plugin-dir` + `--artifacts-out`; concept-centric `Meta` table
+- Removed `webdot generate` / `generate meta-ts` CLI (F14 reshape for review)
 - F17 (partial): IR `libraries` + namespace / FQN / `libraryElement` on meta nodes; `docs/meta/LIBRARIES.md`
 - F15 (StaMS dogfood) still pending outside this repo
 
@@ -368,7 +375,7 @@ npx @kecso/webgme-domain-tools tree repo
 webdot tree --seed StateMachine --cwd c:/Work/StaMS
 webdot tree --seed StateMachine --at /1 --cwd c:/Work/StaMS
 webdot seed meta --seed StateMachine --cwd c:/Work/StaMS
-webdot generate meta-ts --seed StateMachine --cwd c:/Work/StaMS --out src/generated/meta.ts
+webdot plugin run --plugin-dir plugins/GenerateMetaTs --seed StateMachine --cwd c:/Work/StaMS --artifacts-out src/generated --set seedName=StateMachine
 webdot plugin info EchoPlugin --cwd test/fixtures/sample-project
 webdot plugin run EchoPlugin --seed StateMachine --cwd test/fixtures/sample-project --set message=hi
 ```

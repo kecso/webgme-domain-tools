@@ -1,0 +1,5 @@
+{
+  "type": "commonjs",
+  "private": true,
+  "description": "GenerateMetaTs is a plain WebGME plugin (CommonJS / AMD); not an npm package."
+}

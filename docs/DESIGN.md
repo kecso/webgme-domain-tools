@@ -35,7 +35,7 @@ Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-sepa
 - **Run:** `plugin run <name> --seed <seed>` — headless `PluginCliManager` on memory file-project
 - **Plugin context:** project (`--seed` or `--webgmex`) + active node (`--at`, default `/`) + selection (`--select`, default none) + config (`metadata.json` + `--set` / `--config-file`). `webdot plugin run --help` lists defaults; JSON output echoes resolved `context`.
 - **Branch:** not exposed for the current import path. v1 `.webgmex` packages are single-snapshot imports: `importSeedProject` inserts one commit and creates one branch (`master`). Current `webgme-engine` also has repository-package helpers (`getProjectWithHistory` / `insertProjectWithHistory`) for full project collections (commits, branch pointers, tags); future support should detect/import that format and then reintroduce branch/tag-aware context options.
-- Blobs: ephemeral FS per session; `--artifacts-out` saves to disk (relative to `-C cwd`); otherwise stderr warning
+- Blobs: ephemeral FS per session; `--artifacts-out` saves to disk (relative to the shell working directory, same as `--plugin-dir`); otherwise stderr warning
 - **Write-back:** the seed `.webgmex` is imported into memory; a plugin that calls `self.save()` produces a new commit, and the resulting model is written back to the source file by default. `--out <file>` redirects; `--dry-run` runs without writing. Read-only runs (no `save`) never rewrite the source.
 - **Source resolution:** catalog shorthand OR direct `--plugin-dir` / `--webgmex` (no `webgme-setup.json` required)
 
@@ -58,7 +58,7 @@ Each one-shot `webdot` command still runs in its own process, but an **open sess
 
 ## Generators
 
-- `generate meta-ts` — TypeScript types from seed meta (descriptor). CLI: `webdot generate meta-ts --seed <name> [--out file] [--namespace Name]`. Emits `MetaConceptName`, `MetaConcepts`, per-concept attribute/pointer/contains/sets types, and `*ByConcept` maps.
+- **GenerateMetaTs** — plain WebGME plugin at `plugins/GenerateMetaTs/`. From the repo root: `webdot plugin run --plugin-dir plugins/GenerateMetaTs --seed <name> -C <project> --artifacts-out <dir>` (`--plugin-dir` / `--artifacts-out` relative to shell cwd; `-C` selects the project/seed). Emits a **concept-centric** `Meta` table (`Meta.State.attributes`, …) plus thin `AttrsOf` / `PointersOf` helpers — not aggregate `*ByConcept` maps. Config: `--set namespace=…`, `fileName=…`, `seedName=…`. Install/toolbox is Phase 5; autocomplete packages / create helpers are downstream.
 
 See [PROJECT.md](PROJECT.md) for implementation status.
 
