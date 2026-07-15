@@ -36,6 +36,7 @@ webdot seed meta --seed StateMachine --format metalang
 | Descriptor | [`descriptor/schema.json`](descriptor/schema.json) | [`descriptor/RULES.md`](descriptor/RULES.md) |
 | Cardinality | [`CARDINALITY.md`](CARDINALITY.md) | Global + per-type on `contains` / `sets` |
 | MetaLang | [`metalang/grammar.ebnf`](metalang/grammar.ebnf) | [`metalang/RULES.md`](metalang/RULES.md) |
+| Libraries | [`LIBRARIES.md`](LIBRARIES.md) | F17 — namespaces / FQN in IR; descriptor follow-ups |
 
 ## Examples
 

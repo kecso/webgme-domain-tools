@@ -5,11 +5,16 @@
   "description": "Lossless MetaAspectSet intermediate representation from webdot seed meta (core.getJsonMeta per meta node).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["seed", "branch", "webgmex", "metaAspectSet"],
+  "required": ["seed", "branch", "webgmex", "libraries", "metaAspectSet"],
   "properties": {
     "seed": { "type": "string", "minLength": 1 },
     "branch": { "type": "string", "minLength": 1 },
     "webgmex": { "type": "string", "minLength": 1 },
+    "libraries": {
+      "type": "array",
+      "description": "Attached library root names (core.getLibraryNames).",
+      "items": { "type": "string" }
+    },
     "metaAspectSet": {
       "type": "array",
       "items": { "$ref": "#/$defs/metaAspectNodeIr" }
@@ -19,7 +24,7 @@
     "metaAspectNodeIr": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "name", "meta"],
+      "required": ["path", "name", "namespace", "fullyQualifiedName", "libraryElement", "meta"],
       "properties": {
         "path": {
           "type": "string",
@@ -29,6 +34,18 @@
         "name": {
           "type": "string",
           "description": "Concept name (name attribute)."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Library namespace (empty when host-owned)."
+        },
+        "fullyQualifiedName": {
+          "type": "string",
+          "description": "core.getFullyQualifiedName — equals name when namespace is empty."
+        },
+        "libraryElement": {
+          "type": "boolean",
+          "description": "true when the meta node comes from an attached library."
         },
         "meta": {
           "type": "object",

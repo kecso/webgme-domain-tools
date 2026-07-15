@@ -39,9 +39,17 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 4 — Generator & consumer** — `pending` (next)
+**Phase 4 — Generator & consumer** — `review` (branch `feature/phase4-generator`)
 
 **Phase 5 — Installable plugins (global toolbox)** — `pending` (after Phase 4)
+
+| ID | Feature | Status | Review |
+|----|---------|--------|--------|
+| F14 | `generate meta-ts` | `review` | `webdot generate meta-ts --seed StateMachine -C test/fixtures/sample-project` · `npm test` — `generate-meta-ts.test.js` |
+| F15 | StaMS devDependency + scripts | `pending` | Dogfood in StaMS after package publish / link — see Phase 4 notes |
+| F17 | Library & namespace meta (IR) | `review` | IR `libraries` + per-node namespace/FQN; `docs/meta/LIBRARIES.md`. Descriptor/tree/FQN generator follow-ups need a library `.webgmex` fixture |
+
+**Review gate:** `npm test` · `webdot generate meta-ts --seed StateMachine -C test/fixtures/sample-project --out /tmp/meta.ts`
 
 **Phase 3½ — Stateful session shell** — `done` (merged to `main` 2026-07-11, branch `feature/phase3.5-session-shell`)
 
@@ -53,8 +61,6 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | F23 | `session save` / `session discard` | `done` | `npm test` — `session-workspace.test.js` |
 | F24 | Optional REPL / long-lived shell | `done` | `webdot session repl` |
 | F25 | `.webgmex` repository import/export | `deferred` | Use engine `getProjectWithHistory` / `insertProjectWithHistory` (later) |
-
-**Review gate:** `npm test` · `docs/DESIGN.md` stateful session section
 
 **Phase 3 — Plugin run** — `done` (merged to `main` 2026-07-11, branch `feature/phase3-plugin-run`)
 
@@ -212,19 +218,30 @@ Follow-up commands reuse an **opened** project workspace; the user explicitly **
 ### Phase 4 — Generator & consumer
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F14 | `generate meta-ts` | `pending` | TypeScript types from seed meta (descriptor) |
-| F15 | StaMS devDependency + scripts | `pending` | Dogfood in StaMS |
-| F17 | Library & namespace meta | `pending` | See below — with generator work, not before |
+| F14 | `generate meta-ts` | `review` | `descriptorToMetaTs` + CLI; session / `--webgmex` / `--out` / `--namespace` |
+| F15 | StaMS devDependency + scripts | `pending` | Companion change in StaMS after this package is linkable/published |
+| F17 | Library & namespace meta | `review` | IR fields + `docs/meta/LIBRARIES.md`; descriptor/tree/FQN emit need library fixture |
+
+**F15 — StaMS dogfood (outside this repo)**  
+After Phase 4 merges:
+
+```bash
+# In StaMS
+npm install --save-dev github:kecso/webgme-domain-tools#main
+# package.json scripts example:
+#   "gen:meta": "webdot generate meta-ts --seed StateMachine --out src/generated/meta.ts"
+```
+
+Accept when StaMS builds against generated types and CI runs `gen:meta`.
 
 **F17 — Library & namespace (Phase 4)**  
-WebGME seeds may embed or reference **libraries** (`addLibrary`, library roots, `getFullyQualifiedName` / namespace). v1 IR/descriptor/MetaLang and `tree --seed` use concept **names** and storage **paths** only. F17 should:
+IR now records `libraries[]` and per-node `namespace` / `fullyQualifiedName` / `libraryElement` (StateMachine fixture: empty). Remaining:
 
-- Document how libraries appear in IR (`getJsonMeta`, library GUIDs, cross-project refs)
-- Extend descriptor + MetaLang if needed (e.g. qualified names, `library` blocks, namespace in `domain`)
-- Adjust **seed traversal** (`tree --seed`) to mark library-sourced nodes vs owned meta
-- Align **F16 translators** once representation rules are settled
+- Descriptor + MetaLang qualified names / `library` blocks when simple names collide
+- `tree --seed` markers for library-sourced nodes
+- Optional FQN mode in `generate meta-ts`
 
-Priority: **medium** — part of Phase 4 alongside F14–F15.
+Blocked on a **library-bearing `.webgmex` fixture** (none in-repo yet). See [`docs/meta/LIBRARIES.md`](meta/LIBRARIES.md).
 
 ### Phase 5 — Installable plugins (global toolbox)
 | ID | Feature | Status | Notes |
@@ -292,7 +309,12 @@ Record of completed reviews (newest first).
 
 ---
 
-## Changelog
+### Changelog
+
+### 0.6.0 (unreleased) — branch `feature/phase4-generator`
+- Phase 4: `generate meta-ts` (TypeScript types from seed meta descriptor)
+- F17 (partial): IR `libraries` + namespace / FQN / `libraryElement` on meta nodes; `docs/meta/LIBRARIES.md`
+- F15 (StaMS dogfood) still pending outside this repo
 
 ### 0.5.0 (2026-07-11) — merged to `main`
 - Phase 3½: `session open` / `status` / `save` / `discard` / `close` / `repl`
@@ -346,6 +368,7 @@ npx @kecso/webgme-domain-tools tree repo
 webdot tree --seed StateMachine --cwd c:/Work/StaMS
 webdot tree --seed StateMachine --at /1 --cwd c:/Work/StaMS
 webdot seed meta --seed StateMachine --cwd c:/Work/StaMS
+webdot generate meta-ts --seed StateMachine --cwd c:/Work/StaMS --out src/generated/meta.ts
 webdot plugin info EchoPlugin --cwd test/fixtures/sample-project
 webdot plugin run EchoPlugin --seed StateMachine --cwd test/fixtures/sample-project --set message=hi
 ```

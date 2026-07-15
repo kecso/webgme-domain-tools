@@ -7,7 +7,12 @@ Each entry in `metaAspectSet` is one meta node:
 
 - `path` — storage path inside the imported file-project
 - `name` — concept name (`FCO`, `META`, domain concepts)
+- `namespace` — library namespace (empty when host-owned)
+- `fullyQualifiedName` — `core.getFullyQualifiedName`
+- `libraryElement` — whether the node comes from an attached library
 - `meta` — full `core.getJsonMeta(node)` object
+
+Root also includes `libraries` — attached library root names (`core.getLibraryNames`). See [`../LIBRARIES.md`](../LIBRARIES.md).
 
 ## Properties
 

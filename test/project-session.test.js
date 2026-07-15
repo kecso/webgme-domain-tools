@@ -127,8 +127,13 @@ test("buildSeedMetaIr returns MetaAspectSet nodes", async () => {
   await withStateMachineSession(async (context) => {
     const ir = buildSeedMetaIr(context);
     assert.equal(ir.seed, "StateMachine");
+    assert.deepEqual(ir.libraries, []);
     assert.ok(ir.metaAspectSet.length > 0);
     assert.ok(ir.metaAspectSet[0].meta);
+    assert.equal(typeof ir.metaAspectSet[0].namespace, "string");
+    assert.equal(typeof ir.metaAspectSet[0].fullyQualifiedName, "string");
+    assert.equal(typeof ir.metaAspectSet[0].libraryElement, "boolean");
+    assert.equal(ir.metaAspectSet[0].libraryElement, false);
     const tree = renderSeedMeta(ir, "tree");
     assert.match(tree, /├─|└─/);
     assert.match(tree, /State  \/G\/z/);
@@ -151,4 +156,6 @@ test("runSeedTreeCommand and runSeedMetaCommand", async () => {
   });
   const meta = JSON.parse(metaOut);
   assert.ok(meta.metaAspectSet.length > 0);
+  assert.deepEqual(meta.libraries, []);
+  assert.equal(typeof meta.metaAspectSet[0].fullyQualifiedName, "string");
 });

@@ -36,6 +36,12 @@ export interface GmeCore {
   getBase: (node: GmeNode) => GmeNode | null;
   getChildrenRelids: (node: GmeNode) => string[];
   getChild: (node: GmeNode, relid: string) => GmeNode | null;
+  /** Library / namespace APIs (present on webgme-engine core). */
+  getLibraryNames?: (root: GmeNode) => string[];
+  getNamespace?: (node: GmeNode) => string;
+  getFullyQualifiedName?: (node: GmeNode) => string;
+  isLibraryElement?: (node: GmeNode) => boolean;
+  isLibraryRoot?: (node: GmeNode) => boolean;
 }
 
 interface GmeAuthLike {

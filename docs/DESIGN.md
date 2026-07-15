@@ -56,9 +56,9 @@ Each one-shot `webdot` command still runs in its own process, but an **open sess
 
 **F25 (deferred):** repository `.webgmex` packages with full commit/branch/tag history via engine `getProjectWithHistory` / `insertProjectWithHistory`.
 
-## Generators (planned)
+## Generators
 
-- `generate meta-ts` — TypeScript types from seed meta (descriptor / MetaAspectSet)
+- `generate meta-ts` — TypeScript types from seed meta (descriptor). CLI: `webdot generate meta-ts --seed <name> [--out file] [--namespace Name]`. Emits `MetaConceptName`, `MetaConcepts`, per-concept attribute/pointer/contains/sets types, and `*ByConcept` maps.
 
 See [PROJECT.md](PROJECT.md) for implementation status.
 

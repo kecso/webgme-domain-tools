@@ -4,6 +4,7 @@ import { runLsCommand } from "./commands/ls.js";
 import { runSeedMetaCommand, type SeedMetaFormat } from "./commands/seed.js";
 import { runTreeCommand } from "./commands/tree.js";
 import { runPluginInfoCommand, runPluginRunCommand } from "./commands/plugin.js";
+import { runGenerateMetaTsCommand } from "./commands/generate.js";
 import {
   runSessionCloseCommand,
   runSessionDiscardCommand,
@@ -94,7 +95,7 @@ export function createProgram(): Command {
   program
     .name(CLI_NAME)
     .description("WebGME domain tools")
-    .version("0.5.0")
+    .version("0.6.0")
     .option("-C, --cwd <dir>", "WebGME project root (webgme-setup.json) [default: cwd]");
 
   program
@@ -275,6 +276,54 @@ until you run session save. Use session open / session status to manage state.
         }
         console.log(result.output);
         if (!result.success) process.exit(1);
+      } catch (err) {
+        if (err instanceof AmbiguousSeedError) {
+          console.error(err.message);
+          process.exit(2);
+        }
+        if (err instanceof SessionError) {
+          console.error(err.message);
+          process.exit(1);
+        }
+        console.error(err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  const generateCmd = program.command("generate").description("Code generation from seed meta");
+
+  generateCmd
+    .command("meta-ts")
+    .description("Generate TypeScript types from seed MetaAspectSet (via descriptor)")
+    .option("--seed [name]", "Seed name (defaults to open session project)")
+    .option("--webgmex <path>", "Direct .webgmex path (or use --seed)")
+    .option("--out <file>", "Write TypeScript to this file (relative to -C cwd); default: stdout")
+    .option("--namespace <name>", "Wrap exports in export namespace <name>")
+    .action(async (opts: {
+      seed?: string | boolean;
+      webgmex?: string;
+      out?: string;
+      namespace?: string;
+    }, cmd) => {
+      const sessionCwd = executionCwd();
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error("generate meta-ts requires --seed <name>, --webgmex <path>, or an open session");
+        process.exit(2);
+      }
+      try {
+        const result = await runGenerateMetaTsCommand({
+          cwd: projectCwdFor(cmd, sessionCwd),
+          sessionCwd,
+          seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
+          out: opts.out,
+          namespace: opts.namespace,
+        });
+        if (result.outFile) {
+          console.error("wrote:", result.outFile);
+        } else {
+          console.log(result.source);
+        }
       } catch (err) {
         if (err instanceof AmbiguousSeedError) {
           console.error(err.message);

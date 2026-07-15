@@ -38,11 +38,13 @@ webdot ls plugins
 | `tree --seed <name> --at <path>` | Subtree from a node path |
 | `tree --seed <name> --select <paths>` | Comma-separated node paths |
 | `seed meta --seed <name>` | MetaAspectSet IR (`--format json`, descriptor, metalang, tree) |
+| `generate meta-ts --seed <name>` | TypeScript types from seed meta (`--out`, `--namespace`) |
 | `plugin info <name>` | Plugin `metadata.json` + config defaults |
 | `plugin run <name> --seed <seed>` | Headless plugin execution; `--dry-run`, `--out`, `--plugin-dir`, `--webgmex` |
 | `ls [kind]` | Compact component listing |
+| `session open|status|save|discard|close|repl` | Stateful workspace in `.webdot/` |
 
-More commands (`session`, `generate meta-ts`, …) are tracked in [docs/PROJECT.md](docs/PROJECT.md).
+More commands and milestones: [docs/PROJECT.md](docs/PROJECT.md).
 
 ## Development
 
