@@ -58,6 +58,23 @@ Each one-shot `webdot` command still runs in its own process, but an **open sess
 
 ## Generators (planned)
 
-- `generate meta-ts` — TypeScript types from seed MetaAspectSet
+- `generate meta-ts` — TypeScript types from seed meta (descriptor / MetaAspectSet)
 
 See [PROJECT.md](PROJECT.md) for implementation status.
+
+## Installable plugins (Phase 5 — planned)
+
+**Scenario:** `webdot` is used as a **global** CLI. Useful plugins are not copied into every domain studio; they are **installed once** for the user and run against whatever project/session is open.
+
+| Piece | Behavior |
+|-------|----------|
+| Store | User-scoped registry (e.g. `~/.webdot/plugins/`) — local path or GitHub cache |
+| Install | `webdot plugin install <path\|owner/repo> [--as <name>]` |
+| Dictionary | Each install registers under a **unique name**; that name is what `plugin run` / `info` use |
+| Collisions | If the requested name is taken, require `--as <alias>` (or prompt). Never silent overwrite |
+| Distinction | `plugin list` and resolution notes label **catalog** vs **installed** so two similarly named tools stay distinguishable |
+| Execution | Same headless path as F19: registry entry → `PluginSource` `{ name, basePath, metadataPath }` |
+
+Resolution order for a bare plugin name (planned): `--plugin-dir` → project catalog → installed registry.
+
+See [PROJECT.md](PROJECT.md) Phase 5 (F26–F29).

@@ -39,7 +39,9 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 4 — Generator & consumer** — `pending` (next up after Phase 3½ merge)
+**Phase 4 — Generator & consumer** — `pending` (next)
+
+**Phase 5 — Installable plugins (global toolbox)** — `pending` (after Phase 4)
 
 **Phase 3½ — Stateful session shell** — `done` (merged to `main` 2026-07-11, branch `feature/phase3.5-session-shell`)
 
@@ -210,7 +212,7 @@ Follow-up commands reuse an **opened** project workspace; the user explicitly **
 ### Phase 4 — Generator & consumer
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F14 | `generate meta-ts` | `pending` | From seed meta |
+| F14 | `generate meta-ts` | `pending` | TypeScript types from seed meta (descriptor) |
 | F15 | StaMS devDependency + scripts | `pending` | Dogfood in StaMS |
 | F17 | Library & namespace meta | `pending` | See below — with generator work, not before |
 
@@ -222,7 +224,35 @@ WebGME seeds may embed or reference **libraries** (`addLibrary`, library roots, 
 - Adjust **seed traversal** (`tree --seed`) to mark library-sourced nodes vs owned meta
 - Align **F16 translators** once representation rules are settled
 
-Priority: **medium** — part of Phase 4 alongside F14–F15; not blocking Phase 3½.
+Priority: **medium** — part of Phase 4 alongside F14–F15.
+
+### Phase 5 — Installable plugins (global toolbox)
+| ID | Feature | Status | Notes |
+|----|---------|--------|-------|
+| F26 | Plugin install registry (local) | `pending` | User-scoped store; `plugin install <path>` |
+| F27 | Install from GitHub | `pending` | Clone/pin tag or sha into cache |
+| F28 | Collision → alternate install name | `pending` | Prompt / `--as <alias>`; dictionary must be unambiguous |
+| F29 | Resolve installed names on `plugin run` / `info` / `ls` | `pending` | Clear source labels: catalog vs installed |
+
+**Phase 5 — Scenario (boiled down)**  
+`webdot` is installed **system-wide**. Domain-agnostic plugins live in a **user registry**, not inside each studio repo. Any project/session can run them against its own `.webgmex`.
+
+```bash
+# Global CLI already on PATH
+webdot plugin install ./path/to/ModelLint          # local
+webdot plugin install owner/webdot-ModelLint       # GitHub (F27)
+webdot plugin install ./EchoPlugin --as LintEcho   # rename when name collides
+
+webdot plugin list                                 # shows install name + source
+webdot plugin run LintEcho --seed StateMachine -C ~/StaMS
+```
+
+**Name dictionary & collisions**  
+Each install gets a **dictionary key** (the name used later in `plugin run` / `info`). If that key already exists (another install, or a project catalog plugin the user wants to keep distinct), install **requires an alternate name** (`--as <alias>` or interactive prompt). No silent overwrite. Later execution always uses the dictionary key, so catalog `EchoPlugin` and installed `LintEcho` are obviously different tools.
+
+**Layout:** Reuses F19 (`--plugin-dir` semantics). Registry stores absolute paths (symlink for local, cache clone for GitHub) + metadata. Precedence for a bare name: explicit `--plugin-dir` → open project catalog → installed registry (document clearly; prefer unique install names via F28).
+
+Priority: **high product direction** — own milestone after Phase 4 generators.
 
 ---
 
@@ -241,6 +271,7 @@ Tasks not tied to a single milestone — pick up anytime.
 | B7 | meta | See **F17** (Phase 4) — library/namespace in IR, descriptor, MetaLang, traversal | medium |
 | B8 | streamline | CLI complexity: trim rare flags or `webdot examples` tutorial recipes / scenario printouts | medium |
 | B9 | compatibility | Track/adopt WebGME repository `.webgmex` support; replace snapshot-only assumptions with full commit/branch/tag import where available | medium |
+| B10 | product | Phase 5 installable plugins (F26–F29) — global toolbox; see Phase 5 section | high |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
 
