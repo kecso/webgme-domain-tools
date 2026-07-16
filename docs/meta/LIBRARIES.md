@@ -37,10 +37,13 @@ WebGME projects may attach **libraries** (`core.addLibrary`). Meta nodes that co
 
 The StateMachine fixture has **no libraries** (`libraries: []`, empty namespaces). Descriptor / MetaLang / GenerateMetaTs still key concepts by **simple `name`** (v1 behavior).
 
-## Remaining (needs a library-bearing `.webgmex` fixture)
+## Remaining — Phase 6 (Libraries)
 
-1. Descriptor / MetaLang: qualified names or `library` blocks when simple names would collide
-2. `tree --seed`: mark library-sourced nodes vs host-owned meta
-3. GenerateMetaTs: optional FQN-based exports when namespaces are present
+Needs a **library-bearing `.webgmex` fixture**, then:
 
-Until then, studio authors should avoid relying on generated types for library-imported concepts that share simple names with host meta.
+1. **Listing / introspection** — `tree --seed` (and related list views) mark library-sourced nodes; library roots named clearly
+2. **Descriptor / MetaLang** — qualified names or `library` blocks when simple names would collide
+3. **GenerateMetaTs** — optional FQN-based exports when namespaces are present
+4. **CLI management** (optional product surface) — attach / update / remove library packages on a session or seed via engine library APIs
+
+Until Phase 6, studio authors should avoid relying on generated types for library-imported concepts that share simple names with host meta. See [PROJECT.md](../PROJECT.md) Phase 6.

@@ -1,5 +1,4 @@
 import path from "node:path";
-import { loadSetupCatalog, resolvePlugin } from "../catalog/setup-catalog.js";
 import {
   closeProjectSession,
   loadNodeAt,
@@ -7,7 +6,7 @@ import {
 } from "../session/project-session.js";
 import { createSessionLogger, loadGmeConfigForProject, loadGmeRuntime, type SessionLogger } from "../session/gme-runtime.js";
 import { resolvePluginConfig } from "./config.js";
-import { buildPluginInfo, loadPluginMetadataFromPath, renderPluginInfo } from "./metadata.js";
+import { buildPluginInfoFromPath, loadPluginMetadataFromPath, renderPluginInfo } from "./metadata.js";
 import { buildPluginRunContext, formatPluginRunContext } from "./run-context.js";
 import { artifactWarnings, serializePluginResult } from "./result-format.js";
 import {
@@ -23,6 +22,7 @@ import type { PluginRunOutput, SerializedPluginResult } from "./types.js";
 export interface PluginInfoCommandOptions {
   cwd: string;
   plugin: string;
+  home?: string;
 }
 
 export interface PluginRunCommandOptions {
@@ -30,7 +30,7 @@ export interface PluginRunCommandOptions {
   cwd: string;
   /** Execution directory that owns the session (defaults to cwd). */
   sessionCwd?: string;
-  /** Catalog plugin name (or use pluginDir). */
+  /** Catalog or installed plugin name (or use pluginDir). */
   plugin?: string;
   /** Direct path to a plugin directory ({dir}/{dir}.js), bypassing catalog. */
   pluginDir?: string;
@@ -47,6 +47,8 @@ export interface PluginRunCommandOptions {
   dryRun?: boolean;
   /** Write the resulting model to this .webgmex instead of the source. */
   out?: string;
+  /** Override WEBDOT_HOME for installed plugin lookup. */
+  home?: string;
 }
 
 export interface PluginRunCommandResult {
@@ -58,9 +60,18 @@ export interface PluginRunCommandResult {
 }
 
 export async function runPluginInfoCommand(options: PluginInfoCommandOptions): Promise<string> {
-  const catalog = loadSetupCatalog(options.cwd);
-  const entry = resolvePlugin(catalog, options.plugin);
-  return renderPluginInfo(buildPluginInfo(entry));
+  const getCatalog = createCatalogLoader(options.cwd);
+  const pluginSource = resolvePluginSource(
+    { cwd: options.cwd, plugin: options.plugin, home: options.home },
+    getCatalog,
+  );
+  const info = buildPluginInfoFromPath(pluginSource.metadataPath, {
+    id: pluginSource.name,
+    src: path.join(pluginSource.basePath, pluginSource.name),
+    source: pluginSource.source,
+    installName: pluginSource.installName,
+  });
+  return renderPluginInfo(info);
 }
 
 export async function runPluginRunCommand(
@@ -193,6 +204,8 @@ export async function runPluginRunCommand(
       const payload: PluginRunOutput = {
         success,
         plugin: pluginSource.name,
+        source: pluginSource.source,
+        installName: pluginSource.installName,
         context: formatPluginRunContext(modelSource, runContext, config),
         result: serialized,
         warnings,
