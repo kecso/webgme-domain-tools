@@ -12,7 +12,6 @@
   "use strict";
 
   var getMemberMap = buildDescriptor.getMemberMap;
-  var getMemberGlobal = buildDescriptor.getMemberGlobal;
 
   function isValidTsIdentifier(name) {
     return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name);
@@ -33,103 +32,160 @@
       .join("\n");
   }
 
-  /** Emit a runtime attribute def as a TS const expression (descriptor shape). */
-  function attributeDefExpr(def) {
+  function attributeValueType(def) {
     if (typeof def === "string") {
-      return JSON.stringify(def);
+      switch (def) {
+        case "bool":
+          return "boolean";
+        case "integer":
+        case "float":
+          return "number";
+        case "string":
+        case "asset":
+          return "string";
+        default:
+          return "unknown";
+      }
     }
-    if (def.type === "enum" && Array.isArray(def.values)) {
-      return (
-        '{ type: "enum", values: [' +
-        def.values
-          .map(function (v) {
-            return JSON.stringify(v);
-          })
-          .join(", ") +
-        "] as const }"
-      );
-    }
-    return JSON.stringify(def);
-  }
-
-  function typeRefExpr(ref) {
-    if (typeof ref === "string") return JSON.stringify(ref);
-    return (
-      "[" +
-      ref
-        .map(function (r) {
-          return JSON.stringify(r);
+    if (def.type === "enum" && Array.isArray(def.values) && def.values.length > 0) {
+      return def.values
+        .map(function (v) {
+          return JSON.stringify(v);
         })
-        .join(", ") +
-      "] as const"
-    );
+        .join(" | ");
+    }
+    if (def.type === "boolean" || def.type === "bool") return "boolean";
+    if (def.type === "integer" || def.type === "float") return "number";
+    if (def.type === "string" || def.type === "asset") return "string";
+    return "unknown";
   }
 
-  function memberRuleExpr(rule) {
+  /** Pointer target: instance type or name string for loose authoring. */
+  function pointerFieldType(ref) {
+    if (typeof ref === "string") return ref + " | string";
+    return ref.join(" | ") + " | string";
+  }
+
+  function setMemberType(rule) {
     var members = getMemberMap(rule);
-    var global = getMemberGlobal(rule);
-    var keys = Object.keys(members).sort(function (a, b) {
+    var names = Object.keys(members).sort(function (a, b) {
       return a.localeCompare(b);
     });
-    var sorted = {};
-    for (var i = 0; i < keys.length; i += 1) {
-      sorted[keys[i]] = members[keys[i]];
-    }
-    if (global) {
-      return JSON.stringify({ global: global, members: sorted });
-    }
-    return JSON.stringify(sorted);
+    if (names.length === 0) return "string";
+    return names.join(" | ") + " | string";
   }
 
-  function recordExpr(entries, valueFn, empty) {
-    var keys = Object.keys(entries || {}).sort(function (a, b) {
-      return a.localeCompare(b);
-    });
-    if (keys.length === 0) return empty;
-    var lines = ["{"];
-    for (var i = 0; i < keys.length; i += 1) {
-      var key = keys[i];
-      lines.push("    " + quoteProp(key) + ": " + valueFn(entries[key]) + ",");
+  function renderScopedBlock(scopeName, fieldLines) {
+    if (fieldLines.length === 0) return null;
+    var lines = ["  " + scopeName + "?: {"];
+    for (var i = 0; i < fieldLines.length; i += 1) {
+      lines.push("    " + fieldLines[i]);
     }
-    lines.push("  }");
-    return lines.join("\n");
-  }
-
-  function renderConceptEntry(name, body) {
-    var lines = [];
-    lines.push("  " + name + ": {");
-    lines.push("    name: " + JSON.stringify(name) + ",");
-    if (body.extends) {
-      lines.push("    extends: " + JSON.stringify(body.extends) + ",");
-    }
-    lines.push(
-      "    attributes: " +
-        recordExpr(body.attributes, attributeDefExpr, "{}") +
-        " as const,",
-    );
-    lines.push(
-      "    pointers: " + recordExpr(body.pointers, typeRefExpr, "{}") + " as const,",
-    );
-    if (body.contains) {
-      lines.push("    contains: " + memberRuleExpr(body.contains) + " as const,");
-    } else {
-      lines.push("    contains: {} as const,");
-    }
-    lines.push(
-      "    sets: " +
-        recordExpr(body.sets, memberRuleExpr, "{}") +
-        " as const,",
-    );
-    lines.push("  },");
+    lines.push("  };");
     return lines.join("\n");
   }
 
   /**
-   * Concept-centric Meta table. Discover attributes/pointers from Meta.State —
-   * not from aggregate *ByConcept maps.
+   * Domain instance interfaces with WebGME scopes kept separate:
+   * attributes / pointers / sets / children (unnamed containment list).
    */
+  function renderConceptInterface(name, body) {
+    var lines = [];
+    var extendsClause = body.extends ? " extends " + body.extends : "";
+    lines.push("export interface " + name + extendsClause + " {");
+
+    var attrFields = ["name?: string;"];
+    var attrs = body.attributes || {};
+    Object.keys(attrs)
+      .sort(function (a, b) {
+        return a.localeCompare(b);
+      })
+      .forEach(function (attrName) {
+        attrFields.push(
+          quoteProp(attrName) + "?: " + attributeValueType(attrs[attrName]) + ";",
+        );
+      });
+    lines.push(renderScopedBlock("attributes", attrFields));
+
+    var ptrFields = [];
+    var pointers = body.pointers || {};
+    Object.keys(pointers)
+      .sort(function (a, b) {
+        return a.localeCompare(b);
+      })
+      .forEach(function (ptrName) {
+        ptrFields.push(
+          quoteProp(ptrName) + "?: " + pointerFieldType(pointers[ptrName]) + ";",
+        );
+      });
+    var ptrBlock = renderScopedBlock("pointers", ptrFields);
+    if (ptrBlock) lines.push(ptrBlock);
+
+    var setFields = [];
+    var sets = body.sets || {};
+    Object.keys(sets)
+      .sort(function (a, b) {
+        return a.localeCompare(b);
+      })
+      .forEach(function (setName) {
+        setFields.push(
+          quoteProp(setName) + "?: Array<" + setMemberType(sets[setName]) + ">;",
+        );
+      });
+    var setBlock = renderScopedBlock("sets", setFields);
+    if (setBlock) lines.push(setBlock);
+
+    if (body.contains) {
+      var members = getMemberMap(body.contains);
+      var childTypes = Object.keys(members).sort(function (a, b) {
+        return a.localeCompare(b);
+      });
+      if (childTypes.length > 0) {
+        lines.push("  children?: Array<" + childTypes.join(" | ") + ">;");
+      }
+    }
+
+    lines.push("}");
+    return lines.filter(Boolean).join("\n");
+  }
+
+  function topologicalConceptOrder(concepts) {
+    var names = Object.keys(concepts);
+    var remaining = {};
+    names.forEach(function (n) {
+      remaining[n] = true;
+    });
+    var ordered = [];
+    var guard = names.length + 1;
+    while (ordered.length < names.length && guard > 0) {
+      guard -= 1;
+      var progressed = false;
+      names.forEach(function (n) {
+        if (!remaining[n]) return;
+        var base = concepts[n].extends;
+        if (!base || !remaining[base]) {
+          ordered.push(n);
+          delete remaining[n];
+          progressed = true;
+        }
+      });
+      if (!progressed) {
+        Object.keys(remaining)
+          .sort(function (a, b) {
+            return a.localeCompare(b);
+          })
+          .forEach(function (n) {
+            ordered.push(n);
+            delete remaining[n];
+          });
+      }
+    }
+    return ordered;
+  }
+
   function renderDeclarations(descriptor) {
-    var conceptNames = Object.keys(descriptor.concepts).sort(function (a, b) {
+    var concepts = descriptor.concepts;
+    var conceptNames = Object.keys(concepts).sort(function (a, b) {
       return a.localeCompare(b);
     });
     var i;
@@ -143,33 +199,27 @@
       }
     }
 
+    var order = topologicalConceptOrder(concepts);
     var blocks = [];
-    blocks.push("export const Meta = {");
-    for (i = 0; i < conceptNames.length; i += 1) {
-      var name = conceptNames[i];
-      blocks.push(renderConceptEntry(name, descriptor.concepts[name]));
+
+    if (conceptNames.length === 0) {
+      blocks.push("export type DomainConcept = never;", "");
+    } else {
+      blocks.push("export type DomainConcept =");
+      for (i = 0; i < conceptNames.length; i += 1) {
+        blocks.push(
+          "  | " +
+            JSON.stringify(conceptNames[i]) +
+            (i === conceptNames.length - 1 ? ";" : ""),
+        );
+      }
+      blocks.push("");
     }
-    blocks.push("} as const;", "");
-    blocks.push("export type MetaConcept = keyof typeof Meta;", "");
-    blocks.push(
-      "/** Attribute defs for one concept — pick the concept first, then its fields. */",
-    );
-    blocks.push(
-      "export type AttrsOf<C extends MetaConcept> = (typeof Meta)[C][\"attributes\"];",
-      "",
-    );
-    blocks.push(
-      "export type PointersOf<C extends MetaConcept> = (typeof Meta)[C][\"pointers\"];",
-      "",
-    );
-    blocks.push(
-      "export type ContainsOf<C extends MetaConcept> = (typeof Meta)[C][\"contains\"];",
-      "",
-    );
-    blocks.push(
-      "export type SetsOf<C extends MetaConcept> = (typeof Meta)[C][\"sets\"];",
-      "",
-    );
+
+    for (i = 0; i < order.length; i += 1) {
+      var name = order[i];
+      blocks.push(renderConceptInterface(name, concepts[name]), "");
+    }
 
     return blocks.join("\n").replace(/\n+$/, "") + "\n";
   }
@@ -182,8 +232,20 @@
       options.seedName +
       "\n" +
       " *\n" +
-      " * Concept-centric metamodel table. Start from Meta.<Concept>, then\n" +
-      " * read .attributes / .pointers / .contains / .sets on that entry.\n" +
+      " * Domain instance types. WebGME scopes are kept separate so the same\n" +
+      " * name can exist as an attribute and as a pointer without clashing:\n" +
+      " *   node.attributes.name  vs  node.pointers.name\n" +
+      " * Containment is a single `children` array (unnamed in WebGME), not\n" +
+      " * per-type slots like `states` / `actions`.\n" +
+      " *\n" +
+      " * Example:\n" +
+      " *   const door: Machine = {\n" +
+      " *     attributes: { description: \"Door lock\" },\n" +
+      " *     children: [\n" +
+      " *       { attributes: { name: \"Locked\", isInitial: true } },\n" +
+      " *       { attributes: { name: \"Unlocked\", isFinal: true } },\n" +
+      " *     ],\n" +
+      " *   };\n" +
       " */\n\n";
 
     var declarations = renderDeclarations(descriptor);

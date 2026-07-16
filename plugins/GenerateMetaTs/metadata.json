@@ -2,7 +2,7 @@
   "id": "GenerateMetaTs",
   "name": "GenerateMetaTs",
   "version": "0.1.0",
-  "description": "Generate TypeScript types from the project's MetaAspectSet (via descriptor).",
+  "description": "Generate TypeScript domain instance interfaces (Machine, State, …) from seed meta for authoring models in code.",
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "writeAccessRequired": false,

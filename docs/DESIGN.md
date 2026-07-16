@@ -58,7 +58,7 @@ Each one-shot `webdot` command still runs in its own process, but an **open sess
 
 ## Generators
 
-- **GenerateMetaTs** — plain WebGME plugin at `plugins/GenerateMetaTs/`. From the repo root: `webdot plugin run --plugin-dir plugins/GenerateMetaTs --seed <name> -C <project> --artifacts-out <dir>` (`--plugin-dir` / `--artifacts-out` relative to shell cwd; `-C` selects the project/seed). Emits a **concept-centric** `Meta` table (`Meta.State.attributes`, …) plus thin `AttrsOf` / `PointersOf` helpers — not aggregate `*ByConcept` maps. Config: `--set namespace=…`, `fileName=…`, `seedName=…`. Install/toolbox is Phase 5; autocomplete packages / create helpers are downstream.
+- **GenerateMetaTs** — plain plugin at `plugins/GenerateMetaTs/`. Emits domain **instance** interfaces with WebGME scopes kept separate (`attributes` / `pointers` / `sets` / `children`). Containment is a single unnamed `children` union array (not `states`/`actions` slots). Faithful to seed meta: e.g. StateMachine fixture does **not** list `Transition` under `Machine` children. Downstream: create helpers / autocomplete.
 
 See [PROJECT.md](PROJECT.md) for implementation status.
 

@@ -39,23 +39,26 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 4 — Generator & consumer** — `review` (branch `feature/phase4-generator`)
+**Phase 5 — Installable plugins (global toolbox)** — `pending` (next up after Phase 4 merge)
 
-**Phase 5 — Installable plugins (global toolbox)** — `pending` (after Phase 4)
+**Phase 4 — Generator & consumer** — `done` (merged to `main` 2026-07-16, branch `feature/phase4-generator`)
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F14 | GenerateMetaTs plugin | `review` | `webdot plugin run --plugin-dir plugins/GenerateMetaTs --seed StateMachine -C test/fixtures/sample-project --artifacts-out _meta` · `npm test` — `generate-meta-ts.test.js` |
+| F14 | GenerateMetaTs plugin | `done` | `webdot plugin run --plugin-dir plugins/GenerateMetaTs --seed StateMachine -C test/fixtures/sample-project --artifacts-out _meta` · `npm test` — `generate-meta-ts.test.js` |
 | F15 | StaMS devDependency + scripts | `pending` | Dogfood in StaMS after package publish / link — see Phase 4 notes |
-| F17 | Library & namespace meta (IR) | `review` | IR `libraries` + per-node namespace/FQN; `docs/meta/LIBRARIES.md`. Descriptor/tree/FQN generator follow-ups need a library `.webgmex` fixture |
+| F17 | Library & namespace meta (IR) | `done` | IR `libraries` + per-node namespace/FQN; `docs/meta/LIBRARIES.md`. Descriptor/tree/FQN follow-ups still need a library `.webgmex` fixture |
 
 **Review gate:** `npm test` · `webdot plugin run --plugin-dir plugins/GenerateMetaTs --seed StateMachine -C test/fixtures/sample-project --artifacts-out _meta` (from repo root; `--plugin-dir` and `--artifacts-out` are relative to shell cwd)
 
-### Phase 4 review notes (2026-07-15)
+### Phase 4 review notes (2026-07-15 / 2026-07-16)
 
 | ID | Feedback | Action |
 |----|----------|--------|
-| F14 | Generator as separate CLI is architectural noise; should be a plain plugin | Dropped `webdot generate`; self-contained `plugins/GenerateMetaTs` via `--plugin-dir` / `--artifacts-out` (shell cwd). Emit is concept-centric `Meta` (not `*ByConcept` listings). Phase 5 covers install/toolbox. |
+| F14 | Generator as separate CLI is architectural noise; should be a plain plugin | Dropped `webdot generate`; `plugins/GenerateMetaTs` via `--plugin-dir` / `--artifacts-out` (shell cwd) |
+| F14 | Emit should support authoring domain objects in TS, with WebGME scopes | Scoped instance types: `attributes` / `pointers` / `sets` / `children` (unnamed containment union) |
+| F14 | Fixture META: Variable→Machine children looks wrong | Confirmed seed meta quirk; generator is faithful — fix in `StateMachine.webgmex` when convenient |
+| F17 | Partial | IR library/FQN fields landed; richer descriptor/tree/FQN emit waits on a library-bearing fixture |
 
 **Phase 3½ — Stateful session shell** — `done` (merged to `main` 2026-07-11, branch `feature/phase3.5-session-shell`)
 
@@ -224,9 +227,9 @@ Follow-up commands reuse an **opened** project workspace; the user explicitly **
 ### Phase 4 — Generator & consumer
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F14 | GenerateMetaTs (plain plugin) | `review` | `plugins/GenerateMetaTs` — concept-centric `Meta` table via `--plugin-dir` + `--artifacts-out`; config `namespace` / `fileName` / `seedName`. No `generate` CLI. |
+| F14 | GenerateMetaTs (plain plugin) | `done` | Scoped instance interfaces (`attributes` / `pointers` / `sets` / `children`) via `--plugin-dir` + `--artifacts-out` |
 | F15 | StaMS devDependency + scripts | `pending` | Companion change in StaMS after this package is linkable/published |
-| F17 | Library & namespace meta | `review` | IR fields + `docs/meta/LIBRARIES.md`; descriptor/tree/FQN emit need library fixture |
+| F17 | Library & namespace meta | `done` | IR fields + `docs/meta/LIBRARIES.md`; descriptor/tree/FQN emit still need library fixture |
 
 **F15 — StaMS dogfood (outside this repo)**  
 After Phase 4 merges:
@@ -306,6 +309,7 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
+| 2026-07-16 | Phase 4 (F14, F17) | maintainer | Approved | GenerateMetaTs plain plugin (scoped instance TS); F17 IR partial; F15 remains outside repo; merged `feature/phase4-generator` → `main` |
 | 2026-07-11 | Phase 3½ (F20–F24) | maintainer | Approved | Stateful session shell; execution-dir `.webdot`; session scope for all commands; merged `feature/phase3.5-session-shell` → `main` |
 | 2026-07-11 | Phase 3 (F9–F13, F18–F19) | maintainer | Approved | Plugin run, write-back, direct paths; dropped `--branch` (snapshot import); F25/B9 for repository `.webgmex`; merged `feature/phase3-plugin-run` → `main` |
 | 2026-07-10 | Phase 2½ (F16a–c) | maintainer | Approved | Meta specs + `seed meta` descriptor/metalang; F17 deferred to Phase 4; merged `feature/F16-meta-representations` → `main` |
@@ -317,11 +321,13 @@ Record of completed reviews (newest first).
 
 ### Changelog
 
-### 0.6.0 (unreleased) — branch `feature/phase4-generator`
-- Phase 4: GenerateMetaTs plain plugin (`plugins/GenerateMetaTs`) via `plugin run --plugin-dir` + `--artifacts-out`; concept-centric `Meta` table
-- Removed `webdot generate` / `generate meta-ts` CLI (F14 reshape for review)
+### 0.6.0 (2026-07-16) — merged to `main`
+- Phase 4: GenerateMetaTs plain plugin — scoped domain instance TypeScript interfaces from seed meta
+- Removed `webdot generate` / `generate meta-ts` CLI
+- `--plugin-dir` and `--artifacts-out` resolve relative to shell cwd (not `-C`)
 - F17 (partial): IR `libraries` + namespace / FQN / `libraryElement` on meta nodes; `docs/meta/LIBRARIES.md`
 - F15 (StaMS dogfood) still pending outside this repo
+- Ignore `_meta/` artifact directories
 
 ### 0.5.0 (2026-07-11) — merged to `main`
 - Phase 3½: `session open` / `status` / `save` / `discard` / `close` / `repl`
