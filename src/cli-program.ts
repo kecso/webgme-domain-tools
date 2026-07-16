@@ -94,7 +94,7 @@ export function createProgram(): Command {
   program
     .name(CLI_NAME)
     .description("WebGME domain tools")
-    .version("0.5.0")
+    .version("0.6.0")
     .option("-C, --cwd <dir>", "WebGME project root (webgme-setup.json) [default: cwd]");
 
   program
@@ -202,7 +202,7 @@ export function createProgram(): Command {
       "Run a plugin headlessly. Plugin context = project + active node + selection + config.",
     )
     .argument("[name]", "Plugin name from webgme-setup.json (or use --plugin-dir)")
-    .option("--plugin-dir <path>", "Plugin directory ({dir}/{dir}.js), bypasses catalog")
+    .option("--plugin-dir <path>", "Plugin directory ({dir}/{dir}.js) relative to cwd; bypasses catalog")
     .option("--seed [name]", "Project: seed name (defaults to open session)")
     .option("--webgmex <path>", "Project: direct .webgmex path (or use --seed)")
     .option(
@@ -215,7 +215,7 @@ export function createProgram(): Command {
     )
     .option("--config-file <path>", "Plugin config overrides (JSON object)")
     .option("--set <pair...>", "Plugin config override name=value (repeatable; merges over defaults)")
-    .option("--artifacts-out <dir>", "Directory (relative to -C cwd) for blob artifacts")
+    .option("--artifacts-out <dir>", "Directory (relative to shell cwd) for blob artifacts")
     .option("--out <file>", "Write resulting model to this .webgmex instead of the source")
     .option("--dry-run", "Run without writing model changes back to disk")
     .addHelpText(

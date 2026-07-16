@@ -22,6 +22,11 @@ export interface ModelSource {
 
 export interface SourceOptions {
   cwd: string;
+  /**
+   * Base directory for relative `--plugin-dir` paths.
+   * Defaults to `cwd`. CLI passes the execution working directory so `-C` does not relocate the plugin.
+   */
+  pluginDirCwd?: string;
   plugin?: string;
   pluginDir?: string;
   seed?: string;
@@ -45,7 +50,7 @@ export function resolvePluginSource(
   getCatalog: () => SetupCatalog,
 ): PluginSource {
   if (options.pluginDir) {
-    const dir = path.resolve(options.cwd, options.pluginDir);
+    const dir = path.resolve(options.pluginDirCwd ?? options.cwd, options.pluginDir);
     if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
       throw new Error("Plugin directory does not exist: " + dir);
     }

@@ -104,6 +104,27 @@ test("runPluginRunCommand writes artifacts with --artifacts-out", async () => {
   fs.rmSync(artifactsDir, { recursive: true, force: true });
 });
 
+test("runPluginRunCommand resolves --artifacts-out relative to sessionCwd not project cwd", async () => {
+  const execDir = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-art-cwd-"));
+  const outRel = "_artifacts_exec";
+  const outAbs = path.join(execDir, outRel);
+  try {
+    const result = await runPluginRunCommand({
+      cwd: fixture,
+      sessionCwd: execDir,
+      plugin: "EchoPlugin",
+      seed: "StateMachine",
+      set: ["emitArtifact=true", "message=exec-cwd"],
+      artifactsOut: outRel,
+    });
+    assert.equal(result.success, true);
+    assert.equal(fs.readFileSync(path.join(outAbs, "echo.txt"), "utf8"), "exec-cwd");
+    assert.equal(fs.existsSync(path.join(fixture, outRel)), false);
+  } finally {
+    fs.rmSync(execDir, { recursive: true, force: true });
+  }
+});
+
 test("runPluginRunCommand validates --at node path", async () => {
   await assert.rejects(
     () =>
@@ -212,4 +233,22 @@ test("resolvePluginSource rejects missing plugin directory", async () => {
       }),
     /Plugin directory does not exist/,
   );
+});
+
+test("runPluginRunCommand resolves --plugin-dir relative to sessionCwd not project cwd", async () => {
+  const emptyCwd = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-plugin-cwd-"));
+  try {
+    const result = await runPluginRunCommand({
+      cwd: emptyCwd,
+      sessionCwd: fixture,
+      pluginDir: path.join("src", "plugins", "EchoPlugin"),
+      webgmex: stateMachineWebgmex,
+      set: ["message=cwd-rel"],
+      dryRun: true,
+    });
+    assert.equal(result.success, true);
+    assert.equal(JSON.parse(result.output).result.messages[0].message, "cwd-rel");
+  } finally {
+    fs.rmSync(emptyCwd, { recursive: true, force: true });
+  }
 });

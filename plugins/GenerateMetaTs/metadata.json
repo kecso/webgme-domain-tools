@@ -1,0 +1,35 @@
+{
+  "id": "GenerateMetaTs",
+  "name": "GenerateMetaTs",
+  "version": "0.1.0",
+  "description": "Generate TypeScript domain instance interfaces (Machine, State, …) from seed meta for authoring models in code.",
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "writeAccessRequired": false,
+  "configStructure": [
+    {
+      "name": "fileName",
+      "displayName": "Output file name",
+      "description": "Blob artifact file name written under --artifacts-out.",
+      "value": "meta.ts",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "namespace",
+      "displayName": "TypeScript namespace",
+      "description": "Optional export namespace wrapping all generated types. Empty = no namespace.",
+      "value": "",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "seedName",
+      "displayName": "Seed name",
+      "description": "Label for the generated file header. Empty = use project name.",
+      "value": "",
+      "valueType": "string",
+      "readOnly": false
+    }
+  ]
+}
