@@ -68,7 +68,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | F21 | `session open` / `status` / `close` | `done` | `webdot session status` (execution dir; no repeated `-C`) |
 | F22 | Commands default to open session | `done` | `plugin run`, `tree`, `seed meta`, `ls` in session scope |
 | F23 | `session save` / `session discard` | `done` | `npm test` — `session-workspace.test.js` |
-| F24 | Optional REPL / long-lived shell | `done` | `webdot session repl` |
+| F24 | Optional REPL / long-lived shell | `dropped` | Removed 2026-07-17; optional Phase 5 extra (**F30**) if demand appears |
 | F25 | `.webgmex` repository import/export | `deferred` | Use engine `getProjectWithHistory` / `insertProjectWithHistory` (later) |
 
 **Phase 3 — Plugin run** — `done` (merged to `main` 2026-07-11, branch `feature/phase3-plugin-run`)
@@ -164,7 +164,7 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 `ls` is a **compact index** for quick scanning: one block per kind, names only (`seeds:\n  local: StateMachine StateModel EmptySeed`).  
 `tree` is **introspection**: stable refs, `src`, artifacts, metadata paths, warnings/notes. Different commands, different output — not a shared formatter. Unifying UX is optional backlog (B4).
 
-**Status legend:** `pending` · `in progress` · `review` · `done` · `deferred`
+**Status legend:** `pending` · `in progress` · `review` · `done` · `deferred` · `dropped` · `optional`
 
 ---
 
@@ -212,13 +212,13 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 | F21 | `session open` / `session status` / `session close` | `done` | Bind cwd, model path, dirty flag |
 | F22 | Commands default to open session | `done` | `plugin run`, `tree --seed`, `seed meta` when session active |
 | F23 | `session save` / `session discard` | `done` | Explicit write-back to source (or `--out`) |
-| F24 | Optional REPL / long-lived shell | `done` | `webdot session repl` (workspace-file backed) |
+| F24 | Optional REPL / long-lived shell | `dropped` | Removed 2026-07-17; optional Phase 5 extra (**F30**) if demand appears |
 | F25 | `.webgmex` repository import/export | `deferred` | Full commit/branch/tag packages (engine helpers exist) |
 
 **Phase 3½ — Stateful session**  
 Follow-up commands reuse an **opened** project workspace; the user explicitly **saves** (or discards) instead of one-shot import/run/export per invocation.
 
-**Implementation (2026-07-11):** Workspace file model (Approach A). `.webdot/session.json` tracks execution cwd, project root, source path, working `.webgmex`, and dirty flag. Commands re-import the working copy; `session save` writes to the save target. `session repl` provides an interactive shell over the same model. **F25 deferred** — repository `.webgmex` import/export when needed.
+**Implementation (2026-07-11):** Workspace file model (Approach A). `.webdot/session.json` tracks execution cwd, project root, source path, working `.webgmex`, and dirty flag. Commands re-import the working copy; `session save` writes to the save target. **F25 deferred** — repository `.webgmex` import/export when needed. **F24 REPL dropped** (2026-07-17); use one-shot CLI against an open session.
 
 **Session location fix (2026-07-11):** `.webdot/` now lives in the **execution directory** (`process.cwd()`), not under `-C`. `-C` only selects the project to open; `session.json` records that project root (`projectCwd`) so `status`, `save`, `plugin run`, `tree`, `seed meta` work from the same directory without repeating `-C`. This supports driving multiple projects from one working directory. Also fixed a latent bug where running `webdot` outside its own repo root failed because `webgme-engine/src/bin/import.js` loads `require(process.cwd()/config)` at import time — the bridge now loads that module with the package root as cwd.
 
@@ -259,6 +259,7 @@ Blocked on a **library-bearing `.webgmex` fixture** (none in-repo yet). See [`do
 | F27 | Install from GitHub | `pending` | Clone/pin tag or sha into cache |
 | F28 | Collision → alternate install name | `pending` | Prompt / `--as <alias>`; dictionary must be unambiguous |
 | F29 | Resolve installed names on `plugin run` / `info` / `ls` | `pending` | Clear source labels: catalog vs installed |
+| F30 | Optional interactive session REPL | `optional` | Extra only — not required for Phase 5. Thin shell over F20–F23; dropped from product once; revive only if interactive chaining proves necessary |
 
 **Phase 5 — Scenario (boiled down)**  
 `webdot` is installed **system-wide**. Domain-agnostic plugins live in a **user registry**, not inside each studio repo. Any project/session can run them against its own `.webgmex`.
@@ -278,6 +279,8 @@ Each install gets a **dictionary key** (the name used later in `plugin run` / `i
 
 **Layout:** Reuses F19 (`--plugin-dir` semantics). Registry stores absolute paths (symlink for local, cache clone for GitHub) + metadata. Precedence for a bare name: explicit `--plugin-dir` → open project catalog → installed registry (document clearly; prefer unique install names via F28).
 
+**F30 (optional extra):** Interactive `session repl` is **not** part of the installable-plugins core. Keep using one-shot `webdot` against an open session. Only reintroduce a REPL if multi-step interactive use becomes common.
+
 Priority: **high product direction** — own milestone after Phase 4 generators.
 
 ---
@@ -293,7 +296,7 @@ Tasks not tied to a single milestone — pick up anytime.
 | B3 | refactor | Extract shared test helpers from webgme-engine fixtures | medium |
 | B4 | streamline | Single `webdot tree` UX doc + shell completions | low |
 | B5 | refactor | Metadata convention `domainTools.producesArtifacts` | low |
-| B6 | optimize | Cache SetupCatalog per process for multi-subcommand REPL (future) | low |
+| B6 | optimize | Cache SetupCatalog per process (only if a long-lived REPL returns — **F30**) | low |
 | B7 | meta | See **F17** (Phase 4) — library/namespace in IR, descriptor, MetaLang, traversal | medium |
 | B8 | streamline | CLI complexity: trim rare flags or `webdot examples` tutorial recipes / scenario printouts | medium |
 | B9 | compatibility | Track/adopt WebGME repository `.webgmex` support; replace snapshot-only assumptions with full commit/branch/tag import where available | medium |
@@ -309,8 +312,9 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
+| 2026-07-17 | Drop F24 session REPL | maintainer | Approved | Removed `session repl`; F30 optional Phase 5 extra; merged `feature/drop-session-repl` → `main` |
 | 2026-07-16 | Phase 4 (F14, F17) | maintainer | Approved | GenerateMetaTs plain plugin (scoped instance TS); F17 IR partial; F15 remains outside repo; merged `feature/phase4-generator` → `main` |
-| 2026-07-11 | Phase 3½ (F20–F24) | maintainer | Approved | Stateful session shell; execution-dir `.webdot`; session scope for all commands; merged `feature/phase3.5-session-shell` → `main` |
+| 2026-07-11 | Phase 3½ (F20–F23) | maintainer | Approved | Stateful session workspace; execution-dir `.webdot`; session scope for all commands; merged `feature/phase3.5-session-shell` → `main` (F24 REPL later dropped) |
 | 2026-07-11 | Phase 3 (F9–F13, F18–F19) | maintainer | Approved | Plugin run, write-back, direct paths; dropped `--branch` (snapshot import); F25/B9 for repository `.webgmex`; merged `feature/phase3-plugin-run` → `main` |
 | 2026-07-10 | Phase 2½ (F16a–c) | maintainer | Approved | Meta specs + `seed meta` descriptor/metalang; F17 deferred to Phase 4; merged `feature/F16-meta-representations` → `main` |
 | 2026-07-10 | Phase 2 (F5–F8) | maintainer | Approved | `webdot` CLI, F7 fixture, tree-command tests; merged `feature/phase2-seed-model` → `main` |
@@ -321,6 +325,10 @@ Record of completed reviews (newest first).
 
 ### Changelog
 
+### 0.6.1 (2026-07-17) — merged to `main`
+- Dropped `webdot session repl` / `session shell` (F24); stateful session workspace (F20–F23) unchanged
+- Optional interactive REPL noted as Phase 5 extra **F30** (not required)
+
 ### 0.6.0 (2026-07-16) — merged to `main`
 - Phase 4: GenerateMetaTs plain plugin — scoped domain instance TypeScript interfaces from seed meta
 - Removed `webdot generate` / `generate meta-ts` CLI
@@ -330,7 +338,7 @@ Record of completed reviews (newest first).
 - Ignore `_meta/` artifact directories
 
 ### 0.5.0 (2026-07-11) — merged to `main`
-- Phase 3½: `session open` / `status` / `save` / `discard` / `close` / `repl`
+- Phase 3½: `session open` / `status` / `save` / `discard` / `close`
 - Workspace file: `.webdot/session.json` + working `.webgmex` copy
 - Session state lives in the execution dir and records the project root, so follow-up commands need no repeated `-C`
 - All catalog commands (`ls`, `plugin info`, `plugin run`, `tree`, `seed meta`) run in the open session's scope (note on stderr; `-C` overrides)

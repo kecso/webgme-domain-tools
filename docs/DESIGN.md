@@ -52,7 +52,8 @@ Each one-shot `webdot` command still runs in its own process, but an **open sess
 3. **`session save`** — writes the working copy to the save target (original source by default, or `--out`).
 4. **`session discard`** — resets the working copy from the source.
 5. **`session close`** — removes `.webdot/` (blocks when dirty unless `--discard`).
-6. **`session repl`** — interactive shell for open / plugin run / save / close (same workspace file model).
+
+Interactive REPL was removed; use normal one-shot `webdot` commands against an open session. Optional REPL is a Phase 5 extra if demand appears.
 
 **F25 (deferred):** repository `.webgmex` packages with full commit/branch/tag history via engine `getProjectWithHistory` / `insertProjectWithHistory`.
 
@@ -77,4 +78,6 @@ See [PROJECT.md](PROJECT.md) for implementation status.
 
 Resolution order for a bare plugin name (planned): `--plugin-dir` → project catalog → installed registry.
 
-See [PROJECT.md](PROJECT.md) Phase 5 (F26–F29).
+Optional **F30** interactive session REPL is out of scope for the core Phase 5 deliverable.
+
+See [PROJECT.md](PROJECT.md) Phase 5 (F26–F29, optional F30).
