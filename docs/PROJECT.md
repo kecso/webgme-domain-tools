@@ -312,6 +312,7 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
+| 2026-07-17 | Drop F24 session REPL | maintainer | Approved | Removed `session repl`; F30 optional Phase 5 extra; merged `feature/drop-session-repl` → `main` |
 | 2026-07-16 | Phase 4 (F14, F17) | maintainer | Approved | GenerateMetaTs plain plugin (scoped instance TS); F17 IR partial; F15 remains outside repo; merged `feature/phase4-generator` → `main` |
 | 2026-07-11 | Phase 3½ (F20–F23) | maintainer | Approved | Stateful session workspace; execution-dir `.webdot`; session scope for all commands; merged `feature/phase3.5-session-shell` → `main` (F24 REPL later dropped) |
 | 2026-07-11 | Phase 3 (F9–F13, F18–F19) | maintainer | Approved | Plugin run, write-back, direct paths; dropped `--branch` (snapshot import); F25/B9 for repository `.webgmex`; merged `feature/phase3-plugin-run` → `main` |
@@ -324,7 +325,7 @@ Record of completed reviews (newest first).
 
 ### Changelog
 
-### Unreleased — branch `feature/drop-session-repl`
+### 0.6.1 (2026-07-17) — merged to `main`
 - Dropped `webdot session repl` / `session shell` (F24); stateful session workspace (F20–F23) unchanged
 - Optional interactive REPL noted as Phase 5 extra **F30** (not required)
 

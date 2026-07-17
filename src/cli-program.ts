@@ -93,7 +93,7 @@ export function createProgram(): Command {
   program
     .name(CLI_NAME)
     .description("WebGME domain tools")
-    .version("0.6.0")
+    .version("0.6.1")
     .option("-C, --cwd <dir>", "WebGME project root (webgme-setup.json) [default: cwd]");
 
   program
