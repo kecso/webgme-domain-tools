@@ -41,7 +41,7 @@ test("validatePluginDirectory accepts EchoPlugin layout", () => {
   assert.ok(v.metadataPath.endsWith("metadata.json"));
 });
 
-test("parseInstallTarget distinguishes local vs github", () => {
+test("parseInstallTarget distinguishes local vs github (OS-agnostic)", () => {
   assert.deepEqual(parseInstallTarget("owner/repo"), {
     kind: "github",
     repo: "owner/repo",
@@ -52,8 +52,23 @@ test("parseInstallTarget distinguishes local vs github", () => {
     repo: "owner/repo",
     ref: "v1.2.3",
   });
+  assert.deepEqual(parseInstallTarget("https://github.com/owner/repo"), {
+    kind: "github",
+    repo: "owner/repo",
+    ref: undefined,
+  });
+  assert.deepEqual(parseInstallTarget("github.com/owner/repo@main"), {
+    kind: "github",
+    repo: "owner/repo",
+    ref: "main",
+  });
+
+  // Local: relative markers, absolute, deeper paths — never depend on path.sep
   assert.equal(parseInstallTarget("./plugins/Foo", fixture).kind, "local");
+  assert.equal(parseInstallTarget("../plugins/Foo", fixture).kind, "local");
   assert.equal(parseInstallTarget(echoPluginDir).kind, "local");
+  assert.equal(parseInstallTarget("plugins/EchoPlugin/nested", fixture).kind, "local");
+  assert.equal(parseInstallTarget("owner\\repo", fixture).kind, "local");
 });
 
 test("installPlugin local + list + uninstall", async () => {

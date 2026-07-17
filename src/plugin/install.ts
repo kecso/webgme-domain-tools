@@ -88,6 +88,11 @@ export function validatePluginDirectory(dir: string): ValidatedPluginDir {
 
 /**
  * Parse `owner/repo`, `owner/repo@ref`, GitHub URLs, or a filesystem path.
+ *
+ * Rules are OS-agnostic:
+ * - `github.com/...` URLs → GitHub
+ * - exactly `owner/repo` or `owner/repo@ref` (forward slash, two name segments) → GitHub
+ * - everything else → local path (`./…`, `../…`, absolute, backslash paths, deeper relatives)
  */
 export function parseInstallTarget(raw: string, cwd: string = process.cwd()): InstallTarget {
   const trimmed = raw.trim();
@@ -104,9 +109,13 @@ export function parseInstallTarget(raw: string, cwd: string = process.cwd()): In
     };
   }
 
-  const at = trimmed.match(/^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)(?:@([^/]+))?$/);
-  if (at && !trimmed.includes(path.sep) && !path.isAbsolute(trimmed) && !trimmed.startsWith(".")) {
-    return { kind: "github", repo: at[1], ref: at[2] };
+  const shorthand = trimmed.match(/^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)(?:@([^/]+))?$/);
+  if (shorthand) {
+    return {
+      kind: "github",
+      repo: shorthand[1] + "/" + shorthand[2],
+      ref: shorthand[3],
+    };
   }
 
   return { kind: "local", path: path.resolve(cwd, trimmed) };
