@@ -63,21 +63,36 @@ Interactive REPL was removed; use normal one-shot `webdot` commands against an o
 
 See [PROJECT.md](PROJECT.md) for implementation status.
 
-## Installable plugins (Phase 5 — planned)
+## Installable plugins (Phase 5)
 
 **Scenario:** `webdot` is used as a **global** CLI. Useful plugins are not copied into every domain studio; they are **installed once** for the user and run against whatever project/session is open.
 
 | Piece | Behavior |
 |-------|----------|
-| Store | User-scoped registry (e.g. `~/.webdot/plugins/`) — local path or GitHub cache |
-| Install | `webdot plugin install <path\|owner/repo> [--as <name>]` |
+| Store | User-scoped registry (`$WEBDOT_HOME/plugins/` or `~/.webdot/plugins/`) — local path or GitHub cache |
+| Install | `webdot plugin install <path\|owner/repo[@ref]> [--as <name>] [--subdir <path>] [--force]` |
 | Dictionary | Each install registers under a **unique name**; that name is what `plugin run` / `info` use |
-| Collisions | If the requested name is taken, require `--as <alias>` (or prompt). Never silent overwrite |
-| Distinction | `plugin list` and resolution notes label **catalog** vs **installed** so two similarly named tools stay distinguishable |
-| Execution | Same headless path as F19: registry entry → `PluginSource` `{ name, basePath, metadataPath }` |
+| Collisions | If the requested name is taken, require `--as <alias>` or `--force`. Never silent overwrite |
+| Distinction | `plugin list` and `ls plugins` label **catalog** vs **installed** |
+| Execution | Same headless path as F19: registry entry → `PluginSource` `{ name: pluginId, basePath, metadataPath }` |
 
-Resolution order for a bare plugin name (planned): `--plugin-dir` → project catalog → installed registry.
+Resolution order for a bare plugin name: `--plugin-dir` → project catalog → installed registry.
 
 Optional **F30** interactive session REPL is out of scope for the core Phase 5 deliverable.
 
 See [PROJECT.md](PROJECT.md) Phase 5 (F26–F29, optional F30).
+
+## Project libraries (Phase 6 — planned)
+
+**Scenario:** Domain studios attach WebGME **libraries** into a host `.webgmex` (shared metamodel packages). Authors need both **introspection that respects namespaces** and optional **CLI management** of those attachments.
+
+| Area | Behavior |
+|------|----------|
+| List / inspect | Show attached library names, roots, and which meta nodes are library-sourced vs host-owned |
+| Meta emit | Descriptor / MetaLang / `tree --seed` / GenerateMetaTs use FQN or `library` blocks when simple names collide |
+| Manage (CLI) | Attach / update / remove a library `.webgmex` on the open session or a seed (engine `addLibrary` / update / remove APIs) |
+| Fixture | Library-bearing `.webgmex` in `test/fixtures/` so representation + CLI are testable |
+
+Phase 4 already records IR `libraries[]` and per-node `namespace` / `fullyQualifiedName` / `libraryElement`. Phase 6 finishes consumer-facing listing/emit and adds management commands.
+
+See [PROJECT.md](PROJECT.md) Phase 6 (F31–F35) and [`meta/LIBRARIES.md`](meta/LIBRARIES.md).

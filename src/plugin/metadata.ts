@@ -29,7 +29,10 @@ export function configDefaults(configStructure: PluginConfigEntry[] | undefined)
   return defaults;
 }
 
-export function buildPluginInfo(entry: CatalogEntry): PluginInfo {
+export function buildPluginInfo(
+  entry: CatalogEntry,
+  extra?: { source?: string; installName?: string },
+): PluginInfo {
   const metadata = loadPluginMetadata(entry);
   const configStructure = metadata.configStructure ?? [];
   return {
@@ -39,6 +42,28 @@ export function buildPluginInfo(entry: CatalogEntry): PluginInfo {
     description: metadata.description,
     metadataPath: entry.metadataPath,
     src: entry.src,
+    source: extra?.source ?? "catalog",
+    installName: extra?.installName,
+    configStructure,
+    defaults: configDefaults(configStructure),
+  };
+}
+
+export function buildPluginInfoFromPath(
+  metadataPath: string,
+  opts: { id: string; src: string; source: string; installName?: string },
+): PluginInfo {
+  const metadata = loadPluginMetadataFromPath(metadataPath);
+  const configStructure = metadata.configStructure ?? [];
+  return {
+    id: metadata.id ?? opts.id,
+    name: metadata.name ?? opts.id,
+    version: metadata.version,
+    description: metadata.description,
+    metadataPath,
+    src: opts.src,
+    source: opts.source,
+    installName: opts.installName,
     configStructure,
     defaults: configDefaults(configStructure),
   };

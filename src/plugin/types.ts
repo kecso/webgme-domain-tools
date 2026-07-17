@@ -49,6 +49,10 @@ export interface PluginInfo {
   description?: string;
   metadataPath?: string;
   src: string;
+  /** How the plugin was resolved: catalog | installed | plugin-dir. */
+  source?: string;
+  /** Install dictionary name when source is installed. */
+  installName?: string;
   configStructure: PluginConfigEntry[];
   defaults: Record<string, unknown>;
 }
@@ -56,6 +60,9 @@ export interface PluginInfo {
 export interface PluginRunOutput {
   success: boolean;
   plugin: string;
+  /** How the plugin was resolved. */
+  source?: string;
+  installName?: string;
   context: PluginRunContextOutput;
   result: SerializedPluginResult;
   warnings: string[];

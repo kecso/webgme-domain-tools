@@ -1,8 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
-import { loadSetupCatalog, resolvePlugin } from "../catalog/setup-catalog.js";
+import { loadSetupCatalog } from "../catalog/setup-catalog.js";
+import { formatUnknownPluginError } from "../catalog/catalog-errors.js";
 import { resolveSeedSelection } from "../session/seed-resolution.js";
 import type { SetupCatalog } from "../catalog/types.js";
+import { getInstalled, listInstalled } from "./install-registry.js";
+import { validatePluginDirectory } from "./install.js";
+
+export type PluginSourceKind = "plugin-dir" | "catalog" | "installed";
 
 export interface PluginSource {
   /** Plugin id/name (folder name; used for requirejs plugin path). */
@@ -11,6 +16,10 @@ export interface PluginSource {
   basePath: string;
   /** Absolute path to the plugin's metadata.json. */
   metadataPath: string;
+  /** How this plugin was resolved. */
+  source: PluginSourceKind;
+  /** Dictionary key when resolved from the install registry (may differ from `name`). */
+  installName?: string;
 }
 
 export interface ModelSource {
@@ -31,6 +40,8 @@ export interface SourceOptions {
   pluginDir?: string;
   seed?: string;
   webgmex?: string;
+  /** Override `WEBDOT_HOME` for installed-plugin lookup. */
+  home?: string;
 }
 
 /**
@@ -45,41 +56,93 @@ export function createCatalogLoader(cwd: string): () => SetupCatalog {
   };
 }
 
+function tryLoadCatalog(getCatalog: () => SetupCatalog): SetupCatalog | null {
+  try {
+    return getCatalog();
+  } catch {
+    return null;
+  }
+}
+
+function formatUnknownWithInstalled(
+  name: string,
+  catalog: SetupCatalog | null,
+  home?: string,
+): string {
+  const installed = listInstalled(home);
+  const installedBlock =
+    installed.length > 0
+      ? "\n\nInstalled plugins (run: webdot plugin list):\n" +
+        installed.map((e) => "  " + e.name + (e.name !== e.pluginId ? " → " + e.pluginId : "")).join("\n")
+      : "\n\nNo plugins installed. Try: webdot plugin install <path|owner/repo>";
+
+  if (catalog) {
+    return formatUnknownPluginError(catalog, name) + installedBlock;
+  }
+  return 'Unknown plugin "' + name + '".' + installedBlock;
+}
+
 export function resolvePluginSource(
   options: SourceOptions,
   getCatalog: () => SetupCatalog,
 ): PluginSource {
   if (options.pluginDir) {
     const dir = path.resolve(options.pluginDirCwd ?? options.cwd, options.pluginDir);
-    if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
-      throw new Error("Plugin directory does not exist: " + dir);
-    }
-    const name = path.basename(dir);
-    const mainFile = path.join(dir, name + ".js");
-    if (!fs.existsSync(mainFile)) {
-      throw new Error(
-        "Plugin directory must contain " + name + ".js (webgme layout <dir>/" + name + ".js): " + dir,
-      );
-    }
+    const validated = validatePluginDirectory(dir);
     return {
-      name,
-      basePath: path.dirname(dir),
-      metadataPath: path.join(dir, "metadata.json"),
+      name: validated.pluginId,
+      basePath: path.dirname(validated.absPath),
+      metadataPath: validated.metadataPath,
+      source: "plugin-dir",
     };
   }
 
   if (!options.plugin) {
     throw new Error("Provide a plugin name or --plugin-dir <path>");
   }
-  const entry = resolvePlugin(getCatalog(), options.plugin);
-  if (!entry.exists) {
-    throw new Error('Plugin "' + entry.name + '" src path is missing: ' + entry.src);
+
+  const bare = options.plugin.startsWith("plugin:")
+    ? options.plugin.slice("plugin:".length)
+    : options.plugin;
+
+  const catalog = tryLoadCatalog(getCatalog);
+  if (catalog) {
+    const entry = catalog.plugins.find((p) => p.name === bare || p.ref === "plugin:" + bare);
+    if (entry) {
+      if (!entry.exists) {
+        throw new Error('Plugin "' + entry.name + '" src path is missing: ' + entry.src);
+      }
+      return {
+        name: entry.name,
+        basePath: path.dirname(entry.absPath),
+        metadataPath: entry.metadataPath ?? path.join(entry.absPath, "metadata.json"),
+        source: "catalog",
+      };
+    }
   }
-  return {
-    name: entry.name,
-    basePath: path.dirname(entry.absPath),
-    metadataPath: entry.metadataPath ?? path.join(entry.absPath, "metadata.json"),
-  };
+
+  const installed = getInstalled(bare, options.home);
+  if (installed) {
+    if (!fs.existsSync(installed.path)) {
+      throw new Error(
+        'Installed plugin "' +
+          installed.name +
+          '" path is missing: ' +
+          installed.path +
+          ". Re-run: webdot plugin install …",
+      );
+    }
+    const validated = validatePluginDirectory(installed.path);
+    return {
+      name: validated.pluginId,
+      basePath: path.dirname(validated.absPath),
+      metadataPath: validated.metadataPath,
+      source: "installed",
+      installName: installed.name,
+    };
+  }
+
+  throw new Error(formatUnknownWithInstalled(bare, catalog, options.home));
 }
 
 export function resolveModelSource(

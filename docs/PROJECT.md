@@ -39,7 +39,24 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 5 — Installable plugins (global toolbox)** — `pending` (next up after Phase 4 merge)
+**Phase 6 — Project libraries (draft)** — `pending` (next up after Phase 5)
+
+**Phase 5 — Installable plugins (global toolbox)** — `done` (merged to `main` 2026-07-17, branch `feature/phase5-installable-plugins`)
+
+| ID | Feature | Status | Review |
+|----|---------|--------|--------|
+| F26 | Plugin install registry (local) | `done` | `WEBDOT_HOME=<tmp> webdot plugin install plugins/GenerateMetaTs` · `plugin list` · `plugin uninstall` |
+| F27 | Install from GitHub | `done` | `webdot plugin install owner/repo[@ref] [--subdir <path>] [--as <name>]` (clone into cache) |
+| F28 | Collision → alternate install name | `done` | Re-install same name without `--force` fails; `--as` registers alias; no silent overwrite |
+| F29 | Resolve installed names on `plugin run` / `info` / `ls` | `done` | Bare name: `--plugin-dir` → catalog → installed; `plugin list` / `ls plugins` label **catalog** vs **installed** |
+| F30 | Optional interactive session REPL | `optional` | Not shipped; one-shot CLI + session workspace is enough |
+
+### Phase 5 review notes (2026-07-17)
+
+| ID | Feedback | Action |
+|----|----------|--------|
+| F27 | `path.sep` made `owner/repo` OS-dependent (broken on Unix) | Portable rule: exactly `owner/repo[@ref]` → GitHub; `./…` / absolute / deeper paths → local |
+| F24/F30 | REPL | Remains dropped/optional; not part of Phase 5 deliverable |
 
 **Phase 4 — Generator & consumer** — `done` (merged to `main` 2026-07-16, branch `feature/phase4-generator`)
 
@@ -47,9 +64,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 |----|---------|--------|--------|
 | F14 | GenerateMetaTs plugin | `done` | `webdot plugin run --plugin-dir plugins/GenerateMetaTs --seed StateMachine -C test/fixtures/sample-project --artifacts-out _meta` · `npm test` — `generate-meta-ts.test.js` |
 | F15 | StaMS devDependency + scripts | `pending` | Dogfood in StaMS after package publish / link — see Phase 4 notes |
-| F17 | Library & namespace meta (IR) | `done` | IR `libraries` + per-node namespace/FQN; `docs/meta/LIBRARIES.md`. Descriptor/tree/FQN follow-ups still need a library `.webgmex` fixture |
-
-**Review gate:** `npm test` · `webdot plugin run --plugin-dir plugins/GenerateMetaTs --seed StateMachine -C test/fixtures/sample-project --artifacts-out _meta` (from repo root; `--plugin-dir` and `--artifacts-out` are relative to shell cwd)
+| F17 | Library & namespace meta (IR) | `done` | IR fields landed; listing/emit fine-tuning + fixture deferred to **Phase 6** |
 
 ### Phase 4 review notes (2026-07-15 / 2026-07-16)
 
@@ -58,10 +73,9 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | F14 | Generator as separate CLI is architectural noise; should be a plain plugin | Dropped `webdot generate`; `plugins/GenerateMetaTs` via `--plugin-dir` / `--artifacts-out` (shell cwd) |
 | F14 | Emit should support authoring domain objects in TS, with WebGME scopes | Scoped instance types: `attributes` / `pointers` / `sets` / `children` (unnamed containment union) |
 | F14 | Fixture META: Variable→Machine children looks wrong | Confirmed seed meta quirk; generator is faithful — fix in `StateMachine.webgmex` when convenient |
-| F17 | Partial | IR library/FQN fields landed; richer descriptor/tree/FQN emit waits on a library-bearing fixture |
+| F17 | Partial | IR library/FQN fields landed; richer listing/emit + library CLI → **Phase 6** |
 
 **Phase 3½ — Stateful session shell** — `done` (merged to `main` 2026-07-11, branch `feature/phase3.5-session-shell`)
-
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
 | F20 | Session workspace + state file | `done` | `webdot session open --seed StateMachine -C test/fixtures/sample-project` |
@@ -237,29 +251,24 @@ After Phase 4 merges:
 ```bash
 # In StaMS
 npm install --save-dev github:kecso/webgme-domain-tools#main
-# package.json scripts example (path to plugin may change after Phase 5 install):
-#   "gen:meta": "webdot plugin run --plugin-dir <path-to>/plugins/GenerateMetaTs --seed StateMachine --artifacts-out src/generated --set seedName=StateMachine"
+# package.json scripts example (after Phase 5 install):
+#   webdot plugin install <path-to>/plugins/GenerateMetaTs
+#   "gen:meta": "webdot plugin run GenerateMetaTs --seed StateMachine --artifacts-out src/generated --set seedName=StateMachine"
 ```
 
 Accept when StaMS builds against generated types and CI runs `gen:meta`.
 
 **F17 — Library & namespace (Phase 4)**  
-IR now records `libraries[]` and per-node `namespace` / `fullyQualifiedName` / `libraryElement` (StateMachine fixture: empty). Remaining:
-
-- Descriptor + MetaLang qualified names / `library` blocks when simple names collide
-- `tree --seed` markers for library-sourced nodes
-- Optional FQN mode in GenerateMetaTs
-
-Blocked on a **library-bearing `.webgmex` fixture** (none in-repo yet). See [`docs/meta/LIBRARIES.md`](meta/LIBRARIES.md).
+IR records `libraries[]` and per-node `namespace` / `fullyQualifiedName` / `libraryElement` (StateMachine fixture: empty). Listing/emit fine-tuning and library CLI management are **Phase 6**.
 
 ### Phase 5 — Installable plugins (global toolbox)
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F26 | Plugin install registry (local) | `pending` | User-scoped store; `plugin install <path>` |
-| F27 | Install from GitHub | `pending` | Clone/pin tag or sha into cache |
-| F28 | Collision → alternate install name | `pending` | Prompt / `--as <alias>`; dictionary must be unambiguous |
-| F29 | Resolve installed names on `plugin run` / `info` / `ls` | `pending` | Clear source labels: catalog vs installed |
-| F30 | Optional interactive session REPL | `optional` | Extra only — not required for Phase 5. Thin shell over F20–F23; dropped from product once; revive only if interactive chaining proves necessary |
+| F26 | Plugin install registry (local) | `done` | `WEBDOT_HOME` / `~/.webdot/plugins/registry.json`; `plugin install <path>` |
+| F27 | Install from GitHub | `done` | `owner/repo[@ref]`; cache under `plugins/github/`; optional `--subdir` |
+| F28 | Collision → alternate install name | `done` | `--as <alias>`; `--force` to replace; no silent overwrite |
+| F29 | Resolve installed names on `plugin run` / `info` / `ls` | `done` | Precedence + **catalog** / **installed** labels |
+| F30 | Optional interactive session REPL | `optional` | Extra only — not shipped |
 
 **Phase 5 — Scenario (boiled down)**  
 `webdot` is installed **system-wide**. Domain-agnostic plugins live in a **user registry**, not inside each studio repo. Any project/session can run them against its own `.webgmex`.
@@ -275,13 +284,43 @@ webdot plugin run LintEcho --seed StateMachine -C ~/StaMS
 ```
 
 **Name dictionary & collisions**  
-Each install gets a **dictionary key** (the name used later in `plugin run` / `info`). If that key already exists (another install, or a project catalog plugin the user wants to keep distinct), install **requires an alternate name** (`--as <alias>` or interactive prompt). No silent overwrite. Later execution always uses the dictionary key, so catalog `EchoPlugin` and installed `LintEcho` are obviously different tools.
+Each install gets a **dictionary key** (the name used later in `plugin run` / `info`). If that key already exists in the registry, install **requires `--as <alias>` or `--force`**. No silent overwrite. Catalog and installed plugins may share a display name; resolution prefers catalog, so use `--as` when you need a distinct installed tool. The requirejs **plugin id** stays the folder basename (alias is lookup-only).
 
-**Layout:** Reuses F19 (`--plugin-dir` semantics). Registry stores absolute paths (symlink for local, cache clone for GitHub) + metadata. Precedence for a bare name: explicit `--plugin-dir` → open project catalog → installed registry (document clearly; prefer unique install names via F28).
+**Layout:** Reuses F19 (`--plugin-dir` semantics). Registry stores absolute paths (local origin path or GitHub cache) + metadata. Precedence for a bare name: explicit `--plugin-dir` → open project catalog → installed registry. Override home with `WEBDOT_HOME` (tests / portable installs).
 
 **F30 (optional extra):** Interactive `session repl` is **not** part of the installable-plugins core. Keep using one-shot `webdot` against an open session. Only reintroduce a REPL if multi-step interactive use becomes common.
 
 Priority: **high product direction** — own milestone after Phase 4 generators.
+
+### Phase 6 — Project libraries (draft)
+
+**Status:** `pending` (after Phase 5)  
+**Goal:** Treat attached WebGME libraries as first-class in listing/meta emit, and optionally manage them from the CLI.
+
+| ID | Feature | Status | Notes |
+|----|---------|--------|-------|
+| F31 | Library-bearing fixture | `pending` | `.webgmex` with ≥1 attached library for tests |
+| F32 | List / inspect libraries | `pending` | Attached names, roots; `tree --seed` / meta views mark library-sourced nodes |
+| F33 | Descriptor / MetaLang namespaces | `pending` | FQN or `library` blocks on name collision; see `docs/meta/LIBRARIES.md` |
+| F34 | GenerateMetaTs FQN mode | `pending` | Optional qualified exports when namespaces present |
+| F35 | Library CLI management | `pending` | `library list` / `add` / `update` / `remove` on session or seed (engine library APIs) |
+
+**Phase 6 — Scenario (boiled down)**  
+A domain studio imports a shared metamodel library into its seed. Authors want `webdot` to **show** what is host vs library, emit types that do not collide, and (when ready) **attach/update/remove** library packages without opening the WebGME GUI.
+
+```bash
+# Introspection (F32–F34)
+webdot library list --seed HostDomain
+webdot tree --seed HostDomain          # library nodes marked
+webdot seed meta --seed HostDomain --format descriptor
+
+# Management (F35) — draft shape
+webdot library add --seed HostDomain --from ./SharedMeta.webgmex --as SharedMeta
+webdot library update SharedMeta --seed HostDomain --from ./SharedMeta.webgmex
+webdot library remove SharedMeta --seed HostDomain
+```
+
+**Notes:** F17 IR fields are already in place; Phase 6 is consumer-facing fine-tuning plus management. F35 is new product scope (interesting, not required for emit correctness). Prefer session write-back patterns from Phase 3½ when mutating libraries.
 
 ---
 
@@ -297,10 +336,11 @@ Tasks not tied to a single milestone — pick up anytime.
 | B4 | streamline | Single `webdot tree` UX doc + shell completions | low |
 | B5 | refactor | Metadata convention `domainTools.producesArtifacts` | low |
 | B6 | optimize | Cache SetupCatalog per process (only if a long-lived REPL returns — **F30**) | low |
-| B7 | meta | See **F17** (Phase 4) — library/namespace in IR, descriptor, MetaLang, traversal | medium |
+| B7 | meta | See **Phase 6** (F31–F34) — library listing / namespace emit | medium |
 | B8 | streamline | CLI complexity: trim rare flags or `webdot examples` tutorial recipes / scenario printouts | medium |
 | B9 | compatibility | Track/adopt WebGME repository `.webgmex` support; replace snapshot-only assumptions with full commit/branch/tag import where available | medium |
-| B10 | product | Phase 5 installable plugins (F26–F29) — global toolbox; see Phase 5 section | high |
+| B10 | product | Phase 5 installable plugins (F26–F29) — done on `main` | — |
+| B11 | product | Phase 6 library CLI management (F35) | medium |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
 
@@ -312,6 +352,7 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
+| 2026-07-17 | Phase 5 (F26–F29) | maintainer | Approved | Installable plugins registry; portable `owner/repo` parse; merged `feature/phase5-installable-plugins` → `main` |
 | 2026-07-17 | Drop F24 session REPL | maintainer | Approved | Removed `session repl`; F30 optional Phase 5 extra; merged `feature/drop-session-repl` → `main` |
 | 2026-07-16 | Phase 4 (F14, F17) | maintainer | Approved | GenerateMetaTs plain plugin (scoped instance TS); F17 IR partial; F15 remains outside repo; merged `feature/phase4-generator` → `main` |
 | 2026-07-11 | Phase 3½ (F20–F23) | maintainer | Approved | Stateful session workspace; execution-dir `.webdot`; session scope for all commands; merged `feature/phase3.5-session-shell` → `main` (F24 REPL later dropped) |
@@ -324,6 +365,13 @@ Record of completed reviews (newest first).
 ---
 
 ### Changelog
+
+### 0.7.0 (2026-07-17) — merged to `main`
+- Phase 5: installable plugins — `plugin install` / `list` / `uninstall`, user registry under `WEBDOT_HOME` / `~/.webdot`
+- Resolve bare names: `--plugin-dir` → catalog → installed; `ls plugins` labels catalog vs installed
+- GitHub install: `owner/repo[@ref]` (always GitHub shorthand) with optional `--subdir`; collision requires `--as` or `--force`
+- Draft **Phase 6** (project libraries): F17 emit fine-tuning + library CLI management (F31–F35)
+- F30 REPL remains optional / not shipped
 
 ### 0.6.1 (2026-07-17) — merged to `main`
 - Dropped `webdot session repl` / `session shell` (F24); stateful session workspace (F20–F23) unchanged
@@ -389,7 +437,9 @@ npx @kecso/webgme-domain-tools tree repo
 webdot tree --seed StateMachine --cwd c:/Work/StaMS
 webdot tree --seed StateMachine --at /1 --cwd c:/Work/StaMS
 webdot seed meta --seed StateMachine --cwd c:/Work/StaMS
-webdot plugin run --plugin-dir plugins/GenerateMetaTs --seed StateMachine --cwd c:/Work/StaMS --artifacts-out src/generated --set seedName=StateMachine
+webdot plugin install ./plugins/GenerateMetaTs
+webdot plugin list
+webdot plugin run GenerateMetaTs --seed StateMachine --cwd c:/Work/StaMS --artifacts-out src/generated
 webdot plugin info EchoPlugin --cwd test/fixtures/sample-project
 webdot plugin run EchoPlugin --seed StateMachine --cwd test/fixtures/sample-project --set message=hi
 ```

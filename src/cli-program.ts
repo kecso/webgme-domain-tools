@@ -5,6 +5,11 @@ import { runSeedMetaCommand, type SeedMetaFormat } from "./commands/seed.js";
 import { runTreeCommand } from "./commands/tree.js";
 import { runPluginInfoCommand, runPluginRunCommand } from "./commands/plugin.js";
 import {
+  formatPluginList,
+  installPlugin,
+  uninstallPlugin,
+} from "./plugin/install.js";
+import { loadSetupCatalog } from "./catalog/setup-catalog.js";import {
   runSessionCloseCommand,
   runSessionDiscardCommand,
   runSessionOpenCommand,
@@ -93,7 +98,7 @@ export function createProgram(): Command {
   program
     .name(CLI_NAME)
     .description("WebGME domain tools")
-    .version("0.6.1")
+    .version("0.7.0")
     .option("-C, --cwd <dir>", "WebGME project root (webgme-setup.json) [default: cwd]");
 
   program
@@ -188,9 +193,76 @@ export function createProgram(): Command {
   const pluginCmd = program.command("plugin").description("Plugin introspection and execution");
 
   pluginCmd
+    .command("list")
+    .description("List installed plugins (and project catalog plugins when available)")
+    .action((_opts, cmd) => {
+      try {
+        const cwd = projectCwdFor(cmd, executionCwd());
+        let catalogNames: string[] | undefined;
+        try {
+          catalogNames = loadSetupCatalog(cwd).plugins.map((p) => p.name);
+        } catch {
+          catalogNames = undefined;
+        }
+        console.log(formatPluginList({ catalogNames }));
+      } catch (err) {
+        console.error(err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  pluginCmd
+    .command("install")
+    .description("Install a plugin into the user registry (local path or GitHub owner/repo)")
+    .argument("<target>", "Plugin directory, or owner/repo[@ref]")
+    .option("--as <name>", "Dictionary name for plugin run / info (default: folder basename)")
+    .option("--subdir <path>", "Subdirectory inside a GitHub clone that contains the plugin")
+    .option("--force", "Replace an existing install with the same name")
+    .action((target: string, opts: { as?: string; subdir?: string; force?: boolean }) => {
+      try {
+        const result = installPlugin({
+          target,
+          as: opts.as,
+          subdir: opts.subdir,
+          force: opts.force,
+          cwd: executionCwd(),
+        });
+        const label = result.replaced ? "Replaced" : "Installed";
+        console.log(
+          label +
+            " " +
+            result.entry.name +
+            " → " +
+            result.entry.pluginId +
+            " (" +
+            result.entry.path +
+            ")",
+        );
+        if (result.warning) console.error("warning:", result.warning);
+      } catch (err) {
+        console.error(err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  pluginCmd
+    .command("uninstall")
+    .description("Remove a plugin from the user registry")
+    .argument("<name>", "Install dictionary name")
+    .action((name: string) => {
+      try {
+        const entry = uninstallPlugin({ name });
+        console.log("Uninstalled " + entry.name);
+      } catch (err) {
+        console.error(err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  pluginCmd
     .command("info")
     .description("Show plugin metadata and configStructure defaults")
-    .argument("<name>", "Plugin name from webgme-setup.json")
+    .argument("<name>", "Catalog or installed plugin name")
     .action((name: string, _opts, cmd) => {
       void runCli(() => runPluginInfoCommand({ cwd: projectCwdFor(cmd, executionCwd()), plugin: name }));
     });
@@ -200,7 +272,7 @@ export function createProgram(): Command {
     .description(
       "Run a plugin headlessly. Plugin context = project + active node + selection + config.",
     )
-    .argument("[name]", "Plugin name from webgme-setup.json (or use --plugin-dir)")
+    .argument("[name]", "Catalog or installed plugin name (or use --plugin-dir)")
     .option("--plugin-dir <path>", "Plugin directory ({dir}/{dir}.js) relative to cwd; bypasses catalog")
     .option("--seed [name]", "Project: seed name (defaults to open session)")
     .option("--webgmex <path>", "Project: direct .webgmex path (or use --seed)")
@@ -225,6 +297,8 @@ Plugin context (what the plugin receives):
   active node --at <path>     [default: ${DEFAULT_PLUGIN_ACTIVE_NODE_LABEL}]
   selection   --select <paths> [default: ${DEFAULT_PLUGIN_SELECTION_LABEL}]
   config      metadata.json defaults, overridden by --config-file and --set
+
+Name resolution: --plugin-dir → project catalog → installed registry (WEBDOT_HOME/~/.webdot).
 
 With an open session, plugin run edits the session working copy (not the source file)
 until you run session save. Use session open / session status to manage state.
