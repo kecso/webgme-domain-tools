@@ -14,7 +14,6 @@ import {
 import { parseSelect } from "./commands/seed-tree.js";
 import { AmbiguousSeedError } from "./session/seed-resolution.js";
 import { SessionError } from "./session/workspace-state.js";
-import { runSessionRepl } from "./session/repl.js";
 import { readSessionState } from "./session/workspace-state.js";
 import type { RepoTreeFormat } from "./introspection/repo-tree.js";
 import type { SeedTreeFormat } from "./introspection/seed-tree.js";
@@ -344,17 +343,6 @@ until you run session save. Use session open / session status to manage state.
     .option("--discard", "Close even when there are unsaved changes")
     .action((opts: { discard?: boolean }) => {
       void runCli(() => Promise.resolve(runSessionCloseCommand(executionCwd(), opts.discard)));
-    });
-
-  sessionCmd
-    .command("repl")
-    .alias("shell")
-    .description("Interactive session shell (open, plugin run, save, close)")
-    .action(() => {
-      void runSessionRepl(executionCwd()).catch((err) => {
-        console.error(err instanceof Error ? err.message : err);
-        process.exit(1);
-      });
     });
 
   return program;

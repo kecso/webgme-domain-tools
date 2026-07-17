@@ -42,7 +42,7 @@ webdot ls plugins
 | `plugin run <name> --seed <seed>` | Headless plugin execution; `--dry-run`, `--out`, `--plugin-dir`, `--webgmex` |
 | `plugin run --plugin-dir plugins/GenerateMetaTs --seed <seed> --artifacts-out <dir>` | Generate TypeScript meta types (plain plugin) |
 | `ls [kind]` | Compact component listing |
-| `session open|status|save|discard|close|repl` | Stateful workspace in `.webdot/` |
+| `session open|status|save|discard|close` | Stateful workspace in `.webdot/` |
 
 More commands and milestones: [docs/PROJECT.md](docs/PROJECT.md).
 
