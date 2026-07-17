@@ -40,6 +40,8 @@ webdot ls plugins
 | `seed meta --seed <name>` | MetaAspectSet IR (`--format json`, descriptor, metalang, tree) |
 | `plugin info <name>` | Plugin `metadata.json` + config defaults |
 | `plugin run <name> --seed <seed>` | Headless plugin execution; `--dry-run`, `--out`, `--plugin-dir`, `--webgmex` |
+| `plugin install <path\|owner/repo>` | Install plugin into user registry (`--as`, `--force`, `--subdir`) |
+| `plugin list` / `plugin uninstall` | List or remove installed plugins |
 | `plugin run --plugin-dir plugins/GenerateMetaTs --seed <seed> --artifacts-out <dir>` | Generate TypeScript meta types (plain plugin) |
 | `ls [kind]` | Compact component listing |
 | `session open|status|save|discard|close` | Stateful workspace in `.webdot/` |

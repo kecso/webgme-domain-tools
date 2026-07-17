@@ -39,18 +39,24 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 5 — Installable plugins (global toolbox)** — `review` (branch `feature/phase5-installable-plugins`)
+**Phase 6 — Project libraries (draft)** — `pending` (next up after Phase 5)
+
+**Phase 5 — Installable plugins (global toolbox)** — `done` (merged to `main` 2026-07-17, branch `feature/phase5-installable-plugins`)
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F26 | Plugin install registry (local) | `review` | `WEBDOT_HOME=<tmp> webdot plugin install plugins/GenerateMetaTs` · `plugin list` · `plugin uninstall` |
-| F27 | Install from GitHub | `review` | `webdot plugin install owner/repo[@ref] [--subdir <path>] [--as <name>]` (clone into cache) |
-| F28 | Collision → alternate install name | `review` | Re-install same name without `--force` fails; `--as` registers alias; no silent overwrite |
-| F29 | Resolve installed names on `plugin run` / `info` / `ls` | `review` | Bare name: `--plugin-dir` → catalog → installed; `plugin list` / `ls plugins` label **catalog** vs **installed** |
+| F26 | Plugin install registry (local) | `done` | `WEBDOT_HOME=<tmp> webdot plugin install plugins/GenerateMetaTs` · `plugin list` · `plugin uninstall` |
+| F27 | Install from GitHub | `done` | `webdot plugin install owner/repo[@ref] [--subdir <path>] [--as <name>]` (clone into cache) |
+| F28 | Collision → alternate install name | `done` | Re-install same name without `--force` fails; `--as` registers alias; no silent overwrite |
+| F29 | Resolve installed names on `plugin run` / `info` / `ls` | `done` | Bare name: `--plugin-dir` → catalog → installed; `plugin list` / `ls plugins` label **catalog** vs **installed** |
+| F30 | Optional interactive session REPL | `optional` | Not shipped; one-shot CLI + session workspace is enough |
 
-**Review gate:** `npm test` · with `WEBDOT_HOME` temp dir: install EchoPlugin `--as LintEcho`, `plugin info LintEcho`, `plugin run LintEcho --seed StateMachine -C test/fixtures/sample-project --dry-run`
+### Phase 5 review notes (2026-07-17)
 
-**Next (draft):** [Phase 6 — Project libraries](#phase-6--project-libraries-draft) (F17 fine-tuning + library CLI management)
+| ID | Feedback | Action |
+|----|----------|--------|
+| F27 | `path.sep` made `owner/repo` OS-dependent (broken on Unix) | Portable rule: exactly `owner/repo[@ref]` → GitHub; `./…` / absolute / deeper paths → local |
+| F24/F30 | REPL | Remains dropped/optional; not part of Phase 5 deliverable |
 
 **Phase 4 — Generator & consumer** — `done` (merged to `main` 2026-07-16, branch `feature/phase4-generator`)
 
@@ -258,11 +264,11 @@ IR records `libraries[]` and per-node `namespace` / `fullyQualifiedName` / `libr
 ### Phase 5 — Installable plugins (global toolbox)
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F26 | Plugin install registry (local) | `review` | `WEBDOT_HOME` / `~/.webdot/plugins/registry.json`; `plugin install <path>` |
-| F27 | Install from GitHub | `review` | `owner/repo[@ref]`; cache under `plugins/github/`; optional `--subdir` |
-| F28 | Collision → alternate install name | `review` | `--as <alias>`; `--force` to replace; no silent overwrite |
-| F29 | Resolve installed names on `plugin run` / `info` / `ls` | `review` | Precedence + **catalog** / **installed** labels |
-| F30 | Optional interactive session REPL | `optional` | Extra only — not required. Dropped from product; revive only if interactive chaining proves necessary |
+| F26 | Plugin install registry (local) | `done` | `WEBDOT_HOME` / `~/.webdot/plugins/registry.json`; `plugin install <path>` |
+| F27 | Install from GitHub | `done` | `owner/repo[@ref]`; cache under `plugins/github/`; optional `--subdir` |
+| F28 | Collision → alternate install name | `done` | `--as <alias>`; `--force` to replace; no silent overwrite |
+| F29 | Resolve installed names on `plugin run` / `info` / `ls` | `done` | Precedence + **catalog** / **installed** labels |
+| F30 | Optional interactive session REPL | `optional` | Extra only — not shipped |
 
 **Phase 5 — Scenario (boiled down)**  
 `webdot` is installed **system-wide**. Domain-agnostic plugins live in a **user registry**, not inside each studio repo. Any project/session can run them against its own `.webgmex`.
@@ -333,7 +339,7 @@ Tasks not tied to a single milestone — pick up anytime.
 | B7 | meta | See **Phase 6** (F31–F34) — library listing / namespace emit | medium |
 | B8 | streamline | CLI complexity: trim rare flags or `webdot examples` tutorial recipes / scenario printouts | medium |
 | B9 | compatibility | Track/adopt WebGME repository `.webgmex` support; replace snapshot-only assumptions with full commit/branch/tag import where available | medium |
-| B10 | product | Phase 5 installable plugins (F26–F29) — in review on `feature/phase5-installable-plugins` | high |
+| B10 | product | Phase 5 installable plugins (F26–F29) — done on `main` | — |
 | B11 | product | Phase 6 library CLI management (F35) | medium |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
@@ -346,6 +352,7 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
+| 2026-07-17 | Phase 5 (F26–F29) | maintainer | Approved | Installable plugins registry; portable `owner/repo` parse; merged `feature/phase5-installable-plugins` → `main` |
 | 2026-07-17 | Drop F24 session REPL | maintainer | Approved | Removed `session repl`; F30 optional Phase 5 extra; merged `feature/drop-session-repl` → `main` |
 | 2026-07-16 | Phase 4 (F14, F17) | maintainer | Approved | GenerateMetaTs plain plugin (scoped instance TS); F17 IR partial; F15 remains outside repo; merged `feature/phase4-generator` → `main` |
 | 2026-07-11 | Phase 3½ (F20–F23) | maintainer | Approved | Stateful session workspace; execution-dir `.webdot`; session scope for all commands; merged `feature/phase3.5-session-shell` → `main` (F24 REPL later dropped) |
@@ -359,12 +366,12 @@ Record of completed reviews (newest first).
 
 ### Changelog
 
-### 0.7.0 (Phase 5 — review)
+### 0.7.0 (2026-07-17) — merged to `main`
 - Phase 5: installable plugins — `plugin install` / `list` / `uninstall`, user registry under `WEBDOT_HOME` / `~/.webdot`
 - Resolve bare names: `--plugin-dir` → catalog → installed; `ls plugins` labels catalog vs installed
-- GitHub install: `owner/repo[@ref]` with optional `--subdir`; collision requires `--as` or `--force`
+- GitHub install: `owner/repo[@ref]` (always GitHub shorthand) with optional `--subdir`; collision requires `--as` or `--force`
 - Draft **Phase 6** (project libraries): F17 emit fine-tuning + library CLI management (F31–F35)
-- Rebased onto main after F24 REPL drop (F30 remains optional)
+- F30 REPL remains optional / not shipped
 
 ### 0.6.1 (2026-07-17) — merged to `main`
 - Dropped `webdot session repl` / `session shell` (F24); stateful session workspace (F20–F23) unchanged
