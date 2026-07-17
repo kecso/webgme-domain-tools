@@ -410,7 +410,7 @@ Record of completed reviews (newest first).
 
 ### 0.2.0 (2026-07-10)
 - Phase 2: ProjectSession, `tree --seed`, seed resolution, `seed meta`
-- CLI command **`webdot`** (`npx @kecso/webgme-domain-tools` or global install)
+- CLI command **`webdot`** (`npx webgme-domain-tools` or global install)
 - F7: `StateModel` fixture for catalog prefix ambiguity; exit 2 on ambiguous `--seed`
 - `webgme-engine` git dep (MemoryGMEAuth); install with `npm install --ignore-scripts` if postinstall fails
 
@@ -433,7 +433,7 @@ webdot tree repo --cwd c:/Work/StaMS
 webdot tree repo --cwd c:/Work/StaMS --kind seeds,plugins --format json
 
 # Global / npx
-npx @kecso/webgme-domain-tools tree repo
+npx webgme-domain-tools tree repo
 webdot tree --seed StateMachine --cwd c:/Work/StaMS
 webdot tree --seed StateMachine --at /1 --cwd c:/Work/StaMS
 webdot seed meta --seed StateMachine --cwd c:/Work/StaMS

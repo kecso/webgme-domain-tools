@@ -1,5 +1,5 @@
 {
-  "name": "@kecso/webgme-domain-tools",
+  "name": "webgme-domain-tools",
   "version": "0.7.0",
   "description": "webdot — WebGME domain studio CLI",
   "repository": {

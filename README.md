@@ -9,9 +9,9 @@
 ## Install
 
 ```bash
-npm install -g @kecso/webgme-domain-tools
+npm install -g webgme-domain-tools
 # or one-off:
-npx @kecso/webgme-domain-tools tree repo
+npx webgme-domain-tools tree repo
 # from a checkout:
 npm install --ignore-scripts && npm run build
 npm link
