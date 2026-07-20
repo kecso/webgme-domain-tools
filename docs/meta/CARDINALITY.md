@@ -2,7 +2,7 @@
 
 WebGME relational meta rules — **containment**, **set membership**, and (structurally) **pointers** — use a **two-level** limit model. **`-1` in IR means “no bound”** (unset).
 
-Verified in [`webgme-engine` `metacore.js`](https://github.com/webgme/webgme-engine/blob/6227890/src/common/core/metacore.js): `getJsonMeta` reads global `min`/`max` and per-type `minItems`/`maxItems` from the same meta-node attributes.
+Verified in [`webgme-engine` `metacore.js`](https://github.com/webgme/webgme-engine/blob/v2.32.0/src/common/core/metacore.js): `getJsonMeta` reads global `min`/`max` and per-type `minItems`/`maxItems` from the same meta-node attributes.
 
 ## Two levels: global and per-type
 
@@ -24,7 +24,7 @@ At any level in IR, **`-1`** (or omitted attribute) means no rule at that bound.
 | `meta.children` | `min`, `max` (omitted when unset) | `items[]`, `minItems[]`, `maxItems[]` |
 | `meta.pointers.{name}` | `min`, `max` | `items[]`, `minItems[]`, `maxItems[]` |
 
-Sets are stored under `meta.pointers` in IR; core treats `max === 1` as a pointer, otherwise a set ([`metarules.js` `filterPointerRules`](https://github.com/webgme/webgme-engine/blob/6227890/src/common/core/users/metarules.js)).
+Sets are stored under `meta.pointers` in IR; core treats `max === 1` as a pointer, otherwise a set ([`metarules.js` `filterPointerRules`](https://github.com/webgme/webgme-engine/blob/v2.32.0/src/common/core/users/metarules.js)).
 
 ### Pointer global limits (structural)
 
@@ -40,7 +40,7 @@ StaMS `Transition.src` (actual seed):
 }
 ```
 
-Core [`getPointerMeta` example](https://github.com/webgme/webgme-engine/blob/6227890/src/common/core/core.js): global **`min: 1`, `max: 1`**; per-target **`min: -1`, `max: 1`**. Global `max: 1` is what distinguishes a pointer from a set. Pointers are **not** surfaced in descriptor/MetaLang cardinality; rebuild with `setPointerMetaLimits(…, 1, 1)` and per-target `-1`/`1` defaults.
+Core [`getPointerMeta` example](https://github.com/webgme/webgme-engine/blob/v2.32.0/src/common/core/core.js): global **`min: 1`, `max: 1`**; per-target **`min: -1`, `max: 1`**. Global `max: 1` is what distinguishes a pointer from a set. Pointers are **not** surfaced in descriptor/MetaLang cardinality; rebuild with `setPointerMetaLimits(…, 1, 1)` and per-target `-1`/`1` defaults.
 
 ### Containment example
 

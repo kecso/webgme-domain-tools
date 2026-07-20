@@ -17,7 +17,7 @@ npm install --ignore-scripts && npm run build
 npm link
 ```
 
-> `webgme-engine` is installed from GitHub (MemoryGMEAuth). Use `--ignore-scripts` if the engine postinstall fails on your platform.
+> `webgme-engine` v2.32.0. Use `--ignore-scripts` if the engine postinstall fails on your platform.
 
 ## Quick start
 

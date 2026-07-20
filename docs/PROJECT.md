@@ -412,7 +412,7 @@ Record of completed reviews (newest first).
 - Phase 2: ProjectSession, `tree --seed`, seed resolution, `seed meta`
 - CLI command **`webdot`** (`npx webgme-domain-tools` or global install)
 - F7: `StateModel` fixture for catalog prefix ambiguity; exit 2 on ambiguous `--seed`
-- `webgme-engine` git dep (MemoryGMEAuth); install with `npm install --ignore-scripts` if postinstall fails
+- `webgme-engine` v2.32.0; install with `npm install --ignore-scripts` if postinstall fails
 
 ### 0.1.0 (2026-07-10)
 - M0 foundation: SetupCatalog, `tree repo`, `ls`, tests, CI

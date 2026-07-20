@@ -22,14 +22,14 @@ Root also includes `libraries` — attached library root names (`core.getLibrary
 
 ## Cardinality in IR (pointers, sets, children)
 
-`meta` is the raw `getJsonMeta(node)` blob ([`metacore.js`](https://github.com/webgme/webgme-engine/blob/6227890/src/common/core/metacore.js)). Every relational rule has **global** and **per-type** limits:
+`meta` is the raw `getJsonMeta(node)` blob ([`metacore.js`](https://github.com/webgme/webgme-engine/blob/v2.32.0/src/common/core/metacore.js)). Every relational rule has **global** and **per-type** limits:
 
 | `meta` key | Global | Per-type |
 |------------|--------|----------|
 | `children` | `min`, `max` (omitted when unset) | `items[]` + `minItems[]` + `maxItems[]` |
 | `pointers.{name}` | `min`, `max` | `items[]` + `minItems[]` + `maxItems[]` |
 
-**`-1`** in IR = no bound. Sets in IR live under `pointers` with **`max !== 1`**; core classifies `max === 1` as pointer ([`metarules.js`](https://github.com/webgme/webgme-engine/blob/6227890/src/common/core/users/metarules.js)).
+**`-1`** in IR = no bound. Sets in IR live under `pointers` with **`max !== 1`**; core classifies `max === 1` as pointer ([`metarules.js`](https://github.com/webgme/webgme-engine/blob/v2.32.0/src/common/core/users/metarules.js)).
 
 ### Pointers (structural global `1..1`)
 
