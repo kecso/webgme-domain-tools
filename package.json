@@ -1,7 +1,8 @@
 {
   "name": "webgme-domain-tools",
+  "author": "Tamas Kecskes <tamas.kecskes@vanderbilt.edu>",
   "version": "0.7.0",
-  "description": "webdot — headless WebGME CLI: run plugins on .webgmex project files from anywhere, no server required",
+  "description": "webdot — CLI for WebGME: run plugins on .webgmex project files from anywhere, without a browser or server",
   "repository": {
     "type": "git",
     "url": "https://github.com/kecso/webgme-domain-tools.git"
@@ -16,7 +17,6 @@
     "webdot",
     "cli",
     "plugin",
-    "headless",
     "metamodel"
   ],
   "type": "module",

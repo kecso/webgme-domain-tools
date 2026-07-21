@@ -1,8 +1,8 @@
 # webgme-domain-tools
 
-**webdot** — headless CLI for WebGME projects.
+**webdot** — command-line tools for WebGME projects (no browser UI, no WebGME server).
 
-Work from `.webgmex` project files and a `webgme-setup.json` catalog — **no WebGME server required**. The main use case today is running plugins against any model from anywhere: project plugins, a local plugin directory, or tools you install once into a user registry.
+Work from `.webgmex` project files and a `webgme-setup.json` catalog. The main use case today is **running plugins against any model from anywhere**: plugins that ship with a studio, a local plugin directory, or tools you install once into a user registry.
 
 It also helps you inspect domains (repo layout, model trees, meta) and keep an editable session workspace when you want multi-step changes with explicit save/discard.
 
@@ -69,7 +69,7 @@ webdot plugin install ./plugins/GenerateMetaTs
 
 | Command | Description |
 |---------|-------------|
-| `plugin run` | Headless plugin execution (`--seed` / `--webgmex`, `--plugin-dir`, `--dry-run`, `--out`, `--artifacts-out`, …) |
+| `plugin run` | Run a plugin from the terminal against a `.webgmex` (`--seed` / `--webgmex`, `--plugin-dir`, `--dry-run`, `--out`, `--artifacts-out`, …) |
 | `plugin info` | Show `metadata.json` + config defaults |
 | `plugin install` | Install a plugin into the user registry (local path or `owner/repo[@ref]`, `--subdir`, `--as`, `--force`) |
 | `plugin list` / `plugin uninstall` | List or remove installed plugins |
@@ -101,7 +101,8 @@ npm run build
 npm test
 ```
 
-Project tracking and roadmap: [docs/PROJECT.md](docs/PROJECT.md).
+Project tracking and roadmap: [docs/PROJECT.md](docs/PROJECT.md).  
+Publishing to npm: [docs/PUBLISH.md](docs/PUBLISH.md).
 
 ## License
 
