@@ -2,40 +2,56 @@
 
 Package name on the registry is **`webgme-domain-tools`** (unscoped). The GitHub repo may later move under the `webgme` org; that does **not** require renaming the npm package.
 
-## One-time setup
+## Recommended path (avoid fighting the token UI)
 
-### 1. npm account
+npm has made long-lived **write** tokens awkward on purpose (package must exist, IP allowlists, “bypass 2FA” warnings). For a **new** package, the least painful flow is:
 
-Use an npmjs.com account that will own `webgme-domain-tools` (or a org you control).
+### A. First publish from your laptop (interactive 2FA is fine)
 
-### 2. GitHub Actions secret `NPM_TOKEN`
+```bash
+npm login          # browser / one-time 2FA prompt is OK here
+npm run build
+npm publish --access public
+```
 
-1. On [npmjs.com](https://www.npmjs.com/) → **Access Tokens** → generate a **Granular Access Token**
-   - Permission: **Read and write** (or publish) for package `webgme-domain-tools`
-   - Or an Automation token if you prefer classic tokens
-2. In this GitHub repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
-   - Name: `NPM_TOKEN`
-   - Value: the token from npm
+That creates `webgme-domain-tools` on npmjs.com under your account.
 
-The [Publish npm](../.github/workflows/publish.yml) workflow uses `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`.
+### B. Then enable Trusted Publishing (CI without a write token)
 
-### 3. Optional — Trusted Publishing (OIDC)
+1. Open https://www.npmjs.com/package/webgme-domain-tools → **Settings** → **Trusted Publisher**
+2. Choose **GitHub Actions** and set:
+   - **Organization or user:** `kecso` (or `webgme` after a repo move)
+   - **Repository:** `webgme-domain-tools`
+   - **Workflow filename:** `publish.yml` (filename only, with `.yml`)
+   - **Environment:** leave empty unless you add a GitHub Environment
+   - **Allowed actions:** `npm publish`
+3. Save. No `NPM_TOKEN` secret is required for later releases.
+4. Later releases: create a GitHub **Release** (tag `v0.7.1`, etc.) → workflow publishes via OIDC.
 
-After the first successful publish (or when npm allows configuring a pending publisher):
+The [Publish npm](../.github/workflows/publish.yml) workflow already has `permissions.id-token: write` and uses Node 22 (required for Trusted Publishing).
 
-1. Package page on npm → **Settings** → **Trusted Publisher** → **GitHub Actions**
-2. Repository: `kecso/webgme-domain-tools` (update if the repo moves to `webgme/…`)
-3. Workflow filename: `publish.yml`
-4. You can then drop `NPM_TOKEN` once OIDC-only publish is verified
+---
 
-The workflow already requests `id-token: write` and passes `--provenance`.
+## If you still want a granular token (optional / fallback)
 
-## How to cut a release
+Use this only if you cannot do the laptop first publish, or as a temporary fallback (`NPM_TOKEN` secret).
 
-1. Ensure `package.json` `"version"` is what you want (e.g. `0.7.0`).
-2. Merge to `main`.
-3. Create a GitHub **Release** whose tag matches that version, e.g. tag `v0.7.0`.
-4. Publishing the release triggers **Publish npm** → `npm publish`.
+| Form field | What to do |
+|------------|------------|
+| **Package name / scope** | Package must often **already exist**. After step A, select `webgme-domain-tools`. For a brand-new name, prefer laptop publish first — don’t try to invent IP ranges to unblock CI. |
+| **IP ranges** | **Leave empty / unrestricted.** GitHub Actions egress IPs change constantly; pinning ranges will break publishes. |
+| **Bypass 2FA** | **Enable for CI write tokens.** The warning is expected: CI cannot tap your phone. This is why Trusted Publishing is better long-term. |
+| **Expiration** | Keep short (e.g. 7–90 days); rotate if you use this path. |
+
+Then: GitHub repo → **Settings** → **Secrets** → Actions → `NPM_TOKEN` = that token. The workflow passes it as `NODE_AUTH_TOKEN` when the secret exists.
+
+---
+
+## How to cut a release (after Trusted Publishing is set)
+
+1. Bump `"version"` in `package.json` on `main` if needed.
+2. Create a GitHub **Release** whose tag matches, e.g. `v0.7.0`.
+3. Publishing the release runs **Publish npm**.
 
 ## Local smoke (optional)
 
