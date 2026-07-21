@@ -1,12 +1,24 @@
 {
   "name": "webgme-domain-tools",
   "version": "0.7.0",
-  "description": "webdot — WebGME domain studio CLI",
+  "description": "webdot — headless WebGME CLI: run plugins on .webgmex project files from anywhere, no server required",
   "repository": {
     "type": "git",
     "url": "https://github.com/kecso/webgme-domain-tools.git"
   },
+  "homepage": "https://github.com/kecso/webgme-domain-tools#readme",
+  "bugs": {
+    "url": "https://github.com/kecso/webgme-domain-tools/issues"
+  },
   "license": "MIT",
+  "keywords": [
+    "webgme",
+    "webdot",
+    "cli",
+    "plugin",
+    "headless",
+    "metamodel"
+  ],
   "type": "module",
   "bin": {
     "webdot": "./dist/cli.js"
@@ -15,10 +27,13 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "config"
+    "config",
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": "npm run build && npm run test:coverage",
     "test:run": "node --test test/*.test.js",
     "test:coverage": "c8 --include \"dist/**/*.js\" --exclude \"dist/**/*.d.ts\" --reporter=text-summary --reporter=text --check-coverage=false node --enable-source-maps --test test/*.test.js"
