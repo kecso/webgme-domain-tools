@@ -36,8 +36,14 @@ const fixture = path.join(__dirname, "fixtures", "sample-project");
 
 function createWorkCopy() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-session-"));
-  fs.cpSync(fixture, dir, { recursive: true });
-  fs.rmSync(path.join(dir, ".webdot"), { recursive: true, force: true });
+  // Skip ephemeral files: other tests may write *.tmp into the shared fixture while we copy.
+  fs.cpSync(fixture, dir, {
+    recursive: true,
+    filter: (src) => {
+      const base = path.basename(src);
+      return base !== ".webdot" && !base.endsWith(".tmp");
+    },
+  });
   return dir;
 }
 
