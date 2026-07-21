@@ -21,8 +21,6 @@ jobs:
   smoke:
     needs: test
     runs-on: ubuntu-latest
-    env:
-      WEBDOT_HOME: ${{ runner.temp }}/webdot-home
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,15 +32,21 @@ jobs:
       - name: CLI help
         run: node dist/cli.js --help
       - name: Install bundled GenerateMetaTs into user registry
+        env:
+          WEBDOT_HOME: ${{ runner.temp }}/webdot-home
         run: node dist/cli.js plugin install ./plugins/GenerateMetaTs
       - name: List installed plugins
+        env:
+          WEBDOT_HOME: ${{ runner.temp }}/webdot-home
         run: node dist/cli.js plugin list
       - name: Run GenerateMetaTs (dry-run) against fixture seed
-        run: >
-          node dist/cli.js plugin run GenerateMetaTs
-          --seed StateMachine
-          -C test/fixtures/sample-project
-          --artifacts-out ${{ runner.temp }}/meta-out
-          --dry-run
+        env:
+          WEBDOT_HOME: ${{ runner.temp }}/webdot-home
+        run: |
+          node dist/cli.js plugin run GenerateMetaTs \
+            --seed StateMachine \
+            -C test/fixtures/sample-project \
+            --artifacts-out "${{ runner.temp }}/meta-out" \
+            --dry-run
       - name: Confirm artifact was written
         run: test -f "${{ runner.temp }}/meta-out/meta.ts"
