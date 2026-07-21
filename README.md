@@ -1,63 +1,109 @@
 # webgme-domain-tools
 
-**webdot** — minimal CLI for WebGME domain studios. Complements [webgme-cli](https://github.com/webgme/webgme-cli) with headless tooling that works from `webgme-setup.json` and file-project seeds — no server required.
+**webdot** — command-line tools for WebGME projects (no browser UI, no WebGME server).
 
-## Status
+Work from `.webgmex` project files and a `webgme-setup.json` catalog. The main use case today is **running plugins against any model from anywhere**: plugins that ship with a studio, a local plugin directory, or tools you install once into a user registry.
 
-**Early development.** See [docs/PROJECT.md](docs/PROJECT.md) for feature progress, review checkpoints, and backlog.
+It also helps you inspect domains (repo layout, model trees, meta) and keep an editable session workspace when you want multi-step changes with explicit save/discard.
+
+Complements [webgme-cli](https://github.com/webgme/webgme-cli) (scaffold + server); it does not replace it.
 
 ## Install
 
 ```bash
 npm install -g webgme-domain-tools
-# or one-off:
-npx webgme-domain-tools tree repo
-# from a checkout:
-npm install --ignore-scripts && npm run build
-npm link
+# or without a global install:
+npx webgme-domain-tools --help
 ```
 
-> `webgme-engine` v2.32.0. Use `--ignore-scripts` if the engine postinstall fails on your platform.
+Requires **Node.js 20+**.
 
 ## Quick start
 
-Run from a WebGME project root (directory containing `webgme-setup.json`):
+```bash
+# Inspect a studio (directory with webgme-setup.json)
+webdot tree repo -C /path/to/my-studio
+webdot ls plugins -C /path/to/my-studio
+
+# Run a plugin against a seed .webgmex (catalog name)
+webdot plugin run MyPlugin --seed MySeed -C /path/to/my-studio --dry-run
+
+# Or point at any plugin folder and any .webgmex (no catalog required)
+webdot plugin run --plugin-dir ./SomePlugin --webgmex ./model.webgmex --dry-run
+```
+
+## Installable plugins from this repo
+
+The npm package ships the **CLI only**. Domain-agnostic plugins maintained here live under [`plugins/`](https://github.com/kecso/webgme-domain-tools/tree/main/plugins) on GitHub and are installed into your user registry (`~/.webdot` or `$WEBDOT_HOME`).
+
+| Plugin | What it does | Install |
+|--------|----------------|---------|
+| **GenerateMetaTs** | Emits TypeScript domain instance types from seed meta (`--artifacts-out`) | see below |
 
 ```bash
-webdot tree repo
-webdot tree repo --kind seeds,plugins
-webdot ls plugins
+# Install GenerateMetaTs from this repository
+webdot plugin install kecso/webgme-domain-tools --subdir plugins/GenerateMetaTs
+
+webdot plugin list
+webdot plugin info GenerateMetaTs
+
+# Run it against a studio seed (writes under --artifacts-out)
+webdot plugin run GenerateMetaTs --seed StateMachine -C /path/to/studio --artifacts-out ./generated
 ```
+
+Pin a release or branch when you want a fixed revision:
+
+```bash
+webdot plugin install kecso/webgme-domain-tools@v0.7.0 --subdir plugins/GenerateMetaTs
+```
+
+From a local clone of this repo you can also install by path:
+
+```bash
+webdot plugin install ./plugins/GenerateMetaTs
+```
+
+> Later we may add a shorthand to install all bundled toolbox plugins in one step. Until then, use `--subdir` (or a local path) per plugin.
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `tree [repo]` | Repository component tree from `webgme-setup.json` (default) |
-| `tree --seed <name>` | Model tree from a file-project seed |
-| `tree --seed <name> --at <path>` | Subtree from a node path |
-| `tree --seed <name> --select <paths>` | Comma-separated node paths |
-| `seed meta --seed <name>` | MetaAspectSet IR (`--format json`, descriptor, metalang, tree) |
-| `plugin info <name>` | Plugin `metadata.json` + config defaults |
-| `plugin run <name> --seed <seed>` | Headless plugin execution; `--dry-run`, `--out`, `--plugin-dir`, `--webgmex` |
-| `plugin install <path\|owner/repo>` | Install plugin into user registry (`--as`, `--force`, `--subdir`) |
+| `plugin run` | Run a plugin from the terminal against a `.webgmex` (`--seed` / `--webgmex`, `--plugin-dir`, `--dry-run`, `--out`, `--artifacts-out`, …) |
+| `plugin info` | Show `metadata.json` + config defaults |
+| `plugin install` | Install a plugin into the user registry (local path or `owner/repo[@ref]`, `--subdir`, `--as`, `--force`) |
 | `plugin list` / `plugin uninstall` | List or remove installed plugins |
-| `plugin run --plugin-dir plugins/GenerateMetaTs --seed <seed> --artifacts-out <dir>` | Generate TypeScript meta types (plain plugin) |
-| `ls [kind]` | Compact component listing |
-| `session open|status|save|discard|close` | Stateful workspace in `.webdot/` |
+| `tree` / `tree repo` | Repository component tree from `webgme-setup.json` |
+| `tree --seed` | Model tree from a file-project seed |
+| `seed meta` | MetaAspectSet views (`json`, `descriptor`, `metalang`, `tree`, …) |
+| `ls` | Compact catalog listing |
+| `session open\|status\|save\|discard\|close` | Stateful workspace (`.webdot/` working copy) |
 
-More commands and milestones: [docs/PROJECT.md](docs/PROJECT.md).
+Name resolution for `plugin run` / `info`: `--plugin-dir` → project catalog → installed registry.
+
+## Session (optional)
+
+For multi-step edits without touching the original `.webgmex` until you save:
+
+```bash
+webdot session open --seed MySeed -C /path/to/studio
+webdot plugin run SomePlugin --dry-run   # uses the open session by default
+webdot session save                      # or: session discard / session close
+```
 
 ## Development
 
 ```bash
+git clone https://github.com/kecso/webgme-domain-tools.git
+cd webgme-domain-tools
 npm install
 npm run build
 npm test
-node dist/cli.js tree repo --cwd ../StaMS
 ```
 
-## Related
+Project tracking and roadmap: [docs/PROJECT.md](docs/PROJECT.md).  
+Publishing to npm: [docs/PUBLISH.md](docs/PUBLISH.md).
 
-- [StaMS](https://github.com/kecso/StaMS) — first consumer studio
-- [webgme-cli](https://github.com/webgme/webgme-cli) — project scaffolding and server workflows
+## License
+
+[MIT](LICENSE)
