@@ -481,10 +481,11 @@ Record of completed reviews (newest first).
 
 ### Changelog
 
-### 0.8.0 (2026-07-22) — merged to `main`
+### Unreleased — Phase 7 on `main` (2026-07-22)
 - Phase 7: v1/v2 `.webgmex` detect; history-preserving save for repository packages; `--branch` on session/plugin; `history` / `branch` / `tag` / `session checkout`
 - Fixture: `test/fixtures/repository/StateMachine.webgmex`; catalog StateMachine seed meta fix (Machine contains Variable*)
 - Planned **Phase 8** docs (tutorials + CLI reference) before MetaLang (**Phase 9**)
+- Package version still **0.7.0** until the next npm release cut
 
 ### 0.7.0 (2026-07-17) — merged to `main`
 - Phase 5: installable plugins — `plugin install` / `list` / `uninstall`, user registry under `WEBDOT_HOME` / `~/.webdot`
