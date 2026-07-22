@@ -319,7 +319,7 @@ Opening a v2 file must never silently flatten to v1 on save. Optional later: exp
 | F37 | Branch on open / run | `done` | `session open --branch <name>`; re-expose `--branch` on `plugin run`; default `master` (or file’s default branch) |
 | F38 | Switch branch in session | `done` | `session checkout <branch>` updates session state + working head |
 | F39 | History introspection | `done` | `history log [--branch]` / `history show <commit>` — list commits for a branch with **hashes**, messages, times |
-| F40 | Branch & tag management | `done` | `branch list\|create\|delete`; `tag list\|create\|delete`; create from branch / commit id |
+| F40 | Branch & tag management | `done` | `branch list\|create\|update\|delete`; `tag list\|create\|delete`; create fails if name exists (use update to move tip); create/update from branch / commit id |
 | F41 | Multi-branch v2 fixture + tests | `done` | `test/fixtures/repository/StateMachine.webgmex` (branches `master`/`example`, tags, multi-commit) |
 
 **Phase 7 — Scenario (boiled down)**
@@ -330,6 +330,7 @@ webdot history log --branch feature/edit          # commit ids + messages
 webdot plugin run SomeEditor                     # self.save() → new commit on feature/edit
 webdot history log --branch feature/edit         # one more commit
 webdot branch create experiment --from <commitId>
+webdot branch update experiment --from <commitId>   # move existing tip; create does not overwrite
 webdot session checkout experiment
 webdot session save                              # v2 file keeps full graph
 ```

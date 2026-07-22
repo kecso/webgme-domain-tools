@@ -16,8 +16,14 @@ export interface GmeCommitObject {
 
 export interface GmeProject {
   projectId: string;
-  createBranch: (name: string, hash: string) => Promise<unknown>;
+  createBranch: (name: string, hash: string) => Promise<{ status?: string; hash?: string }>;
   deleteBranch: (name: string, oldHash: string) => Promise<unknown>;
+  /** Move branch head. Argument order is (branchName, newHash, oldHash). */
+  setBranchHash: (
+    name: string,
+    newHash: string,
+    oldHash: string,
+  ) => Promise<{ status?: string; hash?: string }>;
   getBranchHash: (name: string) => Promise<string>;
   getBranches: () => Promise<Record<string, string>>;
   createTag: (name: string, commitHash: string) => Promise<unknown>;

@@ -19,7 +19,7 @@ webdot session checkout master
 webdot session close --discard
 ```
 
-Create a branch (names: `[0-9a-zA-Z_]+` only — no hyphens):
+Create or move a branch (names: `[0-9a-zA-Z_]+` only — no hyphens). **`create` does not overwrite** an existing name — use **`update`** to move a tip:
 
 ```bash
 # Copy first if you do not want to mutate a shared fixture
@@ -27,6 +27,9 @@ cp ./repo.webgmex ./work.webgmex
 
 webdot branch create scratch --from example --webgmex ./work.webgmex
 webdot branch list --webgmex ./work.webgmex
+
+# Move an existing branch tip (create would error if scratch already exists)
+webdot branch update scratch --from master --webgmex ./work.webgmex
 
 # Creating a second branch on a v1 file upgrades it to repository format
 webdot branch create feature --webgmex ./snapshot.webgmex

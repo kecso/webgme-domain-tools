@@ -162,7 +162,8 @@ Branch names must match `[0-9a-zA-Z_]+`.
 | Command | Description |
 |---------|-------------|
 | `branch list` | Names + head hashes |
-| `branch create <name>` | `--from` branch or commit; upgrades v1 → v2 when needed |
+| `branch create <name>` | New name only (errors if it already exists); `--from` branch or commit; upgrades v1 → v2 when needed |
+| `branch update <name>` | Move an existing tip to `--from` (or current head); use this to overwrite a branch pointer |
 | `branch delete <name>` | Drop branch pointer (not the current branch) |
 
 ---

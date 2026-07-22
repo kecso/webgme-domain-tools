@@ -22,6 +22,7 @@ import {
   runBranchCreateCommand,
   runBranchDeleteCommand,
   runBranchListCommand,
+  runBranchUpdateCommand,
   runHistoryLogCommand,
   runHistoryShowCommand,
   runTagCreateCommand,
@@ -535,8 +536,10 @@ until you run session save. Use session open / session status to manage state.
 
   branchCmd
     .command("create")
-    .description("Create a branch (name: [0-9a-zA-Z_]+; upgrades snapshot packages to repository format)")
-    .argument("<name>", "New branch name")
+    .description(
+      "Create a new branch (name: [0-9a-zA-Z_]+; does not overwrite an existing name — use branch update; upgrades snapshot packages to repository format)",
+    )
+    .argument("<name>", "New branch name (must not already exist)")
     .option("--from <ref>", "Source branch name or commit hash (default: current head)")
     .option("--seed [name]", "Seed name (or open session)")
     .option("--webgmex <path>", "Direct .webgmex path")
@@ -548,6 +551,31 @@ until you run session save. Use session open / session status to manage state.
       }
       void runCli(() =>
         runBranchCreateCommand({
+          sessionCwd,
+          projectCwd: projectCwdFor(cmd, sessionCwd),
+          name,
+          from: opts.from,
+          seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
+        }),
+      );
+    });
+
+  branchCmd
+    .command("update")
+    .description("Move an existing branch tip to --from (or the current head); create does not overwrite")
+    .argument("<name>", "Existing branch name")
+    .option("--from <ref>", "Target branch name or commit hash (default: current head)")
+    .option("--seed [name]", "Seed name (or open session)")
+    .option("--webgmex <path>", "Direct .webgmex path")
+    .action((name: string, opts: { from?: string; seed?: string | boolean; webgmex?: string }, cmd) => {
+      const sessionCwd = executionCwd();
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error("branch update requires --seed, --webgmex, or an open session");
+        process.exit(2);
+      }
+      void runCli(() =>
+        runBranchUpdateCommand({
           sessionCwd,
           projectCwd: projectCwdFor(cmd, sessionCwd),
           name,
