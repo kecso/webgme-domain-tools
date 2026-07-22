@@ -111,7 +111,20 @@ export function createProgram(): Command {
     .name(CLI_NAME)
     .description("WebGME domain tools")
     .version("0.7.0")
-    .option("-C, --cwd <dir>", "WebGME project root (webgme-setup.json) [default: cwd]");
+    .option("-C, --cwd <dir>", "WebGME project root (webgme-setup.json) [default: cwd]")
+    .addHelpText(
+      "after",
+      `
+Examples:
+  $ webdot tree repo -C /path/to/studio
+  $ webdot plugin run --plugin-dir ./MyPlugin --webgmex ./model.webgmex --dry-run
+  $ webdot session open --seed StateMachine -C /path/to/studio
+  $ webdot history log --webgmex ./repo.webgmex --branch example
+
+Docs (tutorials + full flag reference): see the package README and docs/
+  (GitHub: docs/tutorials/, docs/CLI.md). Prefer: webdot <command> --help
+`,
+    );
 
   program
     .command("tree")

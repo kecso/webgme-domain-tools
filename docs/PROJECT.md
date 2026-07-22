@@ -39,13 +39,13 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 7 — Repository exchange & history** — `done` (merged to `main` 2026-07-22, PR [#7](https://github.com/kecso/webgme-domain-tools/pull/7))
-
-**Phase 8 — Documentation (tutorials & CLI reference)** — `pending` (**next up**; before MetaLang outsourcing)
+**Phase 8 — Documentation (tutorials & CLI reference)** — `in progress` (branch `feature/phase8-docs`)
 
 **Phase 6 — Project libraries (draft)** — `pending` (can interleave with Phase 8)
 
 **Phase 9 — MetaLang authoring** — `pending` (after Phase 8; package extract last)
+
+**Phase 7 — Repository exchange & history** — `done` (merged to `main` 2026-07-22, PR [#7](https://github.com/kecso/webgme-domain-tools/pull/7))
 
 **Phase 5 — Installable plugins (global toolbox)** — `done` (merged to `main` 2026-07-17, branch `feature/phase5-installable-plugins`)
 
@@ -374,41 +374,37 @@ webdot library remove SharedMeta --seed HostDomain
 
 ### Phase 8 — Documentation (tutorials & CLI reference)
 
-**Status:** `pending` (after Phase 7; **before** MetaLang outsourcing)  
+**Status:** `in progress` (branch `feature/phase8-docs`)  
 **Goal:** Make real usage easy to follow — short scenario tutorials with exact commands, and a full command reference that mirrors CLI help (not a thin README table).
 
-**Motivation (2026-07-22):** README “Commands” / quick-start is too shallow for the surface we now ship (plugins, session, history/branches). Prefer extracting the reference out of the README and linking from a slim landing page.
+**Motivation (2026-07-22):** README “Commands” / quick-start was too shallow for the surface we ship (plugins, session, history/branches). Prefer extracting the reference out of the README and linking from a slim landing page.
+
+**CLI norms (decided 2026-07-22):** Follow the usual CLI split ([clig.dev](https://clig.dev/)–style): **`--help`** for flags + a few examples; **README** for install/quick start; **markdown docs** for tutorials and full reference. A separate `webdot examples` command is **not** required — anyone who installs the package should read the README, which points at the same tutorials. Root `webdot --help` lists a few common invocations and points at `docs/`.
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F45 | Full CLI reference doc | `pending` | Move/expand command listing out of README → e.g. `docs/CLI.md` (or `docs/REFERENCE.md`); cover every top-level command + important flags as in `--help` |
-| F46 | Scenario tutorials | `pending` | Short how-tos with **exact** commands: run plugin from anywhere; install GenerateMetaTs; session edit → save/discard; v2 history log / branch checkout / create |
-| F47 | Slim README | `pending` | Keep install + quick start + links to tutorials / CLI reference / PROJECT / PUBLISH; drop the incomplete command table |
-| F48 | Optional `webdot examples` | `optional` | Print named scenarios from the CLI (overlaps **B8**); only if static docs feel insufficient |
+| F45 | Full CLI reference doc | `review` | [`docs/CLI.md`](CLI.md) — every top-level command + important flags (aligned with `--help`) |
+| F46 | Scenario tutorials | `review` | [`docs/tutorials/`](tutorials/README.md) — plugin-anywhere, GenerateMetaTs, session, history/branches |
+| F47 | Slim README | `review` | Install + quick start + doc links; no incomplete command table |
+| F48 | `webdot examples` command | `dropped` | Redundant with README → tutorials and `--help` Examples; revisit only if discoverability still hurts |
 
-**Phase 8 — Scenario sketches (to flesh out in docs)**
+**Phase 8 — Scenario sketches (in tutorials)**
 
 ```bash
-# A. Plugin from anywhere (no studio catalog)
+# A. Plugin from anywhere — docs/tutorials/plugin-anywhere.md
 webdot plugin run --plugin-dir ./MyPlugin --webgmex ./model.webgmex --dry-run
 
-# B. Install toolbox plugin, generate types
+# B. Install toolbox plugin — docs/tutorials/install-generate-meta-ts.md
 webdot plugin install kecso/webgme-domain-tools --subdir plugins/GenerateMetaTs
-webdot plugin run GenerateMetaTs --seed StateMachine -C /path/to/studio --artifacts-out ./generated
 
-# C. Session workspace
+# C. Session — docs/tutorials/session-workspace.md
 webdot session open --seed StateMachine -C /path/to/studio
-webdot plugin run SomeEditor
-webdot session save
 
-# D. Repository history (v2 .webgmex)
+# D. History — docs/tutorials/history-branches.md
 webdot history log --webgmex ./repo.webgmex --branch example
-webdot session open --webgmex ./repo.webgmex --branch example
-webdot session checkout master
-webdot branch create scratch --from example --webgmex ./repo.webgmex
 ```
 
-**Notes:** Format can be markdown tutorials under `docs/tutorials/` plus one reference page; keep examples copy-pasteable. Update links from README and DESIGN when this lands. Does **not** block Phase 6 libraries if someone needs library work first, but should land **before Phase 9 MetaLang** so authoring docs have a home.
+**Notes:** Tutorials + `CLI.md` (+ selected `docs/meta`) ship in the npm tarball so global installs can open them under `node_modules/webgme-domain-tools/docs/`. Does **not** block Phase 6 libraries; should land **before Phase 9 MetaLang**.
 
 ---
 
@@ -449,12 +445,12 @@ Tasks not tied to a single milestone — pick up anytime.
 | B5 | refactor | Metadata convention `domainTools.producesArtifacts` | low |
 | B6 | optimize | Cache SetupCatalog per process (only if a long-lived REPL returns — **F30**) | low |
 | B7 | meta | See **Phase 6** (F31–F34) — library listing / namespace emit | medium |
-| B8 | streamline | CLI complexity / `webdot examples` — see **Phase 8** (F45–F48) | medium |
+| B8 | streamline | CLI examples discovery — Phase 8 uses README + `--help` Examples; `webdot examples` **dropped** (F48) | — |
 | B9 | compatibility | Repository `.webgmex` / history — see **Phase 7** (F36–F41) | — |
 | B10 | product | Phase 5 installable plugins (F26–F29) — done on `main` | — |
 | B11 | product | Phase 6 library CLI management (F35) | medium |
 | B12 | product | Phase 9 MetaLang authoring + package extract (F16d, F42–F44) | low |
-| B13 | docs | Phase 8 tutorials + CLI reference (F45–F47) | medium |
+| B13 | docs | Phase 8 tutorials + CLI reference (F45–F47) | — |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
 

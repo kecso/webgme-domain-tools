@@ -2,6 +2,8 @@
 
 Headless CLI for WebGME domain studios. Complements webgme-cli (scaffold + server); does not replace it.
 
+**User-facing how-tos:** [tutorials](tutorials/README.md) · **Command flags:** [CLI.md](CLI.md) · **`--help`** on each command remains authoritative for the live flag surface.
+
 ## SetupCatalog
 
 Loaded from `{cwd}/webgme-setup.json`. Every command that names a seed, plugin, or component kind resolves through the catalog. Errors cite:
