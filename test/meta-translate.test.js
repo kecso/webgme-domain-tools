@@ -97,7 +97,7 @@ test("descriptorToMetalang renders pointers including src/dst", async () => {
     assert.match(metalang, /concept Transition \{/);
     assert.match(metalang, /src -> State;/);
     assert.match(metalang, /dst -> State;/);
-    assert.match(metalang, /contains Action\*, Constraint\*, Event\*, Guard\*, State\*;/);
+    assert.match(metalang, /contains Action\*, Constraint\*, Event\*, Guard\*, State\*, Variable\*;/);
     assert.doesNotMatch(metalang, /relationship/);
   });
 });

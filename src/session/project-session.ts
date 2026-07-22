@@ -1,6 +1,11 @@
 import path from "node:path";
 import type { CatalogEntry } from "../catalog/types.js";
 import {
+  defaultBranchName,
+  summarizeWebgmex,
+  type ExchangeFormat,
+} from "./exchange-format.js";
+import {
   createMemoryGmeAuth,
   createSessionLogger,
   loadGmeConfigForProject,
@@ -8,6 +13,7 @@ import {
   type GmeCore,
   type GmeImportResult,
   type GmeNode,
+  type GmeProject,
 } from "./gme-runtime.js";
 import { primaryWebgmexPath } from "./seed-resolution.js";
 
@@ -31,9 +37,11 @@ export interface LoadedSeedContext {
   seedName: string;
   branchName: string;
   webgmexPath: string;
+  exchangeFormat: ExchangeFormat;
   core: GmeCore;
   rootNode: GmeNode;
   importResult: GmeImportResult;
+  project: GmeProject;
 }
 
 let activeClose: (() => Promise<void>) | null = null;
@@ -63,7 +71,9 @@ export async function openProjectSession(
   const safeName = seedName.replace(/[^a-zA-Z0-9_]/g, "_");
   const projectName =
     (options.projectNamePrefix ?? "file_project") + "_" + safeName + "_" + Date.now();
-  const branchName = options.branchName ?? "master";
+
+  const summary = summarizeWebgmex(webgmexPath);
+  const branchName = options.branchName ?? defaultBranchName(summary);
 
   const { gmeConfig, gmeAuth } = await createMemoryGmeAuth(projectName, sessionConfig);
   const logger = createSessionLogger(gmeConfig);
@@ -85,15 +95,33 @@ export async function openProjectSession(
 
     return {
       seedName,
-      branchName,
+      branchName: importResult.branchName,
       webgmexPath: path.resolve(webgmexPath),
+      exchangeFormat: (importResult.exchangeFormat ??
+        summarizeWebgmex(webgmexPath).format) as ExchangeFormat,
       core: importResult.core,
       rootNode: importResult.rootNode,
       importResult,
+      project: importResult.project as GmeProject,
     };
   } catch (err) {
     await storage.closeDatabase();
     throw err;
+  }
+}
+
+/**
+ * Open a project, run `fn`, always close. Used by history/branch/tag commands.
+ */
+export async function withProjectSession<T>(
+  options: ProjectSessionOptions,
+  fn: (context: LoadedSeedContext) => Promise<T>,
+): Promise<T> {
+  const context = await openProjectSession(options);
+  try {
+    return await fn(context);
+  } finally {
+    await closeProjectSession();
   }
 }
 

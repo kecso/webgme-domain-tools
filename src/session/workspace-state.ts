@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createCatalogLoader, resolveModelSource } from "../plugin/sources.js";
+import { defaultBranchName, summarizeWebgmex } from "./exchange-format.js";
 
 export const SESSION_DIR = ".webdot";
 export const SESSION_FILE = "session.json";
@@ -31,6 +32,8 @@ export interface SessionState {
   workingWebgmex: string;
   dirty: boolean;
   branch: string;
+  /** Detected at open time from the source package. */
+  exchangeFormat: "snapshot" | "repository";
 }
 
 export class SessionError extends Error {
@@ -55,7 +58,9 @@ export function workspaceRoot(cwd: string): string {
 export function readSessionState(cwd: string): SessionState | null {
   const file = sessionFilePath(cwd);
   if (!fs.existsSync(file)) return null;
-  const raw = JSON.parse(fs.readFileSync(file, "utf8")) as SessionState;
+  const raw = JSON.parse(fs.readFileSync(file, "utf8")) as SessionState & {
+    exchangeFormat?: "snapshot" | "repository";
+  };
   if (raw.version !== SESSION_VERSION) {
     throw new SessionError("Unsupported session version: " + raw.version);
   }
@@ -64,7 +69,14 @@ export function readSessionState(cwd: string): SessionState | null {
       "Session was opened in a different cwd (" + raw.cwd + "); use -C " + raw.cwd + " or session close",
     );
   }
-  return raw;
+  if (!raw.exchangeFormat) {
+    try {
+      raw.exchangeFormat = summarizeWebgmex(raw.workingWebgmex).format;
+    } catch {
+      raw.exchangeFormat = "snapshot";
+    }
+  }
+  return raw as SessionState;
 }
 
 export function requireSessionState(cwd: string): SessionState {
@@ -106,6 +118,8 @@ export interface OpenSessionOptions {
   projectCwd?: string;
   seed?: string;
   webgmex?: string;
+  /** Branch to check out (default: master / package default). */
+  branch?: string;
   force?: boolean;
 }
 
@@ -134,6 +148,24 @@ export function openSessionWorkspace(options: OpenSessionOptions): SessionState 
 
   copyWebgmex(sourcePath, workingWebgmex);
 
+  const summary = summarizeWebgmex(workingWebgmex);
+  const branch = options.branch ?? defaultBranchName(summary);
+  if (summary.format === "repository" && summary.branches[branch] === undefined) {
+    throw new SessionError(
+      'Unknown branch "' +
+        branch +
+        '". Available: ' +
+        Object.keys(summary.branches).sort().join(", "),
+    );
+  }
+  if (summary.format === "snapshot" && options.branch && options.branch !== "master" && options.branch !== summary.branchName) {
+    throw new SessionError(
+      'Snapshot .webgmex has a single branch; cannot open branch "' +
+        options.branch +
+        '". Use branch create to upgrade to a repository package.',
+    );
+  }
+
   const state: SessionState = {
     version: SESSION_VERSION,
     cwd: sessionCwd,
@@ -143,10 +175,33 @@ export function openSessionWorkspace(options: OpenSessionOptions): SessionState 
     saveTarget: sourcePath,
     workingWebgmex,
     dirty: false,
-    branch: "master",
+    branch,
+    exchangeFormat: summary.format,
   };
   writeSessionState(sessionCwd, state);
   return state;
+}
+
+export function checkoutSessionBranch(cwd: string, branch: string): SessionState {
+  const state = requireSessionState(cwd);
+  const summary = summarizeWebgmex(state.workingWebgmex);
+  if (summary.format === "repository") {
+    if (summary.branches[branch] === undefined) {
+      throw new SessionError(
+        'Unknown branch "' +
+          branch +
+          '". Available: ' +
+          Object.keys(summary.branches).sort().join(", "),
+      );
+    }
+  } else if (branch !== "master" && branch !== (summary.branchName ?? "master")) {
+    throw new SessionError(
+      'Snapshot .webgmex has a single branch; cannot checkout "' + branch + '"',
+    );
+  }
+  const next = { ...state, branch, exchangeFormat: summary.format };
+  writeSessionState(cwd, next);
+  return next;
 }
 
 export function discardSessionWorkspace(cwd: string): SessionState {
@@ -193,6 +248,9 @@ export interface ResolvedSessionModel {
   fromSession: boolean;
   /** Project root to use for plugin/catalog resolution alongside this model. */
   projectCwd: string;
+  /** Active branch (from session or default). */
+  branch: string;
+  exchangeFormat: "snapshot" | "repository";
 }
 
 /**
@@ -202,7 +260,7 @@ export interface ResolvedSessionModel {
  */
 export function resolveSessionModelSource(
   sessionCwd: string,
-  options: { seed?: string; webgmex?: string; projectCwd?: string },
+  options: { seed?: string; webgmex?: string; projectCwd?: string; branch?: string },
 ): ResolvedSessionModel {
   const projectCwd = path.resolve(options.projectCwd ?? sessionCwd);
   if (options.seed || options.webgmex) {
@@ -211,14 +269,24 @@ export function resolveSessionModelSource(
       { cwd: options.webgmex ? sessionCwd : projectCwd, seed: options.seed, webgmex: options.webgmex },
       getCatalog,
     );
-    return { ...model, fromSession: false, projectCwd };
+    const summary = summarizeWebgmex(model.webgmexPath);
+    return {
+      ...model,
+      fromSession: false,
+      projectCwd,
+      branch: options.branch ?? defaultBranchName(summary),
+      exchangeFormat: summary.format,
+    };
   }
   const state = requireSessionState(sessionCwd);
+  const summary = summarizeWebgmex(state.workingWebgmex);
   return {
     name: state.source.name,
     webgmexPath: state.workingWebgmex,
     fromSession: true,
     projectCwd: state.projectCwd,
+    branch: options.branch ?? state.branch,
+    exchangeFormat: summary.format,
   };
 }
 
@@ -238,6 +306,7 @@ export function formatSessionStatus(state: SessionState): string {
       },
       dirty: state.dirty,
       branch: state.branch,
+      exchangeFormat: state.exchangeFormat,
     },
     null,
     2,

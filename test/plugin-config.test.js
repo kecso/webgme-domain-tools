@@ -93,7 +93,7 @@ test("formatPluginRunContext shows project and default active node", () => {
   assert.equal(out.project.webgmex, "/tmp/StateMachine.webgmex");
   assert.equal(out.activeNode, "/");
   assert.deepEqual(out.activeSelection, []);
-  assert.equal(out.branch, undefined);
+  assert.equal(out.branch, "master");
   assert.deepEqual(out.config, { message: "hi" });
 });
 

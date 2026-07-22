@@ -1,4 +1,5 @@
 import {
+  checkoutSessionBranch,
   closeSessionWorkspace,
   discardSessionWorkspace,
   formatSessionStatus,
@@ -16,6 +17,7 @@ export interface SessionOpenOptions {
   projectCwd?: string;
   seed?: string;
   webgmex?: string;
+  branch?: string;
   force?: boolean;
 }
 
@@ -68,6 +70,20 @@ export function runSessionDiscardCommand(cwd: string): string {
   );
 }
 
+export function runSessionCheckoutCommand(cwd: string, branch: string): string {
+  const state = checkoutSessionBranch(cwd, branch);
+  return JSON.stringify(
+    {
+      checkedOut: true,
+      branch: state.branch,
+      working: state.workingWebgmex,
+      exchangeFormat: state.exchangeFormat,
+    },
+    null,
+    2,
+  );
+}
+
 function formatSessionOpenResult(state: SessionState, action: string): string {
   return JSON.stringify(
     {
@@ -82,6 +98,7 @@ function formatSessionOpenResult(state: SessionState, action: string): string {
       },
       dirty: state.dirty,
       branch: state.branch,
+      exchangeFormat: state.exchangeFormat,
     },
     null,
     2,
