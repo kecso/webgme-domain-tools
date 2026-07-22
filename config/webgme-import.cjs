@@ -23,8 +23,13 @@ function loadCliImport() {
   return cliImportModule;
 }
 
+function isRepositoryProjectJson(projectJson) {
+  return projectJson && projectJson.formatVersion === 2 && projectJson.exportMode === "repository";
+}
+
 /**
  * Import a .webgmex seed into memory storage (production path — no test fixture / chai).
+ * v2 repository packages use insertProjectWithHistory; v1 snapshots use insertProjectJson.
  */
 async function importSeedProject(storage, parameters) {
   const requireJS = global.requireJS;
@@ -33,7 +38,6 @@ async function importSeedProject(storage, parameters) {
   const Core = requireJS("common/core/coreQ");
 
   const projectName = parameters.projectName;
-  const branchName = parameters.branchName || "master";
   const gmeConfig = parameters.gmeConfig;
   const logger = parameters.logger;
   const projectSeed = parameters.projectSeed;
@@ -47,20 +51,54 @@ async function importSeedProject(storage, parameters) {
   const project = await storage.createProject({ projectName });
   const core = new Core(project, { globConf: gmeConfig, logger });
   const storageUtils = requireJS("common/storage/util");
-  const commitResult = await storageUtils.insertProjectJson(project, projectJson, {
-    commitMessage: "file-project load",
-  });
-  await project.createBranch(branchName, commitResult.hash);
-  const rootNode = await core.loadRoot(projectJson.rootHash);
+  const Q = require("q");
+
+  const repository = isRepositoryProjectJson(projectJson);
+  let branchName = parameters.branchName;
+  let commitHash;
+  let rootHash;
+
+  if (repository) {
+    await storageUtils.insertProjectWithHistory(project, projectJson);
+    const branches = projectJson.branches || {};
+    if (!branchName) {
+      branchName =
+        branches.master !== undefined
+          ? "master"
+          : Object.keys(branches)[0] || projectJson.branchName || "master";
+    }
+    if (branches[branchName] === undefined) {
+      throw new Error(
+        'Unknown branch "' +
+          branchName +
+          '". Available: ' +
+          Object.keys(branches).sort().join(", "),
+      );
+    }
+    commitHash = branches[branchName];
+    const commitObject = await Q.ninvoke(project, "loadObject", commitHash);
+    rootHash = commitObject.root;
+  } else {
+    branchName = branchName || "master";
+    const commitResult = await storageUtils.insertProjectJson(project, projectJson, {
+      commitMessage: "file-project load",
+    });
+    await project.createBranch(branchName, commitResult.hash);
+    commitHash = commitResult.hash;
+    rootHash = projectJson.rootHash;
+  }
+
+  const rootNode = await core.loadRoot(rootHash);
 
   return {
     project,
     core,
     rootNode,
-    commitHash: commitResult.hash,
+    commitHash,
     branchName,
-    rootHash: projectJson.rootHash,
+    rootHash,
     webgmexPath: projectSeed,
+    exchangeFormat: repository ? "repository" : "snapshot",
   };
 }
 
@@ -140,8 +178,8 @@ async function executePlugin(parameters) {
 }
 
 /**
- * Serialize the current branch state back into a .webgmex package on disk.
- * Mirrors webgme-engine/src/bin/export.js (getProjectJson → buildProjectPackage → write).
+ * Serialize project state back into a .webgmex package on disk.
+ * withHistory=true writes exchange format v2 (full repository).
  */
 async function exportProjectToFile(parameters) {
   const requireJS = global.requireJS;
@@ -154,13 +192,16 @@ async function exportProjectToFile(parameters) {
   const gmeConfig = parameters.gmeConfig;
   const logger = parameters.logger;
   const outFile = parameters.outFile;
+  const withHistory = parameters.withHistory === true;
 
   if (typeof outFile !== "string" || !outFile.toLowerCase().includes(".webgmex")) {
     throw new Error("outFile must be a path to a .webgmex file");
   }
 
   const blobClient = new BC(gmeConfig, logger);
-  const jsonExport = await storageUtils.getProjectJson(project, { branchName });
+  const jsonExport = withHistory
+    ? await storageUtils.getProjectWithHistory(project, { defaultBranchName: branchName })
+    : await storageUtils.getProjectJson(project, { branchName });
   const blobHash = await blobUtil.buildProjectPackage(logger, blobClient, jsonExport, true);
   const buffer = await blobClient.getObject(blobHash);
   fs.writeFileSync(outFile, Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer));
@@ -175,4 +216,5 @@ module.exports = {
   registerRequireJsPaths,
   executePlugin,
   exportProjectToFile,
+  isRepositoryProjectJson,
 };

@@ -47,6 +47,8 @@ export interface PluginRunCommandOptions {
   dryRun?: boolean;
   /** Write the resulting model to this .webgmex instead of the source. */
   out?: string;
+  /** Branch to open (defaults to session branch or master). */
+  branch?: string;
   /** Override WEBDOT_HOME for installed plugin lookup. */
   home?: string;
 }
@@ -87,6 +89,7 @@ export async function runPluginRunCommand(
     seed: options.seed,
     webgmex: options.webgmex,
     projectCwd: options.cwd,
+    branch: options.branch,
   });
   const metadata = loadPluginMetadataFromPath(pluginSource.metadataPath);
   const configStructure = metadata.configStructure ?? [];
@@ -97,6 +100,7 @@ export async function runPluginRunCommand(
   const runContext = buildPluginRunContext({
     at: options.at,
     select: options.select,
+    branch: modelSource.branch,
   });
 
   const previousCwd = process.cwd();
@@ -169,6 +173,7 @@ export async function runPluginRunCommand(
           ? path.resolve(options.cwd, options.out)
           : modelSource.webgmexPath;
         if (changedModel || options.out) {
+          const withHistory = context.exchangeFormat === "repository";
           process.chdir(options.cwd);
           try {
             outFile = await bridge.exportProjectToFile({
@@ -177,6 +182,7 @@ export async function runPluginRunCommand(
               gmeConfig,
               logger: createPluginRunLogger(gmeConfig),
               outFile: target,
+              withHistory,
             });
           } finally {
             process.chdir(previousCwd);

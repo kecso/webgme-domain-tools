@@ -59,7 +59,7 @@ test("runPluginRunCommand executes EchoPlugin successfully", async () => {
   assert.equal(payload.context.project.name, "StateMachine");
   assert.equal(payload.context.activeNode, "/");
   assert.deepEqual(payload.context.activeSelection, []);
-  assert.equal(payload.context.branch, undefined);
+  assert.equal(payload.context.branch, "master");
   assert.equal(payload.result.messages[0].message, "test-run");
   assert.equal(result.persisted, false);
   assert.equal(result.warnings.length, 0);

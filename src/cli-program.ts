@@ -9,13 +9,25 @@ import {
   installPlugin,
   uninstallPlugin,
 } from "./plugin/install.js";
-import { loadSetupCatalog } from "./catalog/setup-catalog.js";import {
+import { loadSetupCatalog } from "./catalog/setup-catalog.js";
+import {
+  runSessionCheckoutCommand,
   runSessionCloseCommand,
   runSessionDiscardCommand,
   runSessionOpenCommand,
   runSessionSaveCommand,
   runSessionStatusCommand,
 } from "./commands/session.js";
+import {
+  runBranchCreateCommand,
+  runBranchDeleteCommand,
+  runBranchListCommand,
+  runHistoryLogCommand,
+  runHistoryShowCommand,
+  runTagCreateCommand,
+  runTagDeleteCommand,
+  runTagListCommand,
+} from "./commands/history.js";
 import { parseSelect } from "./commands/seed-tree.js";
 import { AmbiguousSeedError } from "./session/seed-resolution.js";
 import { SessionError } from "./session/workspace-state.js";
@@ -289,11 +301,13 @@ export function createProgram(): Command {
     .option("--artifacts-out <dir>", "Directory (relative to shell cwd) for blob artifacts")
     .option("--out <file>", "Write resulting model to this .webgmex instead of the source")
     .option("--dry-run", "Run without writing model changes back to disk")
+    .option("--branch <name>", "Branch to open (defaults to session branch or master)")
     .addHelpText(
       "after",
       `
 Plugin context (what the plugin receives):
   project     --seed <name>  or  --webgmex <path>  (or open session)
+  branch      --branch <name> [default: session branch or master]
   active node --at <path>     [default: ${DEFAULT_PLUGIN_ACTIVE_NODE_LABEL}]
   selection   --select <paths> [default: ${DEFAULT_PLUGIN_SELECTION_LABEL}]
   config      metadata.json defaults, overridden by --config-file and --set
@@ -315,6 +329,7 @@ until you run session save. Use session open / session status to manage state.
       artifactsOut?: string;
       out?: string;
       dryRun?: boolean;
+      branch?: string;
     }, cmd) => {
       const sessionCwd = executionCwd();
       if (!opts.seed && !opts.webgmex && !readSessionState(sessionCwd)) {
@@ -336,6 +351,7 @@ until you run session save. Use session open / session status to manage state.
           artifactsOut: opts.artifactsOut,
           out: opts.out,
           dryRun: opts.dryRun,
+          branch: opts.branch,
         });
         for (const line of formatPluginMessages(JSON.parse(result.output).result)) {
           console.error(line);
@@ -369,8 +385,9 @@ until you run session save. Use session open / session status to manage state.
     .description("Open a session: copy model to .webdot/workspace for editing")
     .option("--seed <name>", "Seed from webgme-setup.json")
     .option("--webgmex <path>", "Direct .webgmex path")
+    .option("--branch <name>", "Branch to check out (default: master / package default)")
     .option("--force", "Replace an existing session")
-    .action((opts: { seed?: string; webgmex?: string; force?: boolean }, cmd) => {
+    .action((opts: { seed?: string; webgmex?: string; branch?: string; force?: boolean }, cmd) => {
       const sessionCwd = executionCwd();
       if (!opts.seed && !opts.webgmex) {
         console.error("session open requires --seed <name> or --webgmex <path>");
@@ -383,6 +400,7 @@ until you run session save. Use session open / session status to manage state.
             projectCwd: explicitProjectCwd(cmd) ?? sessionCwd,
             seed: opts.seed,
             webgmex: opts.webgmex,
+            branch: opts.branch,
             force: opts.force,
           }),
         ),
@@ -394,6 +412,14 @@ until you run session save. Use session open / session status to manage state.
     .description("Show open session state (from the current directory)")
     .action(() => {
       void runCli(() => Promise.resolve(runSessionStatusCommand(executionCwd())));
+    });
+
+  sessionCmd
+    .command("checkout")
+    .description("Switch the open session to another branch")
+    .argument("<branch>", "Branch name")
+    .action((branch: string) => {
+      void runCli(() => Promise.resolve(runSessionCheckoutCommand(executionCwd(), branch)));
     });
 
   sessionCmd
@@ -417,6 +443,200 @@ until you run session save. Use session open / session status to manage state.
     .option("--discard", "Close even when there are unsaved changes")
     .action((opts: { discard?: boolean }) => {
       void runCli(() => Promise.resolve(runSessionCloseCommand(executionCwd(), opts.discard)));
+    });
+
+  const historyCmd = program.command("history").description("Inspect commit history on a .webgmex");
+
+  historyCmd
+    .command("log")
+    .description("List commits for a branch (newest first)")
+    .option("--seed [name]", "Seed name (or open session)")
+    .option("--webgmex <path>", "Direct .webgmex path")
+    .option("--branch <name>", "Branch to list (default: session / master)")
+    .option("--limit <n>", "Max commits", "50")
+    .action((opts: { seed?: string | boolean; webgmex?: string; branch?: string; limit?: string }, cmd) => {
+      const sessionCwd = executionCwd();
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error("history log requires --seed, --webgmex, or an open session");
+        process.exit(2);
+      }
+      void runCli(() =>
+        runHistoryLogCommand({
+          sessionCwd,
+          projectCwd: projectCwdFor(cmd, sessionCwd),
+          seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
+          branch: opts.branch,
+          limit: opts.limit ? Number(opts.limit) : undefined,
+        }),
+      );
+    });
+
+  historyCmd
+    .command("show")
+    .description("Show one commit by hash")
+    .argument("<commit>", "Commit hash (with or without #)")
+    .option("--seed [name]", "Seed name (or open session)")
+    .option("--webgmex <path>", "Direct .webgmex path")
+    .option("--branch <name>", "Branch used when opening the package")
+    .action((commit: string, opts: { seed?: string | boolean; webgmex?: string; branch?: string }, cmd) => {
+      const sessionCwd = executionCwd();
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error("history show requires --seed, --webgmex, or an open session");
+        process.exit(2);
+      }
+      void runCli(() =>
+        runHistoryShowCommand({
+          sessionCwd,
+          projectCwd: projectCwdFor(cmd, sessionCwd),
+          commit,
+          seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
+          branch: opts.branch,
+        }),
+      );
+    });
+
+  const branchCmd = program.command("branch").description("List and manage branches on a .webgmex");
+
+  branchCmd
+    .command("list")
+    .description("List branches and head commit hashes")
+    .option("--seed [name]", "Seed name (or open session)")
+    .option("--webgmex <path>", "Direct .webgmex path")
+    .action((opts: { seed?: string | boolean; webgmex?: string }, cmd) => {
+      const sessionCwd = executionCwd();
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error("branch list requires --seed, --webgmex, or an open session");
+        process.exit(2);
+      }
+      void runCli(() =>
+        runBranchListCommand({
+          sessionCwd,
+          projectCwd: projectCwdFor(cmd, sessionCwd),
+          seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
+        }),
+      );
+    });
+
+  branchCmd
+    .command("create")
+    .description("Create a branch (upgrades snapshot packages to repository format)")
+    .argument("<name>", "New branch name")
+    .option("--from <ref>", "Source branch name or commit hash (default: current head)")
+    .option("--seed [name]", "Seed name (or open session)")
+    .option("--webgmex <path>", "Direct .webgmex path")
+    .action((name: string, opts: { from?: string; seed?: string | boolean; webgmex?: string }, cmd) => {
+      const sessionCwd = executionCwd();
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error("branch create requires --seed, --webgmex, or an open session");
+        process.exit(2);
+      }
+      void runCli(() =>
+        runBranchCreateCommand({
+          sessionCwd,
+          projectCwd: projectCwdFor(cmd, sessionCwd),
+          name,
+          from: opts.from,
+          seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
+        }),
+      );
+    });
+
+  branchCmd
+    .command("delete")
+    .description("Delete a branch pointer")
+    .argument("<name>", "Branch name")
+    .option("--seed [name]", "Seed name (or open session)")
+    .option("--webgmex <path>", "Direct .webgmex path")
+    .action((name: string, opts: { seed?: string | boolean; webgmex?: string }, cmd) => {
+      const sessionCwd = executionCwd();
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error("branch delete requires --seed, --webgmex, or an open session");
+        process.exit(2);
+      }
+      void runCli(() =>
+        runBranchDeleteCommand({
+          sessionCwd,
+          projectCwd: projectCwdFor(cmd, sessionCwd),
+          name,
+          seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
+        }),
+      );
+    });
+
+  const tagCmd = program.command("tag").description("List and manage tags on a .webgmex");
+
+  tagCmd
+    .command("list")
+    .description("List tags")
+    .option("--seed [name]", "Seed name (or open session)")
+    .option("--webgmex <path>", "Direct .webgmex path")
+    .action((opts: { seed?: string | boolean; webgmex?: string }, cmd) => {
+      const sessionCwd = executionCwd();
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error("tag list requires --seed, --webgmex, or an open session");
+        process.exit(2);
+      }
+      void runCli(() =>
+        runTagListCommand({
+          sessionCwd,
+          projectCwd: projectCwdFor(cmd, sessionCwd),
+          seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
+        }),
+      );
+    });
+
+  tagCmd
+    .command("create")
+    .description("Create a tag at a commit (default: current branch head)")
+    .argument("<name>", "Tag name")
+    .option("--commit <hash>", "Commit hash")
+    .option("--seed [name]", "Seed name (or open session)")
+    .option("--webgmex <path>", "Direct .webgmex path")
+    .action((name: string, opts: { commit?: string; seed?: string | boolean; webgmex?: string }, cmd) => {
+      const sessionCwd = executionCwd();
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error("tag create requires --seed, --webgmex, or an open session");
+        process.exit(2);
+      }
+      void runCli(() =>
+        runTagCreateCommand({
+          sessionCwd,
+          projectCwd: projectCwdFor(cmd, sessionCwd),
+          name,
+          commit: opts.commit,
+          seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
+        }),
+      );
+    });
+
+  tagCmd
+    .command("delete")
+    .description("Delete a tag")
+    .argument("<name>", "Tag name")
+    .option("--seed [name]", "Seed name (or open session)")
+    .option("--webgmex <path>", "Direct .webgmex path")
+    .action((name: string, opts: { seed?: string | boolean; webgmex?: string }, cmd) => {
+      const sessionCwd = executionCwd();
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error("tag delete requires --seed, --webgmex, or an open session");
+        process.exit(2);
+      }
+      void runCli(() =>
+        runTagDeleteCommand({
+          sessionCwd,
+          projectCwd: projectCwdFor(cmd, sessionCwd),
+          name,
+          seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
+        }),
+      );
     });
 
   return program;

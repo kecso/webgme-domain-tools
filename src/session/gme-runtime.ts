@@ -4,19 +4,38 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 
+export interface GmeCommitObject {
+  _id: string;
+  root: string;
+  parents?: string[];
+  time?: number;
+  message?: string;
+  updater?: string[];
+  type?: string;
+}
+
+export interface GmeProject {
+  projectId: string;
+  createBranch: (name: string, hash: string) => Promise<unknown>;
+  deleteBranch: (name: string, oldHash: string) => Promise<unknown>;
+  getBranchHash: (name: string) => Promise<string>;
+  getBranches: () => Promise<Record<string, string>>;
+  createTag: (name: string, commitHash: string) => Promise<unknown>;
+  deleteTag: (name: string) => Promise<unknown>;
+  getTags: () => Promise<Record<string, string>>;
+  getHistory: (start: string | string[], number: number) => Promise<GmeCommitObject[]>;
+  loadObject: (hash: string) => Promise<GmeCommitObject>;
+}
+
 export interface GmeImportResult {
-  project: {
-    projectId: string;
-    createBranch: (name: string, hash: string) => Promise<unknown>;
-    getBranchHash: (name: string) => Promise<string>;
-    loadObject: (hash: string) => Promise<{ root: string }>;
-  };
+  project: GmeProject;
   core: GmeCore;
   rootNode: GmeNode;
   commitHash: string;
   branchName: string;
   rootHash: string;
   webgmexPath: string;
+  exchangeFormat?: "snapshot" | "repository";
 }
 
 export interface GmeNode {
@@ -90,6 +109,7 @@ interface WebgmeImportBridge {
     result: Record<string, unknown>;
   }>;
   exportProjectToFile: (parameters: Record<string, unknown>) => Promise<string>;
+  isRepositoryProjectJson?: (projectJson: Record<string, unknown>) => boolean;
 }
 
 export type SessionLogger = {

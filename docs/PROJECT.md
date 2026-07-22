@@ -39,7 +39,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 7 — Repository exchange & history** — `pending` (**next up** after Phase 5)
+**Phase 7 — Repository exchange & history** — `in progress` (branch `feature/phase7-repository-history`)
 
 **Phase 6 — Project libraries (draft)** — `pending` (after Phase 7)
 
@@ -298,8 +298,8 @@ Priority: **high product direction** — own milestone after Phase 4 generators.
 
 ### Phase 7 — Repository exchange & history (next)
 
-**Status:** `pending` (**next up**)  
-**Goal:** Treat `.webgmex` as a file-backed WebGME repository when the exchange format supports it — progress commits on save (like the GUI), switch branches, and inspect history with real commit ids.
+**Status:** `in progress` (**next up**)  
+**Branch:** `feature/phase7-repository-history`
 
 **Engine:** `webgme-engine` ≥ 2.32 already ships v2 (`formatVersion: 2`, `exportMode: "repository"`) via `getProjectWithHistory` / `insertProjectWithHistory`. See `node_modules/webgme-engine/docs/exchange-format-v2.md`.
 
@@ -314,12 +314,12 @@ Opening a v2 file must never silently flatten to v1 on save. Optional later: exp
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F36 | Detect v1 vs v2; history-aware import/export | `pending` | Import: `insertProjectWithHistory` for v2, snapshot path for v1. Export: v2 round-trip by default when working copy is v2 |
-| F37 | Branch on open / run | `pending` | `session open --branch <name>`; re-expose `--branch` on `plugin run` / tree / meta; default `master` (or file’s default branch) |
-| F38 | Switch branch in session | `pending` | `session checkout <branch>` (or `branch checkout`) updates session state + working head |
-| F39 | History introspection | `pending` | `history log [--branch]` / `history show <commit>` — list commits for a branch with **hashes**, messages, times (needed for real branch ops) |
-| F40 | Branch & tag management | `pending` | `branch list\|create\|delete`; `tag list\|create\|delete`; create from branch / commit id |
-| F41 | Multi-branch v2 fixture + tests | `pending` | Fixture with ≥2 branches and a short commit chain; round-trip + log + checkout tests |
+| F36 | Detect v1 vs v2; history-aware import/export | `in progress` | Import: `insertProjectWithHistory` for v2, snapshot path for v1. Export: v2 round-trip by default when working copy is v2 |
+| F37 | Branch on open / run | `in progress` | `session open --branch <name>`; re-expose `--branch` on `plugin run` / tree / meta; default `master` (or file’s default branch) |
+| F38 | Switch branch in session | `in progress` | `session checkout <branch>` (or `branch checkout`) updates session state + working head |
+| F39 | History introspection | `in progress` | `history log [--branch]` / `history show <commit>` — list commits for a branch with **hashes**, messages, times (needed for real branch ops) |
+| F40 | Branch & tag management | `in progress` | `branch list\|create\|delete`; `tag list\|create\|delete`; create from branch / commit id |
+| F41 | Multi-branch v2 fixture + tests | `in progress` | Generated in tests via `branch create` upgrade; optional hand-made golden later |
 
 **Phase 7 — Scenario (boiled down)**
 
