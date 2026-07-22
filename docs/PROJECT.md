@@ -39,11 +39,13 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 7 — Repository exchange & history** — `in progress` (branch `feature/phase7-repository-history`)
+**Phase 7 — Repository exchange & history** — `in progress` (PR [#7](https://github.com/kecso/webgme-domain-tools/pull/7), branch `feature/phase7-repository-history`)
 
 **Phase 6 — Project libraries (draft)** — `pending` (after Phase 7)
 
-**Phase 8 — MetaLang authoring** — `pending` (after Phase 6; package extract last)
+**Phase 8 — Documentation (tutorials & CLI reference)** — `pending` (after Phase 7; before MetaLang outsourcing)
+
+**Phase 9 — MetaLang authoring** — `pending` (after Phase 8; package extract last)
 
 **Phase 5 — Installable plugins (global toolbox)** — `done` (merged to `main` 2026-07-17, branch `feature/phase5-installable-plugins`)
 
@@ -116,7 +118,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | F16a | Meta representation specs (IR, descriptor, MetaLang) | `done` | `docs/meta/README.md` + examples |
 | F16b | `seed meta --format descriptor` | `done` | `npm test` — `meta-translate.test.js` |
 | F16c | `seed meta --format metalang` | `done` | `webdot seed meta --seed StateMachine --format metalang` |
-| F16d | MetaLang parser / Langium (optional) | `deferred` → **Phase 8** | Authoring path + eventual package extract |
+| F16d | MetaLang parser / Langium (optional) | `deferred` → **Phase 9** | Authoring path + eventual package extract |
 
 ### Phase 2½ review notes (2026-07-10)
 
@@ -210,7 +212,7 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 | F16a | Meta specs + examples | `done` | `docs/meta/` — pointer-first descriptor, MetaLang EBNF + RULES |
 | F16b | `seed meta --format descriptor` | `done` | `irToDescriptor` + tests |
 | F16c | `seed meta --format metalang` | `done` | `descriptorToMetalang` + tests |
-| F16d | MetaLang parser (Langium optional) | `deferred` → **Phase 8** | Authoring path metalang → descriptor |
+| F16d | MetaLang parser (Langium optional) | `deferred` → **Phase 9** | Authoring path metalang → descriptor |
 
 ### Phase 3 — Plugin run
 | ID | Feature | Status | Notes |
@@ -371,9 +373,49 @@ webdot library remove SharedMeta --seed HostDomain
 
 ---
 
-### Phase 8 — MetaLang authoring (draft)
+### Phase 8 — Documentation (tutorials & CLI reference)
 
-**Status:** `pending` (after Phase 6; **no hurry**)  
+**Status:** `pending` (after Phase 7; **before** MetaLang outsourcing)  
+**Goal:** Make real usage easy to follow — short scenario tutorials with exact commands, and a full command reference that mirrors CLI help (not a thin README table).
+
+**Motivation (2026-07-22):** README “Commands” / quick-start is too shallow for the surface we now ship (plugins, session, history/branches). Prefer extracting the reference out of the README and linking from a slim landing page.
+
+| ID | Feature | Status | Notes |
+|----|---------|--------|-------|
+| F45 | Full CLI reference doc | `pending` | Move/expand command listing out of README → e.g. `docs/CLI.md` (or `docs/REFERENCE.md`); cover every top-level command + important flags as in `--help` |
+| F46 | Scenario tutorials | `pending` | Short how-tos with **exact** commands: run plugin from anywhere; install GenerateMetaTs; session edit → save/discard; v2 history log / branch checkout / create |
+| F47 | Slim README | `pending` | Keep install + quick start + links to tutorials / CLI reference / PROJECT / PUBLISH; drop the incomplete command table |
+| F48 | Optional `webdot examples` | `optional` | Print named scenarios from the CLI (overlaps **B8**); only if static docs feel insufficient |
+
+**Phase 8 — Scenario sketches (to flesh out in docs)**
+
+```bash
+# A. Plugin from anywhere (no studio catalog)
+webdot plugin run --plugin-dir ./MyPlugin --webgmex ./model.webgmex --dry-run
+
+# B. Install toolbox plugin, generate types
+webdot plugin install kecso/webgme-domain-tools --subdir plugins/GenerateMetaTs
+webdot plugin run GenerateMetaTs --seed StateMachine -C /path/to/studio --artifacts-out ./generated
+
+# C. Session workspace
+webdot session open --seed StateMachine -C /path/to/studio
+webdot plugin run SomeEditor
+webdot session save
+
+# D. Repository history (v2 .webgmex)
+webdot history log --webgmex ./repo.webgmex --branch example
+webdot session open --webgmex ./repo.webgmex --branch example
+webdot session checkout master
+webdot branch create scratch --from example --webgmex ./repo.webgmex
+```
+
+**Notes:** Format can be markdown tutorials under `docs/tutorials/` plus one reference page; keep examples copy-pasteable. Update links from README and DESIGN when this lands. Does **not** block Phase 6 libraries if someone needs library work first, but should land **before Phase 9 MetaLang** so authoring docs have a home.
+
+---
+
+### Phase 9 — MetaLang authoring (draft)
+
+**Status:** `pending` (after Phase 8; **no hurry**)  
 **Goal:** Close the authoring loop (metalang → descriptor → WebGME meta), optionally add LSP, then extract MetaLang into its own package last.
 
 | ID | Feature | Status | Notes |
@@ -383,7 +425,7 @@ webdot library remove SharedMeta --seed HostDomain
 | F43 | Langium language server | `pending` | Diagnostics / completion against grammar; thin editor extension optional |
 | F44 | Extract `webgme-metalang` package | `pending` | **Last** step — move grammar, translate, LSP; webdot depends on the package |
 
-**Phase 8 — Scenario (boiled down)**
+**Phase 9 — Scenario (boiled down)**
 
 ```bash
 webdot seed meta --seed StateMachine --format metalang > domain.metalang
@@ -408,11 +450,12 @@ Tasks not tied to a single milestone — pick up anytime.
 | B5 | refactor | Metadata convention `domainTools.producesArtifacts` | low |
 | B6 | optimize | Cache SetupCatalog per process (only if a long-lived REPL returns — **F30**) | low |
 | B7 | meta | See **Phase 6** (F31–F34) — library listing / namespace emit | medium |
-| B8 | streamline | CLI complexity: trim rare flags or `webdot examples` tutorial recipes / scenario printouts | medium |
+| B8 | streamline | CLI complexity / `webdot examples` — see **Phase 8** (F45–F48) | medium |
 | B9 | compatibility | Repository `.webgmex` / history — see **Phase 7** (F36–F41) | — |
 | B10 | product | Phase 5 installable plugins (F26–F29) — done on `main` | — |
 | B11 | product | Phase 6 library CLI management (F35) | medium |
-| B12 | product | Phase 8 MetaLang authoring + package extract (F16d, F42–F44) | low |
+| B12 | product | Phase 9 MetaLang authoring + package extract (F16d, F42–F44) | low |
+| B13 | docs | Phase 8 tutorials + CLI reference (F45–F47) | medium |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
 
@@ -448,7 +491,8 @@ Record of completed reviews (newest first).
 ### Planning (2026-07-22) — not yet released
 - **Phase 7** (next): repository exchange v2 / history — F36–F41; v1 overwrite vs v2 commit-on-save; `--branch` on open/run; `history log` + branch/tag CLI
 - **Phase 6** libraries remain after Phase 7
-- **Phase 8** MetaLang authoring (F16d, F42–F43) with package extract **F44** last
+- **Phase 8** documentation: tutorials + full CLI reference (F45–F47); before MetaLang
+- **Phase 9** MetaLang authoring (F16d, F42–F43) with package extract **F44** last
 
 ### 0.6.1 (2026-07-17) — merged to `main`
 - Dropped `webdot session repl` / `session shell` (F24); stateful session workspace (F20–F23) unchanged

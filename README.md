@@ -67,17 +67,14 @@ webdot plugin install ./plugins/GenerateMetaTs
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `plugin run` | Run a plugin from the terminal against a `.webgmex` (`--seed` / `--webgmex`, `--plugin-dir`, `--dry-run`, `--out`, `--artifacts-out`, …) |
-| `plugin info` | Show `metadata.json` + config defaults |
-| `plugin install` | Install a plugin into the user registry (local path or `owner/repo[@ref]`, `--subdir`, `--as`, `--force`) |
-| `plugin list` / `plugin uninstall` | List or remove installed plugins |
-| `tree` / `tree repo` | Repository component tree from `webgme-setup.json` |
-| `tree --seed` | Model tree from a file-project seed |
-| `seed meta` | MetaAspectSet views (`json`, `descriptor`, `metalang`, `tree`, …) |
-| `ls` | Compact catalog listing |
-| `session open\|status\|save\|discard\|close` | Stateful workspace (`.webdot/` working copy) |
+See `webdot <command> --help` for the full flag surface. A fuller command reference and copy-paste tutorials are planned as **Phase 8** in [docs/PROJECT.md](docs/PROJECT.md) (extract from this README + scenario walkthroughs).
+
+| Area | Commands |
+|------|----------|
+| Plugins | `plugin run` · `info` · `install` · `list` · `uninstall` |
+| Catalog / tree | `tree` · `tree repo` · `tree --seed` · `ls` · `seed meta` |
+| Session | `session open` · `status` · `checkout` · `save` · `discard` · `close` |
+| History / branches | `history log` · `history show` · `branch …` · `tag …` |
 
 Name resolution for `plugin run` / `info`: `--plugin-dir` → project catalog → installed registry.
 

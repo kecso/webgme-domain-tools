@@ -56,4 +56,4 @@ webdot seed meta --seed StateMachine -C test/fixtures/sample-project --format js
 | **F16a** | Specs, schemas, examples | `done` |
 | **F16b** | `irToDescriptor` + `--format descriptor` | `done` |
 | **F16c** | `descriptorToMetalang` + `--format metalang` | `done` |
-| **F16d** | Langium / metalang → descriptor | `deferred` → **Phase 8** |
+| **F16d** | Langium / metalang → descriptor | `deferred` → **Phase 9** |
