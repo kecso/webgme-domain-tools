@@ -39,11 +39,11 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 7 — Repository exchange & history** — `in progress` (PR [#7](https://github.com/kecso/webgme-domain-tools/pull/7), branch `feature/phase7-repository-history`)
+**Phase 7 — Repository exchange & history** — `done` (merged to `main` 2026-07-22, PR [#7](https://github.com/kecso/webgme-domain-tools/pull/7))
 
-**Phase 6 — Project libraries (draft)** — `pending` (after Phase 7)
+**Phase 8 — Documentation (tutorials & CLI reference)** — `pending` (**next up**; before MetaLang outsourcing)
 
-**Phase 8 — Documentation (tutorials & CLI reference)** — `pending` (after Phase 7; before MetaLang outsourcing)
+**Phase 6 — Project libraries (draft)** — `pending` (can interleave with Phase 8)
 
 **Phase 9 — MetaLang authoring** — `pending` (after Phase 8; package extract last)
 
@@ -298,10 +298,9 @@ Each install gets a **dictionary key** (the name used later in `plugin run` / `i
 
 Priority: **high product direction** — own milestone after Phase 4 generators.
 
-### Phase 7 — Repository exchange & history (next)
+### Phase 7 — Repository exchange & history
 
-**Status:** `in progress` (**next up**)  
-**Branch:** `feature/phase7-repository-history`
+**Status:** `done` (merged to `main` 2026-07-22, PR [#7](https://github.com/kecso/webgme-domain-tools/pull/7))
 
 **Engine:** `webgme-engine` ≥ 2.32 already ships v2 (`formatVersion: 2`, `exportMode: "repository"`) via `getProjectWithHistory` / `insertProjectWithHistory`. See `node_modules/webgme-engine/docs/exchange-format-v2.md`.
 
@@ -316,12 +315,12 @@ Opening a v2 file must never silently flatten to v1 on save. Optional later: exp
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F36 | Detect v1 vs v2; history-aware import/export | `in progress` | Import: `insertProjectWithHistory` for v2, snapshot path for v1. Export: v2 round-trip by default when working copy is v2 |
-| F37 | Branch on open / run | `in progress` | `session open --branch <name>`; re-expose `--branch` on `plugin run` / tree / meta; default `master` (or file’s default branch) |
-| F38 | Switch branch in session | `in progress` | `session checkout <branch>` (or `branch checkout`) updates session state + working head |
-| F39 | History introspection | `in progress` | `history log [--branch]` / `history show <commit>` — list commits for a branch with **hashes**, messages, times (needed for real branch ops) |
-| F40 | Branch & tag management | `in progress` | `branch list\|create\|delete`; `tag list\|create\|delete`; create from branch / commit id |
-| F41 | Multi-branch v2 fixture + tests | `in progress` | `test/fixtures/repository/StateMachine.webgmex` (branches `master`/`example`, tags, multi-commit) |
+| F36 | Detect v1 vs v2; history-aware import/export | `done` | Import: `insertProjectWithHistory` for v2, snapshot path for v1. Export: v2 round-trip by default when working copy is v2 |
+| F37 | Branch on open / run | `done` | `session open --branch <name>`; re-expose `--branch` on `plugin run`; default `master` (or file’s default branch) |
+| F38 | Switch branch in session | `done` | `session checkout <branch>` updates session state + working head |
+| F39 | History introspection | `done` | `history log [--branch]` / `history show <commit>` — list commits for a branch with **hashes**, messages, times |
+| F40 | Branch & tag management | `done` | `branch list\|create\|delete`; `tag list\|create\|delete`; create from branch / commit id |
+| F41 | Multi-branch v2 fixture + tests | `done` | `test/fixtures/repository/StateMachine.webgmex` (branches `master`/`example`, tags, multi-commit) |
 
 **Phase 7 — Scenario (boiled down)**
 
@@ -467,6 +466,7 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
+| 2026-07-22 | Phase 7 (F36–F41) | maintainer | Approved | Repository exchange v2 / history / branch CLI; fixture + coverage; merged PR #7 → `main`; Phase 8 docs scheduled before MetaLang |
 | 2026-07-17 | Phase 5 (F26–F29) | maintainer | Approved | Installable plugins registry; portable `owner/repo` parse; merged `feature/phase5-installable-plugins` → `main` |
 | 2026-07-17 | Drop F24 session REPL | maintainer | Approved | Removed `session repl`; F30 optional Phase 5 extra; merged `feature/drop-session-repl` → `main` |
 | 2026-07-16 | Phase 4 (F14, F17) | maintainer | Approved | GenerateMetaTs plain plugin (scoped instance TS); F17 IR partial; F15 remains outside repo; merged `feature/phase4-generator` → `main` |
@@ -480,6 +480,11 @@ Record of completed reviews (newest first).
 ---
 
 ### Changelog
+
+### 0.8.0 (2026-07-22) — merged to `main`
+- Phase 7: v1/v2 `.webgmex` detect; history-preserving save for repository packages; `--branch` on session/plugin; `history` / `branch` / `tag` / `session checkout`
+- Fixture: `test/fixtures/repository/StateMachine.webgmex`; catalog StateMachine seed meta fix (Machine contains Variable*)
+- Planned **Phase 8** docs (tutorials + CLI reference) before MetaLang (**Phase 9**)
 
 ### 0.7.0 (2026-07-17) — merged to `main`
 - Phase 5: installable plugins — `plugin install` / `list` / `uninstall`, user registry under `WEBDOT_HOME` / `~/.webdot`
