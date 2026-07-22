@@ -76,7 +76,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 |----|----------|--------|
 | F14 | Generator as separate CLI is architectural noise; should be a plain plugin | Dropped `webdot generate`; `plugins/GenerateMetaTs` via `--plugin-dir` / `--artifacts-out` (shell cwd) |
 | F14 | Emit should support authoring domain objects in TS, with WebGME scopes | Scoped instance types: `attributes` / `pointers` / `sets` / `children` (unnamed containment union) |
-| F14 | Fixture META: Variable→Machine children looks wrong | Confirmed seed meta quirk; generator is faithful — fix in `StateMachine.webgmex` when convenient |
+| F14 | Fixture META: Variable→Machine children looks wrong | Fixed in updated `StateMachine.webgmex` — Machine contains Variable*; Variable no longer contains Machine |
 | F17 | Partial | IR library/FQN fields landed; richer listing/emit + library CLI → **Phase 6** |
 
 **Phase 3½ — Stateful session shell** — `done` (merged to `main` 2026-07-11, branch `feature/phase3.5-session-shell`)
@@ -319,7 +319,7 @@ Opening a v2 file must never silently flatten to v1 on save. Optional later: exp
 | F38 | Switch branch in session | `in progress` | `session checkout <branch>` (or `branch checkout`) updates session state + working head |
 | F39 | History introspection | `in progress` | `history log [--branch]` / `history show <commit>` — list commits for a branch with **hashes**, messages, times (needed for real branch ops) |
 | F40 | Branch & tag management | `in progress` | `branch list\|create\|delete`; `tag list\|create\|delete`; create from branch / commit id |
-| F41 | Multi-branch v2 fixture + tests | `in progress` | Generated in tests via `branch create` upgrade; optional hand-made golden later |
+| F41 | Multi-branch v2 fixture + tests | `in progress` | `test/fixtures/repository/StateMachine.webgmex` (branches `master`/`example`, tags, multi-commit) |
 
 **Phase 7 — Scenario (boiled down)**
 

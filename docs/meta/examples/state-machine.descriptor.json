@@ -1,15 +1,12 @@
 {
   "version": 1,
   "concepts": {
-    "State": {
+    "Variable": {
       "attributes": {
-        "isInitial": "bool",
-        "isFinal": "bool"
-      },
-      "pointers": {
-        "entry": "Action",
-        "run": "Action",
-        "exit": "Action"
+        "type": {
+          "type": "enum",
+          "values": ["float", "string"]
+        }
       }
     },
     "Transition": {
@@ -21,25 +18,6 @@
         "action": "Action"
       }
     },
-    "Machine": {
-      "contains": {
-        "Action": "*",
-        "Constraint": "*",
-        "Event": "*",
-        "Guard": "*",
-        "State": "*"
-      },
-      "attributes": {
-        "description": "string"
-      }
-    },
-    "Event": {},
-    "Guard": {},
-    "Action": {
-      "attributes": {
-        "body": "string"
-      }
-    },
     "Constraint": {
       "attributes": {
         "body": "string",
@@ -49,20 +27,40 @@
         }
       }
     },
-    "Variable": {
-      "attributes": {
-        "type": {
-          "type": "enum",
-          "values": ["float", "string"]
-        }
-      },
+    "File": {
       "contains": {
         "Machine": "*"
       }
     },
-    "File": {
+    "Machine": {
+      "attributes": {
+        "description": "string"
+      },
       "contains": {
-        "Machine": "*"
+        "Action": "*",
+        "Constraint": "*",
+        "Event": "*",
+        "Guard": "*",
+        "State": "*",
+        "Variable": "*"
+      }
+    },
+    "Event": {},
+    "Action": {
+      "attributes": {
+        "body": "string"
+      }
+    },
+    "Guard": {},
+    "State": {
+      "attributes": {
+        "isFinal": "bool",
+        "isInitial": "bool"
+      },
+      "pointers": {
+        "entry": "Action",
+        "run": "Action",
+        "exit": "Action"
       }
     }
   }

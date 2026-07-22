@@ -522,7 +522,7 @@ until you run session save. Use session open / session status to manage state.
 
   branchCmd
     .command("create")
-    .description("Create a branch (upgrades snapshot packages to repository format)")
+    .description("Create a branch (name: [0-9a-zA-Z_]+; upgrades snapshot packages to repository format)")
     .argument("<name>", "New branch name")
     .option("--from <ref>", "Source branch name or commit hash (default: current head)")
     .option("--seed [name]", "Seed name (or open session)")
@@ -593,7 +593,7 @@ until you run session save. Use session open / session status to manage state.
 
   tagCmd
     .command("create")
-    .description("Create a tag at a commit (default: current branch head)")
+    .description("Create a tag at a commit (name: [0-9a-zA-Z_]+; default: current branch head)")
     .argument("<name>", "Tag name")
     .option("--commit <hash>", "Commit hash")
     .option("--seed [name]", "Seed name (or open session)")

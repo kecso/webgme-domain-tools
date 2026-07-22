@@ -4,12 +4,8 @@
 
 domain StaMS.StateMachine
 
-concept State {
-  isInitial: bool;
-  isFinal: bool;
-  entry -> Action;
-  run -> Action;
-  exit -> Action;
+concept Variable {
+  type: enum[float, string];
 }
 
 concept Transition {
@@ -20,25 +16,32 @@ concept Transition {
   action -> Action;
 }
 
-concept Machine {
-  description: string;
-  contains Action*, Constraint*, Event*, Guard*, State*;
-}
-
-concept Event;
-concept Guard;
-
-concept Action {
-  body: string;
-}
-
 concept Constraint {
   body: string;
   kind: enum[safety, goal];
 }
 
-concept Variable {
-  type: enum[float, string];
+concept File {
+  contains Machine*;
 }
 
-concept File;
+concept Machine {
+  description: string;
+  contains Action*, Constraint*, Event*, Guard*, State*, Variable*;
+}
+
+concept Event;
+
+concept Action {
+  body: string;
+}
+
+concept Guard;
+
+concept State {
+  isFinal: bool;
+  isInitial: bool;
+  entry -> Action;
+  run -> Action;
+  exit -> Action;
+}
