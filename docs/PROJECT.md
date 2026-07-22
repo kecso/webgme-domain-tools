@@ -39,7 +39,11 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 6 — Project libraries (draft)** — `pending` (next up after Phase 5)
+**Phase 7 — Repository exchange & history** — `pending` (**next up** after Phase 5)
+
+**Phase 6 — Project libraries (draft)** — `pending` (after Phase 7)
+
+**Phase 8 — MetaLang authoring** — `pending` (after Phase 6; package extract last)
 
 **Phase 5 — Installable plugins (global toolbox)** — `done` (merged to `main` 2026-07-17, branch `feature/phase5-installable-plugins`)
 
@@ -83,7 +87,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | F22 | Commands default to open session | `done` | `plugin run`, `tree`, `seed meta`, `ls` in session scope |
 | F23 | `session save` / `session discard` | `done` | `npm test` — `session-workspace.test.js` |
 | F24 | Optional REPL / long-lived shell | `dropped` | Removed 2026-07-17; optional Phase 5 extra (**F30**) if demand appears |
-| F25 | `.webgmex` repository import/export | `deferred` | Use engine `getProjectWithHistory` / `insertProjectWithHistory` (later) |
+| F25 | `.webgmex` repository import/export | `deferred` → **Phase 7** | Engine helpers exist; promoted to next milestone |
 
 **Phase 3 — Plugin run** — `done` (merged to `main` 2026-07-11, branch `feature/phase3-plugin-run`)
 
@@ -103,7 +107,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 |----|----------|--------|
 | F9–F19 | CLI flag surface growing; long commands hard to compose | **B8** backlog — trim rarely used flags or add tutorial recipes / `webdot examples` (future) |
 | F12 | Plugin output should reflect full context, not just seed name | JSON `context` block + `plugin run --help` documents project / active node / selection / config with defaults |
-| F10 | `--branch` is meaningless: `.webgmex` import is single-snapshot (one commit, one branch) | Dropped `--branch` flag; branch fixed to `master` internally. Re-expose via **F25** when repository import lands |
+| F10 | `--branch` is meaningless: `.webgmex` import is single-snapshot (one commit, one branch) | Dropped `--branch` flag; branch fixed to `master` internally. Re-expose via **Phase 7** (F37) |
 
 **Phase 2½ — Meta representations** — `done` (merged to `main` 2026-07-10, branch `feature/F16-meta-representations`)
 
@@ -112,7 +116,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | F16a | Meta representation specs (IR, descriptor, MetaLang) | `done` | `docs/meta/README.md` + examples |
 | F16b | `seed meta --format descriptor` | `done` | `npm test` — `meta-translate.test.js` |
 | F16c | `seed meta --format metalang` | `done` | `webdot seed meta --seed StateMachine --format metalang` |
-| F16d | MetaLang parser / Langium (optional) | `deferred` | — |
+| F16d | MetaLang parser / Langium (optional) | `deferred` → **Phase 8** | Authoring path + eventual package extract |
 
 ### Phase 2½ review notes (2026-07-10)
 
@@ -206,13 +210,13 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 | F16a | Meta specs + examples | `done` | `docs/meta/` — pointer-first descriptor, MetaLang EBNF + RULES |
 | F16b | `seed meta --format descriptor` | `done` | `irToDescriptor` + tests |
 | F16c | `seed meta --format metalang` | `done` | `descriptorToMetalang` + tests |
-| F16d | MetaLang parser (Langium optional) | `deferred` | Authoring path metalang → descriptor |
+| F16d | MetaLang parser (Langium optional) | `deferred` → **Phase 8** | Authoring path metalang → descriptor |
 
 ### Phase 3 — Plugin run
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
 | F9 | `plugin info` (configStructure) | `done` | JSON: metadata + defaults from `metadata.json` |
-| F10 | `plugin run` context flags | `done` | `--seed`, `--at`, `--select` (no `--branch`: single-snapshot import → always `master`) |
+| F10 | `plugin run` context flags | `done` | `--seed`, `--at`, `--select` (no `--branch` until Phase 7 / F37) |
 | F11 | Config validation + `--set` | `done` | `--config-file`, read-only enforcement |
 | F12 | Message / result routing | `done` | Plugin logger → stderr; messages in JSON + stderr |
 | F13 | Ephemeral FS blob + `--artifacts-out` | `done` | Warn when artifacts produced but not saved |
@@ -227,12 +231,12 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 | F22 | Commands default to open session | `done` | `plugin run`, `tree --seed`, `seed meta` when session active |
 | F23 | `session save` / `session discard` | `done` | Explicit write-back to source (or `--out`) |
 | F24 | Optional REPL / long-lived shell | `dropped` | Removed 2026-07-17; optional Phase 5 extra (**F30**) if demand appears |
-| F25 | `.webgmex` repository import/export | `deferred` | Full commit/branch/tag packages (engine helpers exist) |
+| F25 | `.webgmex` repository import/export | `deferred` → **Phase 7** | Full commit/branch/tag packages (engine helpers exist) |
 
 **Phase 3½ — Stateful session**  
 Follow-up commands reuse an **opened** project workspace; the user explicitly **saves** (or discards) instead of one-shot import/run/export per invocation.
 
-**Implementation (2026-07-11):** Workspace file model (Approach A). `.webdot/session.json` tracks execution cwd, project root, source path, working `.webgmex`, and dirty flag. Commands re-import the working copy; `session save` writes to the save target. **F25 deferred** — repository `.webgmex` import/export when needed. **F24 REPL dropped** (2026-07-17); use one-shot CLI against an open session.
+**Implementation (2026-07-11):** Workspace file model (Approach A). `.webdot/session.json` tracks execution cwd, project root, source path, working `.webgmex`, and dirty flag. Commands re-import the working copy; `session save` writes to the save target. **F25 → Phase 7** (history-aware I/O + branch/history CLI). **F24 REPL dropped** (2026-07-17); use one-shot CLI against an open session.
 
 **Session location fix (2026-07-11):** `.webdot/` now lives in the **execution directory** (`process.cwd()`), not under `-C`. `-C` only selects the project to open; `session.json` records that project root (`projectCwd`) so `status`, `save`, `plugin run`, `tree`, `seed meta` work from the same directory without repeating `-C`. This supports driving multiple projects from one working directory. Also fixed a latent bug where running `webdot` outside its own repo root failed because `webgme-engine/src/bin/import.js` loads `require(process.cwd()/config)` at import time — the bridge now loads that module with the package root as cwd.
 
@@ -292,9 +296,52 @@ Each install gets a **dictionary key** (the name used later in `plugin run` / `i
 
 Priority: **high product direction** — own milestone after Phase 4 generators.
 
+### Phase 7 — Repository exchange & history (next)
+
+**Status:** `pending` (**next up**)  
+**Goal:** Treat `.webgmex` as a file-backed WebGME repository when the exchange format supports it — progress commits on save (like the GUI), switch branches, and inspect history with real commit ids.
+
+**Engine:** `webgme-engine` ≥ 2.32 already ships v2 (`formatVersion: 2`, `exportMode: "repository"`) via `getProjectWithHistory` / `insertProjectWithHistory`. See `node_modules/webgme-engine/docs/exchange-format-v2.md`.
+
+**Save / write-back policy (decided 2026-07-22)**
+
+| Input / session mode | On plugin/`session save` |
+|----------------------|--------------------------|
+| **v1** snapshot `.webgmex` | **Overwrite** with a new v1 snapshot (today’s behaviour) |
+| **v2** repository `.webgmex` | **Preserve history** — export with `getProjectWithHistory` so new commits from `self.save()` (and session commits) accumulate like a GUI workload |
+
+Opening a v2 file must never silently flatten to v1 on save. Optional later: explicit `session open --upgrade-history` (or similar) to convert a v1 seed into a v2 repo on first save — not required for v1 of this phase.
+
+| ID | Feature | Status | Notes |
+|----|---------|--------|-------|
+| F36 | Detect v1 vs v2; history-aware import/export | `pending` | Import: `insertProjectWithHistory` for v2, snapshot path for v1. Export: v2 round-trip by default when working copy is v2 |
+| F37 | Branch on open / run | `pending` | `session open --branch <name>`; re-expose `--branch` on `plugin run` / tree / meta; default `master` (or file’s default branch) |
+| F38 | Switch branch in session | `pending` | `session checkout <branch>` (or `branch checkout`) updates session state + working head |
+| F39 | History introspection | `pending` | `history log [--branch]` / `history show <commit>` — list commits for a branch with **hashes**, messages, times (needed for real branch ops) |
+| F40 | Branch & tag management | `pending` | `branch list\|create\|delete`; `tag list\|create\|delete`; create from branch / commit id |
+| F41 | Multi-branch v2 fixture + tests | `pending` | Fixture with ≥2 branches and a short commit chain; round-trip + log + checkout tests |
+
+**Phase 7 — Scenario (boiled down)**
+
+```bash
+webdot session open --webgmex ./model.webgmex --branch feature/edit
+webdot history log --branch feature/edit          # commit ids + messages
+webdot plugin run SomeEditor                     # self.save() → new commit on feature/edit
+webdot history log --branch feature/edit         # one more commit
+webdot branch create experiment --from <commitId>
+webdot session checkout experiment
+webdot session save                              # v2 file keeps full graph
+```
+
+**Notes:** Promotes deferred **F25** / **B9**. Merge/conflict UX is **out of scope** for this phase (engine merge helpers exist; defer). Session still re-imports per process — history survives because the **file** is the store (v2 round-trip each mutating command).
+
+**Priority:** Ahead of Phase 6 libraries — cleaner product goal and unblocks file-as-repo workflows.
+
+---
+
 ### Phase 6 — Project libraries (draft)
 
-**Status:** `pending` (after Phase 5)  
+**Status:** `pending` (**after Phase 7**)  
 **Goal:** Treat attached WebGME libraries as first-class in listing/meta emit, and optionally manage them from the CLI.
 
 | ID | Feature | Status | Notes |
@@ -320,7 +367,31 @@ webdot library update SharedMeta --seed HostDomain --from ./SharedMeta.webgmex
 webdot library remove SharedMeta --seed HostDomain
 ```
 
-**Notes:** F17 IR fields are already in place; Phase 6 is consumer-facing fine-tuning plus management. F35 is new product scope (interesting, not required for emit correctness). Prefer session write-back patterns from Phase 3½ when mutating libraries.
+**Notes:** F17 IR fields are already in place; Phase 6 is consumer-facing fine-tuning plus management. F35 is new product scope (interesting, not required for emit correctness). Prefer session write-back patterns from Phase 3½ when mutating libraries. Prefer history-aware save (Phase 7) when library mutations write `.webgmex`.
+
+---
+
+### Phase 8 — MetaLang authoring (draft)
+
+**Status:** `pending` (after Phase 6; **no hurry**)  
+**Goal:** Close the authoring loop (metalang → descriptor → WebGME meta), optionally add LSP, then extract MetaLang into its own package last.
+
+| ID | Feature | Status | Notes |
+|----|---------|--------|-------|
+| F16d | MetaLang → descriptor parser | `pending` | In-repo first (grammar + RULES already in `docs/meta/metalang/`); round-trip tests |
+| F42 | ImportMetaLang plugin | `pending` | Installable plugin: ingest `.metalang` → build/update meta in a project / `--out` `.webgmex` |
+| F43 | Langium language server | `pending` | Diagnostics / completion against grammar; thin editor extension optional |
+| F44 | Extract `webgme-metalang` package | `pending` | **Last** step — move grammar, translate, LSP; webdot depends on the package |
+
+**Phase 8 — Scenario (boiled down)**
+
+```bash
+webdot seed meta --seed StateMachine --format metalang > domain.metalang
+# edit domain.metalang (editor LSP once F43 lands)
+webdot plugin run ImportMetaLang --set file=./domain.metalang --out ./NewDomain.webgmex
+```
+
+**Notes:** Descriptor/MetaLang remain lossy vs IR (no sheets/mixins/constraints) — ingest creates a **useful** meta project, not a bit-perfect GUI round-trip. Separation (F44) waits until authoring + plugin are proven in-repo.
 
 ---
 
@@ -338,9 +409,10 @@ Tasks not tied to a single milestone — pick up anytime.
 | B6 | optimize | Cache SetupCatalog per process (only if a long-lived REPL returns — **F30**) | low |
 | B7 | meta | See **Phase 6** (F31–F34) — library listing / namespace emit | medium |
 | B8 | streamline | CLI complexity: trim rare flags or `webdot examples` tutorial recipes / scenario printouts | medium |
-| B9 | compatibility | Track/adopt WebGME repository `.webgmex` support; replace snapshot-only assumptions with full commit/branch/tag import where available | medium |
+| B9 | compatibility | Repository `.webgmex` / history — see **Phase 7** (F36–F41) | — |
 | B10 | product | Phase 5 installable plugins (F26–F29) — done on `main` | — |
 | B11 | product | Phase 6 library CLI management (F35) | medium |
+| B12 | product | Phase 8 MetaLang authoring + package extract (F16d, F42–F44) | low |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
 
@@ -370,8 +442,13 @@ Record of completed reviews (newest first).
 - Phase 5: installable plugins — `plugin install` / `list` / `uninstall`, user registry under `WEBDOT_HOME` / `~/.webdot`
 - Resolve bare names: `--plugin-dir` → catalog → installed; `ls plugins` labels catalog vs installed
 - GitHub install: `owner/repo[@ref]` (always GitHub shorthand) with optional `--subdir`; collision requires `--as` or `--force`
-- Draft **Phase 6** (project libraries): F17 emit fine-tuning + library CLI management (F31–F35)
+- Draft **Phase 6** (project libraries): F17 emit fine-tuning + library CLI management (F31–F35) — scheduled **after Phase 7**
 - F30 REPL remains optional / not shipped
+
+### Planning (2026-07-22) — not yet released
+- **Phase 7** (next): repository exchange v2 / history — F36–F41; v1 overwrite vs v2 commit-on-save; `--branch` on open/run; `history log` + branch/tag CLI
+- **Phase 6** libraries remain after Phase 7
+- **Phase 8** MetaLang authoring (F16d, F42–F43) with package extract **F44** last
 
 ### 0.6.1 (2026-07-17) — merged to `main`
 - Dropped `webdot session repl` / `session shell` (F24); stateful session workspace (F20–F23) unchanged
