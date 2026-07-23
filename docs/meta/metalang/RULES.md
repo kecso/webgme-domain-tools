@@ -222,7 +222,7 @@ Parser/editor emits the inverse JSON Patch operations (`remove`, `replace`) per 
 
 | Rule | WebGME feature |
 |------|----------------|
-| `add-mixin` | Mixins |
+| `add-mixin` | Mixins (multiple inheritance beyond primary `extends` / `getBase`) |
 | `add-constraint` | Meta constraints |
 | `add-aspect` | Aspects |
 | `add-sheet` | Meta aspect sheets |
