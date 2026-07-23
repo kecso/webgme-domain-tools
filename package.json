@@ -28,6 +28,11 @@
   "files": [
     "dist",
     "config",
+    "docs/CLI.md",
+    "docs/tutorials",
+    "docs/meta",
+    "docs/DESIGN.md",
+    "docs/PUBLISH.md",
     "LICENSE",
     "README.md"
   ],

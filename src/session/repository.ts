@@ -25,6 +25,35 @@ function loadObject(project: GmeProject, hash: string): Promise<GmeCommitObject>
   const Q = require("q") as { ninvoke: (obj: unknown, method: string, ...args: unknown[]) => Promise<GmeCommitObject> };
   return Q.ninvoke(project, "loadObject", hash);
 }
+
+async function resolveCommitRef(
+  project: GmeProject,
+  from: string | undefined,
+  fallbackHash: string,
+): Promise<string> {
+  if (!from) return fallbackHash;
+  if (from.startsWith("#") || /^[0-9a-f]{40}$/i.test(from.replace(/^#/, ""))) {
+    const hash = from.startsWith("#") ? from : "#" + from;
+    await loadObject(project, hash);
+    return hash;
+  }
+  const hash = await project.getBranchHash(from);
+  if (!hash) {
+    throw new Error('Unknown branch or commit for --from: "' + from + '"');
+  }
+  return hash;
+}
+
+function assertSynced(
+  result: { status?: string; hash?: string } | undefined,
+  action: string,
+): void {
+  if (result && result.status && result.status !== "SYNCED") {
+    throw new Error(
+      action + " did not sync (status=" + result.status + "). Branch tip was not changed.",
+    );
+  }
+}
 export interface HistoryCommitRow {
   hash: string;
   message: string;
@@ -184,23 +213,26 @@ export async function runBranchCreate(options: {
     branchName: options.branch,
   });
   try {
-    let hash: string;
-    if (options.from) {
-      const from = options.from;
-      if (from.startsWith("#") || /^[0-9a-f]{40}$/i.test(from.replace(/^#/, ""))) {
-        hash = from.startsWith("#") ? from : "#" + from;
-        await loadObject(context.project, hash);
-      } else {
-        hash = await context.project.getBranchHash(from);
-        if (!hash) {
-          throw new Error('Unknown branch or commit for --from: "' + from + '"');
-        }
-      }
-    } else {
-      hash = context.importResult.commitHash;
+    const existing = await context.project.getBranches();
+    if (existing[options.name]) {
+      throw new Error(
+        'Branch "' +
+          options.name +
+          '" already exists (create does not overwrite). Use: webdot branch update ' +
+          options.name +
+          " --from <branch|commit>",
+      );
     }
 
-    await context.project.createBranch(options.name, hash);
+    const hash = await resolveCommitRef(
+      context.project,
+      options.from,
+      context.importResult.commitHash,
+    );
+
+    const result = await context.project.createBranch(options.name, hash);
+    assertSynced(result, 'Create branch "' + options.name + '"');
+
     // Branch pointers require repository export (v2).
     const upgradedToRepository = context.exchangeFormat !== "repository";
     await exportLoadedProject(
@@ -213,6 +245,64 @@ export async function runBranchCreate(options: {
       created: options.name,
       hash,
       upgradedToRepository,
+    };
+  } finally {
+    await closeProjectSession();
+  }
+}
+
+/**
+ * Move an existing branch tip to --from (or the currently opened branch head).
+ * Unlike create, this overwrites the previous tip pointer.
+ */
+export async function runBranchUpdate(options: {
+  cwd: string;
+  webgmexPath: string;
+  name: string;
+  from?: string;
+  branch?: string;
+}): Promise<{
+  webgmex: string;
+  updated: string;
+  hash: string;
+  previousHash: string;
+}> {
+  const context = await openProjectSession({
+    cwd: options.cwd,
+    webgmexPath: options.webgmexPath,
+    branchName: options.branch,
+  });
+  try {
+    const previousHash = await context.project.getBranchHash(options.name);
+    if (!previousHash) {
+      throw new Error(
+        'Unknown branch "' +
+          options.name +
+          '". Create it first: webdot branch create ' +
+          options.name,
+      );
+    }
+
+    const hash = await resolveCommitRef(
+      context.project,
+      options.from,
+      context.importResult.commitHash,
+    );
+
+    // ProjectInterface: setBranchHash(branchName, newHash, oldHash)
+    const result = await context.project.setBranchHash(options.name, hash, previousHash);
+    assertSynced(result, 'Update branch "' + options.name + '"');
+
+    await exportLoadedProject(
+      { ...context, exchangeFormat: "repository" },
+      options.webgmexPath,
+      { withHistory: true, cwd: options.cwd },
+    );
+    return {
+      webgmex: options.webgmexPath,
+      updated: options.name,
+      hash,
+      previousHash,
     };
   } finally {
     await closeProjectSession();

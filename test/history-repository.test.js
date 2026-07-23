@@ -16,6 +16,7 @@ import {
   runBranchCreate,
   runBranchDelete,
   runBranchList,
+  runBranchUpdate,
   runHistoryLog,
   runHistoryShow,
   runTagCreate,
@@ -37,6 +38,7 @@ import {
   runBranchCreateCommand,
   runBranchDeleteCommand,
   runBranchListCommand,
+  runBranchUpdateCommand,
   runHistoryLogCommand,
   runHistoryShowCommand,
   runTagCreateCommand,
@@ -302,6 +304,72 @@ test("repository fixture: create/delete branch and tag round-trip", async () => 
       tags.tags.some((t) => t.name === "tmptag"),
       false,
     );
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("branch create does not overwrite; update moves tip", async () => {
+  const { dir, dest } = copyToTemp(repositoryFixture, "repo-update");
+  try {
+    const before = summarizeWebgmex(dest);
+    const masterHash = before.branches.master;
+    const exampleHash = before.branches.example;
+    assert.notEqual(masterHash, exampleHash);
+
+    await assert.rejects(
+      () =>
+        runBranchCreate({
+          cwd: dir,
+          webgmexPath: dest,
+          name: "example",
+          from: "master",
+          branch: "master",
+        }),
+      /already exists.*branch update/i,
+    );
+
+    const unchanged = summarizeWebgmex(dest);
+    assert.equal(unchanged.branches.example, exampleHash);
+
+    const updated = await runBranchUpdate({
+      cwd: dir,
+      webgmexPath: dest,
+      name: "example",
+      from: "master",
+      branch: "master",
+    });
+    assert.equal(updated.updated, "example");
+    assert.equal(updated.previousHash, exampleHash);
+    assert.equal(updated.hash, masterHash);
+
+    const after = summarizeWebgmex(dest);
+    assert.equal(after.branches.example, masterHash);
+    assert.equal(after.branches.master, masterHash);
+
+    await assert.rejects(
+      () =>
+        runBranchUpdate({
+          cwd: dir,
+          webgmexPath: dest,
+          name: "missing",
+          from: "master",
+          branch: "master",
+        }),
+      /Unknown branch "missing"/,
+    );
+
+    const cmdOut = await runBranchUpdateCommand({
+      sessionCwd: dir,
+      projectCwd: dir,
+      name: "example",
+      from: exampleHash,
+      webgmex: dest,
+    });
+    const cmdJson = JSON.parse(cmdOut);
+    assert.equal(cmdJson.updated, "example");
+    assert.equal(cmdJson.hash, exampleHash);
+    assert.equal(summarizeWebgmex(dest).branches.example, exampleHash);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }

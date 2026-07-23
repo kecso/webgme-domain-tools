@@ -2,6 +2,8 @@
 
 Headless CLI for WebGME domain studios. Complements webgme-cli (scaffold + server); does not replace it.
 
+**User-facing how-tos:** [tutorials](tutorials/README.md) · **Command flags:** [CLI.md](CLI.md) · **`--help`** on each command remains authoritative for the live flag surface.
+
 ## SetupCatalog
 
 Loaded from `{cwd}/webgme-setup.json`. Every command that names a seed, plugin, or component kind resolves through the catalog. Errors cite:
@@ -19,9 +21,9 @@ Stable refs: `seed:StateMachine`, `plugin:TextToModel`, `viz:MonacoEditor`, `rou
 | Repo (default) | `tree` / `tree repo` | SetupCatalog only |
 | Seed model | `tree --seed <name>` | File-project load from `.webgmex` |
 
-Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-separated). Ambiguous seed names exit 2 with candidates.
+Seed scope options: `--at <path>` (subtree root, `[default: /]`), `--nodes <paths>` (comma-separated; `[default: all nodes under --at]`). Ambiguous seed names exit 2 with candidates.
 
-**Seed tree formats:** `tree` (default — DFS, npm-style branches, path tail), `tree-verbose` (+ meta/type), `flat`, `json`.
+**Seed tree formats:** `tree` (`[default]` — DFS, npm-style branches, path tail), `tree-verbose` (+ meta/type), `flat`, `json`.
 
 ## seed command
 
@@ -33,7 +35,7 @@ Seed scope options: `--at <path>` (subtree root), `--select <paths>` (comma-sepa
 
 - **Info:** `plugin info <name>` — `metadata.json` configStructure + defaults
 - **Run:** `plugin run <name> --seed <seed>` — headless `PluginCliManager` on memory file-project
-- **Plugin context:** project (`--seed` or `--webgmex`) + active node (`--at`, default `/`) + selection (`--select`, default none) + config (`metadata.json` + `--set` / `--config-file`). `webdot plugin run --help` lists defaults; JSON output echoes resolved `context`.
+- **Plugin context:** project (`--seed` or `--webgmex`) + active node (`--at`, `[default: / (root)]`) + selection (`--select`, `[default: (none)]`) + config (`metadata.json` + `--set` / `--config-file`). `webdot plugin run --help` lists defaults; JSON output echoes resolved `context`.
 - **Branch / history:** v1 `.webgmex` packages are single-snapshot imports (`insertProjectJson` → one branch). Engine also has repository helpers (`getProjectWithHistory` / `insertProjectWithHistory`) for full commit/branch/tag packages (exchange format v2). **Phase 7:** detect v1 vs v2; on save, v1 overwrites a snapshot, v2 exports with history so plugin/`session save` commits accumulate like the GUI; re-expose `--branch` / `session open --branch` and history/branch CLI (`history log`, branch create/checkout, …).
 - Blobs: ephemeral FS per session; `--artifacts-out` saves to disk (relative to the shell working directory, same as `--plugin-dir`); otherwise stderr warning
 - **Write-back:** the seed `.webgmex` is imported into memory; a plugin that calls `self.save()` produces a new commit, and the resulting model is written back to the source file by default. `--out <file>` redirects; `--dry-run` runs without writing. Read-only runs (no `save`) never rewrite the source. (Phase 7: v2 write-back preserves the full repository graph.)

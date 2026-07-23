@@ -3,6 +3,7 @@ import {
   runBranchCreate,
   runBranchDelete,
   runBranchList,
+  runBranchUpdate,
   runHistoryLog,
   runHistoryShow,
   runTagCreate,
@@ -90,6 +91,29 @@ export async function runBranchCreateCommand(options: {
 }): Promise<string> {
   const resolved = resolveWebgmex(options);
   const result = await runBranchCreate({
+    cwd: options.projectCwd,
+    webgmexPath: resolved.webgmexPath,
+    name: options.name,
+    from: options.from,
+    branch: resolved.branch,
+  });
+  const session = readSessionState(options.sessionCwd);
+  if (session && path.resolve(session.workingWebgmex) === path.resolve(resolved.webgmexPath)) {
+    markSessionDirty(options.sessionCwd);
+  }
+  return JSON.stringify(result, null, 2);
+}
+
+export async function runBranchUpdateCommand(options: {
+  sessionCwd: string;
+  projectCwd: string;
+  name: string;
+  from?: string;
+  seed?: string;
+  webgmex?: string;
+}): Promise<string> {
+  const resolved = resolveWebgmex(options);
+  const result = await runBranchUpdate({
     cwd: options.projectCwd,
     webgmexPath: resolved.webgmexPath,
     name: options.name,
