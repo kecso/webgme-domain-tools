@@ -39,15 +39,15 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 6 — Project libraries** — `pending` (**next up** — do this before Phase 9 MetaLang extract)
+**Phase 6 — Project libraries** — `in progress` (branch `feature/phase6-libraries`)
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F31 | Library-bearing fixtures | `pending` | Synthetic + real under `test/fixtures/` |
-| F32 | List / inspect libraries | `pending` | `webdot library list`; `tree --seed` — library roots first under ROOT |
-| F33 | Descriptor / MetaLang always FQN | `pending` | Host bare names; library `Lib.Concept`; see `docs/meta/LIBRARIES.md` |
-| F34 | GenerateMetaTs FQN / namespaces | `pending` | Nested `namespace Lib { … }` for library concepts; host top-level |
-| F35 | Library CLI management | `pending` | No session; always persist `.webgmex`; GUI `addLibrary` semantics |
+| F31 | Library-bearing fixtures | `in progress` | Synthetic: `test/fixtures/libraries/` · **need you:** real/DSS-scale package when ready |
+| F32 | List / inspect libraries | `review` | `webdot library list --webgmex …` · tree library-roots-first + `[library-root]` |
+| F33 | Descriptor / MetaLang always FQN | `review` | Host bare; library `Lib.Concept` |
+| F34 | GenerateMetaTs FQN / namespaces | `review` | Nested `namespace Lib { … }` |
+| F35 | Library CLI management | `review` | `add` / `update` / `remove` — no session; always persist |
 
 **Hard gate:** Phase 9 may start parser/plugin work in-repo, but **`webgme-metalang` package extract (F44) waits until Phase 6 F31–F34 are done** so namespaces/libraries are part of the language surface we ship externally.
 

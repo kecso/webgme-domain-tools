@@ -31,6 +31,13 @@ export interface GmeProject {
   getTags: () => Promise<Record<string, string>>;
   getHistory: (start: string | string[], number: number) => Promise<GmeCommitObject[]>;
   loadObject: (hash: string) => Promise<GmeCommitObject>;
+  makeCommit: (
+    branchName: string,
+    parents: string[],
+    rootHash: string,
+    objects: unknown,
+    msg: string,
+  ) => Promise<{ hash?: string; status?: string }>;
 }
 
 export interface GmeImportResult {
@@ -61,32 +68,27 @@ export interface GmeCore {
   getBase: (node: GmeNode) => GmeNode | null;
   getChildrenRelids: (node: GmeNode) => string[];
   getChild: (node: GmeNode, relid: string) => GmeNode | null;
+  persist: (node: GmeNode) => { rootHash: string; objects: unknown };
   /** Library / namespace APIs (present on webgme-engine core). */
   getLibraryNames?: (root: GmeNode) => string[];
   getNamespace?: (node: GmeNode) => string;
   getFullyQualifiedName?: (node: GmeNode) => string;
   isLibraryElement?: (node: GmeNode) => boolean;
   isLibraryRoot?: (node: GmeNode) => boolean;
-}
-
-interface GmeAuthLike {
-  connect: () => Promise<void>;
-  addUser: (
-    id: string,
-    email: string,
-    password: string,
-    canCreate: boolean,
-    opts: Record<string, unknown>,
+  addLibrary?: (
+    node: GmeNode,
+    name: string,
+    libraryRootHash: string,
+    libraryInfo: Record<string, unknown>,
   ) => Promise<unknown>;
-  authorizer: {
-    ENTITY_TYPES: { PROJECT: string };
-    setAccessRights: (
-      userId: string,
-      projectId: string,
-      rights: Record<string, boolean>,
-      params: Record<string, unknown>,
-    ) => Promise<unknown>;
-  };
+  updateLibrary?: (
+    node: GmeNode,
+    name: string,
+    libraryRootHash: string,
+    libraryInfo: Record<string, unknown>,
+  ) => Promise<unknown>;
+  removeLibrary?: (node: GmeNode, name: string) => void;
+  getLibraryInfo?: (node: GmeNode, name: string) => Record<string, unknown> | null;
 }
 
 interface WebgmeImportBridge {
@@ -116,6 +118,13 @@ interface WebgmeImportBridge {
   }>;
   exportProjectToFile: (parameters: Record<string, unknown>) => Promise<string>;
   isRepositoryProjectJson?: (projectJson: Record<string, unknown>) => boolean;
+  attachLibraryFromWebgmex?: (parameters: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  updateLibraryFromWebgmex?: (parameters: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  persistProjectCommit?: (parameters: Record<string, unknown>) => Promise<{
+    commitHash: string;
+    rootHash: string;
+    status?: string;
+  }>;
 }
 
 export type SessionLogger = {
@@ -125,6 +134,26 @@ export type SessionLogger = {
   warn?: (...args: unknown[]) => void;
   fork: (name: string) => SessionLogger;
 };
+
+interface GmeAuthLike {
+  connect: () => Promise<void>;
+  addUser: (
+    id: string,
+    email: string,
+    password: string,
+    canCreate: boolean,
+    opts: Record<string, unknown>,
+  ) => Promise<unknown>;
+  authorizer: {
+    ENTITY_TYPES: { PROJECT: string };
+    setAccessRights: (
+      userId: string,
+      projectId: string,
+      rights: Record<string, boolean>,
+      params: Record<string, unknown>,
+    ) => Promise<unknown>;
+  };
+}
 
 let cached: {
   bridge: WebgmeImportBridge;

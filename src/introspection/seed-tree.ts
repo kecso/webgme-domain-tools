@@ -13,6 +13,8 @@ export interface SeedNodeRow {
   name: string;
   metaType: string | null;
   isMeta: boolean;
+  isLibraryRoot?: boolean;
+  isLibraryElement?: boolean;
 }
 
 function nodeName(core: GmeCore, node: GmeNode): string {
@@ -33,14 +35,36 @@ function toRow(core: GmeCore, node: GmeNode): SeedNodeRow {
     name: nodeName(core, node),
     metaType: metaTypeName(core, node),
     isMeta: core.isMetaNode(node),
+    isLibraryRoot:
+      typeof core.isLibraryRoot === "function" ? Boolean(core.isLibraryRoot(node)) : false,
+    isLibraryElement:
+      typeof core.isLibraryElement === "function" ? Boolean(core.isLibraryElement(node)) : false,
   };
+}
+
+/** Library roots first among siblings; relative order within each group is preserved. */
+function sortChildNodes(core: GmeCore, children: GmeNode[]): GmeNode[] {
+  const libs: GmeNode[] = [];
+  const rest: GmeNode[] = [];
+  for (const child of children) {
+    if (typeof core.isLibraryRoot === "function" && core.isLibraryRoot(child)) {
+      libs.push(child);
+    } else {
+      rest.push(child);
+    }
+  }
+  return libs.concat(rest);
 }
 
 function walkDepthFirst(core: GmeCore, node: GmeNode, rows: SeedNodeRow[]): void {
   rows.push(toRow(core, node));
+  const children: GmeNode[] = [];
   for (const relid of core.getChildrenRelids(node)) {
     const child = core.getChild(node, relid);
-    if (child) walkDepthFirst(core, child, rows);
+    if (child) children.push(child);
+  }
+  for (const child of sortChildNodes(core, children)) {
+    walkDepthFirst(core, child, rows);
   }
 }
 
@@ -117,6 +141,8 @@ function renderIndentedTreeLine(
   if (verbose) {
     const tags: string[] = [];
     if (row.isMeta) tags.push("meta");
+    if (row.isLibraryRoot) tags.push("library-root");
+    else if (row.isLibraryElement) tags.push("library");
     if (row.metaType) tags.push("type:" + row.metaType);
     if (tags.length > 0) line += "  [" + tags.join(", ") + "]";
   }

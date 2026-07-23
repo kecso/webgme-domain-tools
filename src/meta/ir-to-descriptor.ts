@@ -44,7 +44,13 @@ function buildPathToNameMap(context: LoadedSeedContext): Map<string, string> {
   const metaByPath = context.core.getAllMetaNodes(context.rootNode);
   const map = new Map<string, string>();
   for (const [nodePath, node] of Object.entries(metaByPath)) {
-    map.set(nodePath, metaNodeName(context.core, node));
+    const simple = metaNodeName(context.core, node);
+    if (typeof context.core.getFullyQualifiedName === "function") {
+      const fqn = context.core.getFullyQualifiedName(node);
+      map.set(nodePath, typeof fqn === "string" && fqn.length > 0 ? fqn : simple);
+    } else {
+      map.set(nodePath, simple);
+    }
   }
   return map;
 }
@@ -162,11 +168,13 @@ function conceptFromIrNode(
   const metaNode = context.core.getAllMetaNodes(context.rootNode)[node.path];
   if (!metaNode) return undefined;
 
+  const conceptKey = node.fullyQualifiedName || node.name;
   const body: ConceptBody = {};
   const base = context.core.getBase(metaNode);
   if (base) {
-    const baseName = metaNodeName(context.core, base);
-    if (baseName !== "FCO") body.extends = baseName;
+    const basePath = context.core.getPath(base);
+    const baseFqn = pathToName.get(basePath) ?? metaNodeName(context.core, base);
+    if (metaNodeName(context.core, base) !== "FCO") body.extends = baseFqn;
   }
 
   const attributes = mapAttributes(node.meta);
@@ -182,7 +190,7 @@ function conceptFromIrNode(
   if (Object.keys(pointers).length > 0) body.pointers = pointers;
   if (Object.keys(sets).length > 0) body.sets = sets;
 
-  return [node.name, body];
+  return [conceptKey, body];
 }
 
 export function irToDescriptor(ir: SeedMetaIr, context: LoadedSeedContext): MetaDescriptor {
