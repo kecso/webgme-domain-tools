@@ -6,6 +6,7 @@ A sample v2 file for tests: `test/fixtures/repository/StateMachine.webgmex` (bra
 
 ```bash
 # Inspect history (commit hashes + messages)
+# --limit [default: 50]; --branch [default: session branch or master]
 webdot history log --webgmex ./repo.webgmex --branch example --limit 20
 webdot history show '#abc123…' --webgmex ./repo.webgmex
 
@@ -19,7 +20,7 @@ webdot session checkout master
 webdot session close --discard
 ```
 
-Create or move a branch (names: `[0-9a-zA-Z_]+` only — no hyphens). **`create` does not overwrite** an existing name — use **`update`** to move a tip:
+Create or move a branch (names: `[0-9a-zA-Z_]+` only — no hyphens). **`create` does not overwrite** an existing name — use **`update`** to move a tip. `--from` `[default: current head]`:
 
 ```bash
 # Copy first if you do not want to mutate a shared fixture

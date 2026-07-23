@@ -45,4 +45,35 @@ test("webdot --help shows Examples and docs pointer", () => {
   assert.match(result.stdout, /Examples:/);
   assert.match(result.stdout, /plugin run --plugin-dir/);
   assert.match(result.stdout, /docs\//);
+  assert.match(result.stdout.replace(/\s+/g, " "), /\[default: cwd\]/);
+});
+
+test("CLI.md documents [default: …] for common optional flags", () => {
+  const cliMd = fs.readFileSync(path.join(root, "docs/CLI.md"), "utf8");
+  assert.match(cliMd, /\[default: …\]/);
+  assert.match(cliMd, /--at <path>.*\[default: \/\]/);
+  assert.match(cliMd, /--at <path>.*\[default: \/ \(root\)\]/);
+  assert.match(cliMd, /--limit.*\[default: 50\]/);
+  assert.match(cliMd, /--format <fmt>.*\[default: tree\]/);
+  assert.match(cliMd, /--format <fmt>.*\[default: json\]/);
+  assert.match(cliMd, /--from.*\[default: current head\]/);
+});
+
+test("subcommand --help strings use [default: …]", () => {
+  const cases = [
+    [["tree", "--help"], /\[default: tree\]/, /\[default: \/\]/],
+    [["seed", "meta", "--help"], /\[default: json\]/],
+    [["history", "log", "--help"], /\[default: 50\]/],
+    [["branch", "create", "--help"], /\[default: current head\]/],
+    [["tag", "create", "--help"], /\[default: current branch head\]/],
+    [["session", "open", "--help"], /\[default: master \/ package default\]/],
+  ];
+  for (const [args, ...patterns] of cases) {
+    const result = spawnSync(process.execPath, [cli, ...args], { encoding: "utf8" });
+    assert.equal(result.status, 0, args.join(" "));
+    const help = result.stdout.replace(/\s+/g, " ");
+    for (const pattern of patterns) {
+      assert.match(help, pattern, args.join(" ") + " missing " + pattern);
+    }
+  }
 });

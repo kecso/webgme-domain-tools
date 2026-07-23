@@ -25,7 +25,7 @@ webdot plugin run \
 ```
 
 `--plugin-dir` is relative to your **shell** cwd (not `-C`).  
-See `webdot plugin run --help` for context defaults (active node, selection, branch).
+See `webdot plugin run --help` for context defaults (`--at` `[default: / (root)]`, `--select` `[default: (none)]`, `--branch` `[default: session branch or master]`).
 
 **With a studio catalog**, you can use names instead:
 

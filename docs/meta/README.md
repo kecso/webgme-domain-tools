@@ -22,7 +22,7 @@ Foundation for describing WebGME **MetaAspectSet** metamodels in three complemen
 ```
 
 ```bash
-webdot seed meta --seed StateMachine --format ir          # default: json
+webdot seed meta --seed StateMachine --format json        # [default: json] (IR)
 webdot seed meta --seed StateMachine --format tree        # same indentation as tree --seed
 webdot seed meta --seed StateMachine --format descriptor
 webdot seed meta --seed StateMachine --format metalang

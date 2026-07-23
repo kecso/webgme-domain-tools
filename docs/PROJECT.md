@@ -39,11 +39,11 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 8 — Documentation (tutorials & CLI reference)** — `in progress` (branch `feature/phase8-docs`)
-
-**Phase 6 — Project libraries (draft)** — `pending` (can interleave with Phase 8)
+**Phase 6 — Project libraries (draft)** — `pending` (next product work; can interleave with docs polish)
 
 **Phase 9 — MetaLang authoring** — `pending` (after Phase 8; package extract last)
+
+**Phase 8 — Documentation (tutorials & CLI reference)** — `done` (merged to `main` 2026-07-22, PR [#8](https://github.com/kecso/webgme-domain-tools/pull/8))
 
 **Phase 7 — Repository exchange & history** — `done` (merged to `main` 2026-07-22, PR [#7](https://github.com/kecso/webgme-domain-tools/pull/7))
 
@@ -375,18 +375,18 @@ webdot library remove SharedMeta --seed HostDomain
 
 ### Phase 8 — Documentation (tutorials & CLI reference)
 
-**Status:** `in progress` (branch `feature/phase8-docs`)  
+**Status:** `done` (merged to `main` 2026-07-22, PR [#8](https://github.com/kecso/webgme-domain-tools/pull/8))  
 **Goal:** Make real usage easy to follow — short scenario tutorials with exact commands, and a full command reference that mirrors CLI help (not a thin README table).
 
 **Motivation (2026-07-22):** README “Commands” / quick-start was too shallow for the surface we ship (plugins, session, history/branches). Prefer extracting the reference out of the README and linking from a slim landing page.
 
-**CLI norms (decided 2026-07-22):** Follow the usual CLI split ([clig.dev](https://clig.dev/)–style): **`--help`** for flags + a few examples; **README** for install/quick start; **markdown docs** for tutorials and full reference. A separate `webdot examples` command is **not** required — anyone who installs the package should read the README, which points at the same tutorials. Root `webdot --help` lists a few common invocations and points at `docs/`.
+**CLI norms (decided 2026-07-22):** Follow the usual CLI split ([clig.dev](https://clig.dev/)–style): **`--help`** for flags + a few examples; **README** for install/quick start; **markdown docs** for tutorials and full reference. A separate `webdot examples` command is **not** required — anyone who installs the package should read the README, which points at the same tutorials. Root `webdot --help` lists a few common invocations and points at `docs/`. Optional flags with fallbacks use a consistent **`[default: …]`** marker in `--help` and [`docs/CLI.md`](CLI.md).
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F45 | Full CLI reference doc | `review` | [`docs/CLI.md`](CLI.md) — every top-level command + important flags (aligned with `--help`) |
-| F46 | Scenario tutorials | `review` | [`docs/tutorials/`](tutorials/README.md) — plugin-anywhere, GenerateMetaTs, session, history/branches |
-| F47 | Slim README | `review` | Install + quick start + doc links; no incomplete command table |
+| F45 | Full CLI reference doc | `done` | [`docs/CLI.md`](CLI.md) — every top-level command + important flags (aligned with `--help`, including `[default: …]`) |
+| F46 | Scenario tutorials | `done` | [`docs/tutorials/`](tutorials/README.md) — plugin-anywhere, GenerateMetaTs, session, history/branches |
+| F47 | Slim README | `done` | Install + quick start + doc links; no incomplete command table |
 | F48 | `webdot examples` command | `dropped` | Redundant with README → tutorials and `--help` Examples; revisit only if discoverability still hurts |
 
 **Phase 8 — Scenario sketches (in tutorials)**
@@ -451,7 +451,7 @@ Tasks not tied to a single milestone — pick up anytime.
 | B10 | product | Phase 5 installable plugins (F26–F29) — done on `main` | — |
 | B11 | product | Phase 6 library CLI management (F35) | medium |
 | B12 | product | Phase 9 MetaLang authoring + package extract (F16d, F42–F44) | low |
-| B13 | docs | Phase 8 tutorials + CLI reference (F45–F47) | — |
+| B13 | docs | Phase 8 tutorials + CLI reference (F45–F47) — done on `main` | — |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
 
@@ -463,6 +463,7 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
+| 2026-07-22 | Phase 8 (F45–F47) | maintainer | Approved | Tutorials + CLI reference + slim README; `[default: …]` on help/docs; `branch update`; merged PR #8 → `main` |
 | 2026-07-22 | Phase 7 (F36–F41) | maintainer | Approved | Repository exchange v2 / history / branch CLI; fixture + coverage; merged PR #7 → `main`; Phase 8 docs scheduled before MetaLang |
 | 2026-07-17 | Phase 5 (F26–F29) | maintainer | Approved | Installable plugins registry; portable `owner/repo` parse; merged `feature/phase5-installable-plugins` → `main` |
 | 2026-07-17 | Drop F24 session REPL | maintainer | Approved | Removed `session repl`; F30 optional Phase 5 extra; merged `feature/drop-session-repl` → `main` |
@@ -478,10 +479,12 @@ Record of completed reviews (newest first).
 
 ### Changelog
 
-### Unreleased — Phase 7 on `main` (2026-07-22)
+### Unreleased — Phase 7–8 on `main` (2026-07-22)
+- Phase 8: tutorials (`docs/tutorials/`), full CLI reference (`docs/CLI.md`), slim README; docs shipped in npm tarball; consistent `[default: …]` in `--help` / CLI.md
+- `branch update` to move an existing tip; `branch create` refuses to overwrite
 - Phase 7: v1/v2 `.webgmex` detect; history-preserving save for repository packages; `--branch` on session/plugin; `history` / `branch` / `tag` / `session checkout`
 - Fixture: `test/fixtures/repository/StateMachine.webgmex`; catalog StateMachine seed meta fix (Machine contains Variable*)
-- Planned **Phase 8** docs (tutorials + CLI reference) before MetaLang (**Phase 9**)
+- Next product work: **Phase 6** libraries (can interleave); **Phase 9** MetaLang authoring later
 - Package version still **0.7.0** until the next npm release cut
 
 ### 0.7.0 (2026-07-17) — merged to `main`
@@ -492,9 +495,7 @@ Record of completed reviews (newest first).
 - F30 REPL remains optional / not shipped
 
 ### Planning (2026-07-22) — not yet released
-- **Phase 7** (next): repository exchange v2 / history — F36–F41; v1 overwrite vs v2 commit-on-save; `--branch` on open/run; `history log` + branch/tag CLI
-- **Phase 6** libraries remain after Phase 7
-- **Phase 8** documentation: tutorials + full CLI reference (F45–F47); before MetaLang
+- **Phase 6** libraries (F31–F35) — next product milestone on `main` after Phase 8
 - **Phase 9** MetaLang authoring (F16d, F42–F43) with package extract **F44** last
 
 ### 0.6.1 (2026-07-17) — merged to `main`

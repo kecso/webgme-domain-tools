@@ -2,11 +2,13 @@
 
 Flag-level detail matches `webdot <command> --help`. Prefer that for the live surface; this page is the durable overview.
 
+Optional flags and arguments that have a fallback are marked with **`[default: …]`** (same wording as `--help`).
+
 Global option (all commands):
 
 | Flag | Meaning |
 |------|---------|
-| `-C, --cwd <dir>` | WebGME project root (`webgme-setup.json`). Default: process cwd. An open **session** supplies project scope when `-C` is omitted. |
+| `-C, --cwd <dir>` | WebGME project root (`webgme-setup.json`) `[default: cwd]`. An open **session** supplies project scope when `-C` is omitted. |
 | `-V, --version` | Package version |
 | `-h, --help` | Help for this command |
 
@@ -24,12 +26,12 @@ webdot tree [options] [scope]
 
 | Argument / option | Description |
 |-------------------|-------------|
-| `[scope]` | `repo` or `seed`. Default: session model when a session is open, else `repo`. |
-| `--seed [name]` | Seed model tree (defaults to open session project) |
-| `--kind <kinds>` | Repo: `seeds,plugins,visualizers,routers` (comma-separated) |
-| `--format <fmt>` | Repo: `tree` \| `flat` \| `json`. Seed: `tree` \| `tree-verbose` \| `flat` \| `json` |
-| `--at <path>` | Seed: subtree root (e.g. `/1`) |
-| `--nodes <paths>` | Seed: only these comma-separated node paths |
+| `[scope]` | `repo` or `seed` `[default: session model when a session is open, else repo]` |
+| `--seed [name]` | Seed model tree `[default: open session project]` |
+| `--kind <kinds>` | Repo: `seeds,plugins,visualizers,routers` (comma-separated) `[default: all kinds]` |
+| `--format <fmt>` | Repo: `tree` \| `flat` \| `json`. Seed: `tree` \| `tree-verbose` \| `flat` \| `json` `[default: tree]` |
+| `--at <path>` | Seed: subtree root (e.g. `/1`) `[default: /]` |
+| `--nodes <paths>` | Seed: only these comma-separated node paths `[default: all nodes under --at]` |
 
 ```bash
 webdot tree repo -C /path/to/studio
@@ -49,8 +51,8 @@ webdot seed meta [options]
 
 | Option | Description |
 |--------|-------------|
-| `--seed [name]` | Seed name (or open session) |
-| `--format <fmt>` | `json` (IR) \| `tree` \| `tree-verbose` \| `descriptor` \| `metalang` (default `json`) |
+| `--seed [name]` | Seed name `[default: open session project]` |
+| `--format <fmt>` | `json` (IR) \| `tree` \| `tree-verbose` \| `descriptor` \| `metalang` `[default: json]` |
 
 Specs: [docs/meta/](meta/README.md).
 
@@ -68,7 +70,7 @@ Compact catalog listing.
 webdot ls [kind]
 ```
 
-`kind`: `seeds` \| `plugins` \| `visualizers` \| `routers` \| `all` (default).
+`kind`: `seeds` \| `plugins` \| `visualizers` \| `routers` \| `all` `[default: all]`.
 
 ---
 
@@ -84,11 +86,11 @@ Install into the user registry (`~/.webdot` or `$WEBDOT_HOME`).
 
 | Option | Description |
 |--------|-------------|
-| `--as <name>` | Dictionary name for `run` / `info` |
+| `--as <name>` | Dictionary name for `run` / `info` `[default: plugin folder basename]` |
 | `--subdir <path>` | Plugin folder inside a GitHub clone |
 | `--force` | Replace same name |
 
-`target`: local plugin directory, or `owner/repo[@ref]`.
+`target`: local plugin directory, or `owner/repo[@ref]` (GitHub ref `[default: HEAD]`).
 
 ### `plugin uninstall <name>`
 
@@ -105,14 +107,14 @@ Headless plugin execution.
 | Option | Description |
 |--------|-------------|
 | `--plugin-dir <path>` | Plugin directory (`{dir}/{dir}.js`), relative to shell cwd |
-| `--seed [name]` / `--webgmex <path>` | Project (or open session) |
-| `--branch <name>` | Branch to open (session branch or `master`) |
-| `--at <path>` | Active node (default `/`) |
-| `--select <paths>` | Selection (comma-separated) |
+| `--seed [name]` / `--webgmex <path>` | Project `[default: open session]` |
+| `--branch <name>` | Branch to open `[default: session branch or master]` |
+| `--at <path>` | Active node `[default: / (root)]` |
+| `--select <paths>` | Selection (comma-separated) `[default: (none)]` |
 | `--config-file <path>` | JSON config overrides |
-| `--set <pair...>` | `name=value` overrides (repeatable) |
+| `--set <pair...>` | `name=value` overrides (repeatable; merges over metadata defaults) |
 | `--artifacts-out <dir>` | Write blob artifacts (relative to shell cwd) |
-| `--out <file>` | Write model to this `.webgmex` instead of source |
+| `--out <file>` | Write model to this `.webgmex` `[default: overwrite source / session working copy]` |
 | `--dry-run` | Do not write model back |
 
 **Name resolution:** `--plugin-dir` → project catalog → installed registry.
@@ -131,10 +133,10 @@ Stateful workspace: `.webdot/session.json` + working `.webgmex` copy.
 
 | Command | Description |
 |---------|-------------|
-| `session open` | `--seed` or `--webgmex`; optional `--branch`, `--force` |
+| `session open` | `--seed` or `--webgmex`; optional `--branch` `[default: master / package default]`, `--force` |
 | `session status` | Show open session (execution dir) |
 | `session checkout <branch>` | Switch session branch |
-| `session save` | Write working copy to save target (`--out` optional) |
+| `session save` | Write working copy `[default: session save target]`; `--out` redirects |
 | `session discard` | Reset working copy from source |
 | `session close` | Remove workspace (`--discard` if dirty) |
 
@@ -150,8 +152,8 @@ webdot session save
 
 | Command | Description |
 |---------|-------------|
-| `history log` | Commits for a branch (`--seed` / `--webgmex`, `--branch`, `--limit`) |
-| `history show <commit>` | One commit by hash (`#` optional) |
+| `history log` | Commits for a branch (`--seed` / `--webgmex` `[default: open session]`, `--branch` `[default: session branch or master]`, `--limit` `[default: 50]`) |
+| `history show <commit>` | One commit by hash (`#` optional); `--branch` `[default: session branch or master]` |
 
 ---
 
@@ -162,9 +164,11 @@ Branch names must match `[0-9a-zA-Z_]+`.
 | Command | Description |
 |---------|-------------|
 | `branch list` | Names + head hashes |
-| `branch create <name>` | New name only (errors if it already exists); `--from` branch or commit; upgrades v1 → v2 when needed |
-| `branch update <name>` | Move an existing tip to `--from` (or current head); use this to overwrite a branch pointer |
+| `branch create <name>` | New name only (errors if it already exists); `--from` `[default: current head]`; upgrades v1 → v2 when needed |
+| `branch update <name>` | Move an existing tip to `--from` `[default: current head]`; use this to overwrite a branch pointer |
 | `branch delete <name>` | Drop branch pointer (not the current branch) |
+
+Project source for these commands: `--seed` / `--webgmex` `[default: open session]`.
 
 ---
 
@@ -175,8 +179,10 @@ Tag names must match `[0-9a-zA-Z_]+`.
 | Command | Description |
 |---------|-------------|
 | `tag list` | Tag → commit |
-| `tag create <name>` | Optional `--commit`; default current head |
+| `tag create <name>` | `--commit` `[default: current branch head]` |
 | `tag delete <name>` | Remove tag |
+
+Project source: `--seed` / `--webgmex` `[default: open session]`.
 
 ---
 

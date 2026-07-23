@@ -130,12 +130,30 @@ Docs (tutorials + full flag reference): see the package README and docs/
   program
     .command("tree")
     .description("Repository or seed model tree")
-    .argument("[scope]", "repo or seed (defaults to the session model when a session is open, else repo)")
-    .option("--seed [name]", "Load seed model tree (defaults to open session project)")
-    .option("--kind <kinds>", "Repo scope: seeds,plugins,visualizers,routers (comma-separated)")
-    .option("--format <fmt>", "repo: tree|flat|json — seed: tree|tree-verbose|flat|json", "tree")
-    .option("--at <path>", "Seed scope: subtree root path (e.g. /1)")
-    .option("--nodes <paths>", "Seed scope: list only these comma-separated node paths")
+    .argument(
+      "[scope]",
+      "repo or seed [default: session model when a session is open, else repo]",
+    )
+    .option(
+      "--seed [name]",
+      "Load seed model tree [default: open session project]",
+    )
+    .option(
+      "--kind <kinds>",
+      "Repo scope: seeds,plugins,visualizers,routers (comma-separated) [default: all kinds]",
+    )
+    .option(
+      "--format <fmt>",
+      "repo: tree|flat|json — seed: tree|tree-verbose|flat|json [default: tree]",
+    )
+    .option(
+      "--at <path>",
+      "Seed scope: subtree root (e.g. /1) [default: /]",
+    )
+    .option(
+      "--nodes <paths>",
+      "Seed scope: list only these comma-separated node paths [default: all nodes under --at]",
+    )
     .action((scope: string | undefined, opts: {
       seed?: string;
       kind?: string;
@@ -184,8 +202,11 @@ Docs (tutorials + full flag reference): see the package README and docs/
     .description("Seed model introspection")
     .command("meta")
     .description("MetaAspectSet IR from a file-project seed")
-    .option("--seed [name]", "Seed name (defaults to open session project)")
-    .option("--format <fmt>", "json | tree | tree-verbose | descriptor | metalang", "json")
+    .option("--seed [name]", "Seed name [default: open session project]")
+    .option(
+      "--format <fmt>",
+      "json | tree | tree-verbose | descriptor | metalang [default: json]",
+    )
     .action((opts: { seed?: string | boolean; format?: string }, cmd) => {
       const sessionCwd = executionCwd();
       if (opts.seed === undefined && !readSessionState(sessionCwd)) {
@@ -205,8 +226,8 @@ Docs (tutorials + full flag reference): see the package README and docs/
   program
     .command("ls")
     .description("List components from webgme-setup.json")
-    .argument("[kind]", "seeds | plugins | visualizers | routers | all", "all")
-    .action((kind: string, _opts, cmd) => {
+    .argument("[kind]", "seeds | plugins | visualizers | routers | all [default: all]")
+    .action((kind: string | undefined, _opts, cmd) => {
       try {
         const cwd = projectCwdFor(cmd, executionCwd());
         console.log(runLsCommand(cwd, kind));
@@ -240,8 +261,11 @@ Docs (tutorials + full flag reference): see the package README and docs/
   pluginCmd
     .command("install")
     .description("Install a plugin into the user registry (local path or GitHub owner/repo)")
-    .argument("<target>", "Plugin directory, or owner/repo[@ref]")
-    .option("--as <name>", "Dictionary name for plugin run / info (default: folder basename)")
+    .argument("<target>", "Plugin directory, or owner/repo[@ref] (GitHub ref [default: HEAD])")
+    .option(
+      "--as <name>",
+      "Dictionary name for plugin run / info [default: plugin folder basename]",
+    )
     .option("--subdir <path>", "Subdirectory inside a GitHub clone that contains the plugin")
     .option("--force", "Replace an existing install with the same name")
     .action((target: string, opts: { as?: string; subdir?: string; force?: boolean }) => {
@@ -300,8 +324,8 @@ Docs (tutorials + full flag reference): see the package README and docs/
     )
     .argument("[name]", "Catalog or installed plugin name (or use --plugin-dir)")
     .option("--plugin-dir <path>", "Plugin directory ({dir}/{dir}.js) relative to cwd; bypasses catalog")
-    .option("--seed [name]", "Project: seed name (defaults to open session)")
-    .option("--webgmex <path>", "Project: direct .webgmex path (or use --seed)")
+    .option("--seed [name]", "Project: seed name [default: open session]")
+    .option("--webgmex <path>", "Project: direct .webgmex path (or use --seed / open session)")
     .option(
       "--at <path>",
       "Active (main) node path [default: " + DEFAULT_PLUGIN_ACTIVE_NODE_LABEL + "]",
@@ -311,20 +335,27 @@ Docs (tutorials + full flag reference): see the package README and docs/
       "Selected node paths, comma-separated [default: " + DEFAULT_PLUGIN_SELECTION_LABEL + "]",
     )
     .option("--config-file <path>", "Plugin config overrides (JSON object)")
-    .option("--set <pair...>", "Plugin config override name=value (repeatable; merges over defaults)")
+    .option("--set <pair...>", "Plugin config override name=value (repeatable; merges over metadata defaults)")
     .option("--artifacts-out <dir>", "Directory (relative to shell cwd) for blob artifacts")
-    .option("--out <file>", "Write resulting model to this .webgmex instead of the source")
+    .option(
+      "--out <file>",
+      "Write resulting model to this .webgmex [default: overwrite source / session working copy]",
+    )
     .option("--dry-run", "Run without writing model changes back to disk")
-    .option("--branch <name>", "Branch to open (defaults to session branch or master)")
+    .option(
+      "--branch <name>",
+      "Branch to open [default: session branch or master]",
+    )
     .addHelpText(
       "after",
       `
 Plugin context (what the plugin receives):
-  project     --seed <name>  or  --webgmex <path>  (or open session)
+  project     --seed <name>  or  --webgmex <path>  [default: open session]
   branch      --branch <name> [default: session branch or master]
   active node --at <path>     [default: ${DEFAULT_PLUGIN_ACTIVE_NODE_LABEL}]
   selection   --select <paths> [default: ${DEFAULT_PLUGIN_SELECTION_LABEL}]
   config      metadata.json defaults, overridden by --config-file and --set
+  write-back  --out <file>    [default: overwrite source / session working copy]
 
 Name resolution: --plugin-dir → project catalog → installed registry (WEBDOT_HOME/~/.webdot).
 
@@ -399,7 +430,10 @@ until you run session save. Use session open / session status to manage state.
     .description("Open a session: copy model to .webdot/workspace for editing")
     .option("--seed <name>", "Seed from webgme-setup.json")
     .option("--webgmex <path>", "Direct .webgmex path")
-    .option("--branch <name>", "Branch to check out (default: master / package default)")
+    .option(
+      "--branch <name>",
+      "Branch to check out [default: master / package default]",
+    )
     .option("--force", "Replace an existing session")
     .action((opts: { seed?: string; webgmex?: string; branch?: string; force?: boolean }, cmd) => {
       const sessionCwd = executionCwd();
@@ -438,8 +472,11 @@ until you run session save. Use session open / session status to manage state.
 
   sessionCmd
     .command("save")
-    .description("Write working copy to save target (original source by default)")
-    .option("--out <file>", "Save to this .webgmex instead of the session save target")
+    .description("Write working copy to save target")
+    .option(
+      "--out <file>",
+      "Save to this .webgmex [default: session save target / original source]",
+    )
     .action((opts: { out?: string }) => {
       void runCli(() => Promise.resolve(runSessionSaveCommand({ cwd: executionCwd(), out: opts.out })));
     });
@@ -464,10 +501,10 @@ until you run session save. Use session open / session status to manage state.
   historyCmd
     .command("log")
     .description("List commits for a branch (newest first)")
-    .option("--seed [name]", "Seed name (or open session)")
-    .option("--webgmex <path>", "Direct .webgmex path")
-    .option("--branch <name>", "Branch to list (default: session / master)")
-    .option("--limit <n>", "Max commits", "50")
+    .option("--seed [name]", "Seed name [default: open session]")
+    .option("--webgmex <path>", "Direct .webgmex path (or use --seed / open session)")
+    .option("--branch <name>", "Branch to list [default: session branch or master]")
+    .option("--limit <n>", "Max commits [default: 50]")
     .action((opts: { seed?: string | boolean; webgmex?: string; branch?: string; limit?: string }, cmd) => {
       const sessionCwd = executionCwd();
       if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
@@ -490,9 +527,12 @@ until you run session save. Use session open / session status to manage state.
     .command("show")
     .description("Show one commit by hash")
     .argument("<commit>", "Commit hash (with or without #)")
-    .option("--seed [name]", "Seed name (or open session)")
-    .option("--webgmex <path>", "Direct .webgmex path")
-    .option("--branch <name>", "Branch used when opening the package")
+    .option("--seed [name]", "Seed name [default: open session]")
+    .option("--webgmex <path>", "Direct .webgmex path (or use --seed / open session)")
+    .option(
+      "--branch <name>",
+      "Branch used when opening the package [default: session branch or master]",
+    )
     .action((commit: string, opts: { seed?: string | boolean; webgmex?: string; branch?: string }, cmd) => {
       const sessionCwd = executionCwd();
       if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
@@ -516,8 +556,8 @@ until you run session save. Use session open / session status to manage state.
   branchCmd
     .command("list")
     .description("List branches and head commit hashes")
-    .option("--seed [name]", "Seed name (or open session)")
-    .option("--webgmex <path>", "Direct .webgmex path")
+    .option("--seed [name]", "Seed name [default: open session]")
+    .option("--webgmex <path>", "Direct .webgmex path (or use --seed / open session)")
     .action((opts: { seed?: string | boolean; webgmex?: string }, cmd) => {
       const sessionCwd = executionCwd();
       if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
@@ -540,9 +580,9 @@ until you run session save. Use session open / session status to manage state.
       "Create a new branch (name: [0-9a-zA-Z_]+; does not overwrite an existing name — use branch update; upgrades snapshot packages to repository format)",
     )
     .argument("<name>", "New branch name (must not already exist)")
-    .option("--from <ref>", "Source branch name or commit hash (default: current head)")
-    .option("--seed [name]", "Seed name (or open session)")
-    .option("--webgmex <path>", "Direct .webgmex path")
+    .option("--from <ref>", "Source branch name or commit hash [default: current head]")
+    .option("--seed [name]", "Seed name [default: open session]")
+    .option("--webgmex <path>", "Direct .webgmex path (or use --seed / open session)")
     .action((name: string, opts: { from?: string; seed?: string | boolean; webgmex?: string }, cmd) => {
       const sessionCwd = executionCwd();
       if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
@@ -565,9 +605,9 @@ until you run session save. Use session open / session status to manage state.
     .command("update")
     .description("Move an existing branch tip to --from (or the current head); create does not overwrite")
     .argument("<name>", "Existing branch name")
-    .option("--from <ref>", "Target branch name or commit hash (default: current head)")
-    .option("--seed [name]", "Seed name (or open session)")
-    .option("--webgmex <path>", "Direct .webgmex path")
+    .option("--from <ref>", "Target branch name or commit hash [default: current head]")
+    .option("--seed [name]", "Seed name [default: open session]")
+    .option("--webgmex <path>", "Direct .webgmex path (or use --seed / open session)")
     .action((name: string, opts: { from?: string; seed?: string | boolean; webgmex?: string }, cmd) => {
       const sessionCwd = executionCwd();
       if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
@@ -590,8 +630,8 @@ until you run session save. Use session open / session status to manage state.
     .command("delete")
     .description("Delete a branch pointer")
     .argument("<name>", "Branch name")
-    .option("--seed [name]", "Seed name (or open session)")
-    .option("--webgmex <path>", "Direct .webgmex path")
+    .option("--seed [name]", "Seed name [default: open session]")
+    .option("--webgmex <path>", "Direct .webgmex path (or use --seed / open session)")
     .action((name: string, opts: { seed?: string | boolean; webgmex?: string }, cmd) => {
       const sessionCwd = executionCwd();
       if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
@@ -614,8 +654,8 @@ until you run session save. Use session open / session status to manage state.
   tagCmd
     .command("list")
     .description("List tags")
-    .option("--seed [name]", "Seed name (or open session)")
-    .option("--webgmex <path>", "Direct .webgmex path")
+    .option("--seed [name]", "Seed name [default: open session]")
+    .option("--webgmex <path>", "Direct .webgmex path (or use --seed / open session)")
     .action((opts: { seed?: string | boolean; webgmex?: string }, cmd) => {
       const sessionCwd = executionCwd();
       if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
@@ -634,11 +674,11 @@ until you run session save. Use session open / session status to manage state.
 
   tagCmd
     .command("create")
-    .description("Create a tag at a commit (name: [0-9a-zA-Z_]+; default: current branch head)")
+    .description("Create a tag at a commit (name: [0-9a-zA-Z_]+)")
     .argument("<name>", "Tag name")
-    .option("--commit <hash>", "Commit hash")
-    .option("--seed [name]", "Seed name (or open session)")
-    .option("--webgmex <path>", "Direct .webgmex path")
+    .option("--commit <hash>", "Commit hash [default: current branch head]")
+    .option("--seed [name]", "Seed name [default: open session]")
+    .option("--webgmex <path>", "Direct .webgmex path (or use --seed / open session)")
     .action((name: string, opts: { commit?: string; seed?: string | boolean; webgmex?: string }, cmd) => {
       const sessionCwd = executionCwd();
       if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
@@ -661,8 +701,8 @@ until you run session save. Use session open / session status to manage state.
     .command("delete")
     .description("Delete a tag")
     .argument("<name>", "Tag name")
-    .option("--seed [name]", "Seed name (or open session)")
-    .option("--webgmex <path>", "Direct .webgmex path")
+    .option("--seed [name]", "Seed name [default: open session]")
+    .option("--webgmex <path>", "Direct .webgmex path (or use --seed / open session)")
     .action((name: string, opts: { seed?: string | boolean; webgmex?: string }, cmd) => {
       const sessionCwd = executionCwd();
       if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
