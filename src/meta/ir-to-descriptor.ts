@@ -1,7 +1,7 @@
 import type { MetaAspectNodeIr, SeedMetaIr } from "../introspection/seed-meta.js";
 import type { GmeCore, GmeNode } from "../session/gme-runtime.js";
 import type { LoadedSeedContext } from "../session/project-session.js";
-import { cardinalityFromMinMax } from "./cardinality.js";
+import { cardinalityFromMinMax, getMemberGlobal, getMemberMap } from "webgme-metalang";
 import type {
   AttributeDef,
   ConceptBody,
@@ -9,8 +9,7 @@ import type {
   MembersMap,
   MetaDescriptor,
   TypeRef,
-} from "./types.js";
-import { isStructuredMemberRule } from "./types.js";
+} from "webgme-metalang";
 
 const SYSTEM_CONCEPTS = new Set(["FCO", "META"]);
 
@@ -205,10 +204,4 @@ export function irToDescriptor(ir: SeedMetaIr, context: LoadedSeedContext): Meta
   return { version: 1, concepts };
 }
 
-export function getMemberMap(rule: MemberRule): MembersMap {
-  return isStructuredMemberRule(rule) ? rule.members : rule;
-}
-
-export function getMemberGlobal(rule: MemberRule): string | undefined {
-  return isStructuredMemberRule(rule) ? rule.global : undefined;
-}
+export { getMemberMap, getMemberGlobal };

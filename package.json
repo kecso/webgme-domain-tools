@@ -48,7 +48,8 @@
   },
   "dependencies": {
     "commander": "^13.1.0",
-    "webgme-engine": "2.32.0"
+    "webgme-engine": "2.32.0",
+    "webgme-metalang": "github:kecso/webgme-metalang#main"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",

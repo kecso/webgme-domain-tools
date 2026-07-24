@@ -39,14 +39,14 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 9 — Extract `webgme-metalang` (F44)** — `pending` (next)
+**Phase 9 — Extract `webgme-metalang` (F44)** — `in progress` (branch `feature/F44-webgme-metalang`)
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F44 | Extract `webgme-metalang` package | `pending` | Move grammar, translate, Langium/LSP; webdot depends on the package |
-| F43 | Langium LSP | `deferred` → F44 package | Ships with extract, not webdot CLI |
+| F44 | Extract `webgme-metalang` package | `in progress` | Repo [kecso/webgme-metalang](https://github.com/kecso/webgme-metalang) M0 core; webdot depends via `github:kecso/webgme-metalang` |
+| F43 | Langium LSP | `deferred` → metalang M3 | Tracked in metalang [`docs/PROJECT.md`](https://github.com/kecso/webgme-metalang/blob/main/docs/PROJECT.md) |
 
-**Review gate:** Package boundary + in-repo webdot dependency; LSP not required for first extract cut if deferred inside the package.
+**Review gate:** webdot `npm test` · metalang `npm test` · ImportMetaLang still in webdot (plugins not moved)
 
 **Phase 9 — MetaLang authoring** — `done` (merged to `main` 2026-07-24, branch `feature/phase9-metalang`)
 
@@ -421,7 +421,7 @@ webdot library remove Domain --webgmex ./Host.webgmex
 | F42 | ImportMetaLang plugin | `done` | **Create-only**; `importMetaLangToWebgmex` + `plugins/ImportMetaLang`; GUI-like `addLibrary` |
 | F49 | Textual libraries (multi-domain + `library` directive) | `done` | Domains are scopes; host = last `domain`; unused domains ignored; `library Dom [as Alias]`; file import; canonical emit |
 | F43 | Langium language server | `deferred` → **F44 package** | LSP ships with `webgme-metalang`, not webdot CLI |
-| F44 | Extract `webgme-metalang` package | `pending` | **Next** — move grammar, translate, **Langium/LSP**; webdot depends on the package |
+| F44 | Extract `webgme-metalang` package | `in progress` | **M0** on [webgme-metalang](https://github.com/kecso/webgme-metalang): parse/emit/types; LSP/VS Code = metalang M3–M4; plugins stay in webdot |
 
 **Phase 9 — Scenario (boiled down)**
 

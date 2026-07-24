@@ -54,9 +54,9 @@ Descriptor JSON lists the same pointers — no separate connection block. Domain
 
 | Stage | Approach |
 |-------|----------|
-| Now | Hand-rolled `metalang → descriptor` parser (`src/meta/metalang-to-descriptor.ts`); canonical emit uses `library` blocks |
-| Now | `ImportMetaLang` plugin / `importMetaLangToWebgmex` — create-only `.webgmex` (GUI-like `addLibrary` for libraries) |
-| Extract (F44) | Langium grammar + LSP in `webgme-metalang` package |
+| Now | Hand-rolled parser in [`webgme-metalang`](https://github.com/kecso/webgme-metalang); webdot re-exports; canonical emit uses `library` directives |
+| Now | `ImportMetaLang` plugin / `importMetaLangToWebgmex` — create-only `.webgmex` (GUI-like `addLibrary` for libraries); **stays in webdot** for now |
+| Next (metalang M2–M4) | Langium grammar + LSP + VS Code extension packaging |
 
 ## Libraries in MetaLang
 
