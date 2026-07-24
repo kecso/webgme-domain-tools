@@ -8,8 +8,10 @@ import { irToDescriptor } from "../dist/meta/ir-to-descriptor.js";
 import { descriptorToMetalang } from "../dist/meta/descriptor-to-metalang.js";
 import {
   cardinalityFromMinMax,
+  cardinalityToMinMax,
   formatGlobalCardinality,
   formatMemberCardinality,
+  parseCardinalityToken,
 } from "../dist/meta/cardinality.js";
 import { parseSeedMetaFormat, runSeedMetaCommand } from "../dist/commands/seed.js";
 import {
@@ -62,6 +64,30 @@ test("formatGlobalCardinality for bracket syntax", () => {
   assert.equal(formatGlobalCardinality("0..1"), "0..1");
   assert.equal(formatGlobalCardinality("?"), "0..1");
   assert.equal(formatGlobalCardinality("0..100"), "0..100");
+});
+
+test("parseCardinalityToken accepts MetaLang suffixes and tokens", () => {
+  assert.equal(parseCardinalityToken("*"), "*");
+  assert.equal(parseCardinalityToken("+"), "+");
+  assert.equal(parseCardinalityToken("?"), "0..1");
+  assert.equal(parseCardinalityToken("3"), "3");
+  assert.equal(parseCardinalityToken("2..5"), "2..5");
+  assert.equal(parseCardinalityToken("0..*"), "*");
+  assert.equal(parseCardinalityToken("1..*"), "+");
+  assert.equal(parseCardinalityToken("2..*"), "2..*");
+  assert.throws(() => parseCardinalityToken("nope"), /Invalid cardinality/);
+});
+
+test("cardinalityToMinMax maps descriptor cards to core limits", () => {
+  assert.deepEqual(cardinalityToMinMax(undefined), { min: 0, max: -1 });
+  assert.deepEqual(cardinalityToMinMax("*"), { min: 0, max: -1 });
+  assert.deepEqual(cardinalityToMinMax("+"), { min: 1, max: -1 });
+  assert.deepEqual(cardinalityToMinMax("?"), { min: 0, max: 1 });
+  assert.deepEqual(cardinalityToMinMax("0..1"), { min: 0, max: 1 });
+  assert.deepEqual(cardinalityToMinMax("3"), { min: 3, max: 3 });
+  assert.deepEqual(cardinalityToMinMax("2..5"), { min: 2, max: 5 });
+  assert.deepEqual(cardinalityToMinMax("2..*"), { min: 2, max: -1 });
+  assert.throws(() => cardinalityToMinMax("nope"), /Unsupported cardinality/);
 });
 
 test("parseSeedMetaFormat accepts all meta output formats", () => {

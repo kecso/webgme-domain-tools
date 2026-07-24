@@ -4,11 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { importMetaLangToWebgmex } from "../dist/meta/import-metalang.js";
+import { importMetaLangToWebgmex, materializeMetalangOnContext, defaultMetaTemplatePath } from "../dist/meta/import-metalang.js";
 import { buildSeedMetaIr } from "../dist/introspection/seed-meta.js";
 import { irToDescriptor } from "../dist/meta/ir-to-descriptor.js";
 import { descriptorToMetalang } from "../dist/meta/descriptor-to-metalang.js";
 import { parseMetalang } from "../dist/meta/metalang-to-descriptor.js";
+import { loadGmeConfigForProject } from "../dist/session/gme-runtime.js";
 import {
   closeProjectSession,
   openProjectSession,
@@ -107,6 +108,142 @@ library SharedMeta {
       assert.ok(descriptor.concepts["SharedMeta.State"]);
       const roundTrip = parseMetalang(descriptorToMetalang(descriptor, "Host"));
       assert.ok(roundTrip.descriptor.concepts["SharedMeta.State"]);
+    } finally {
+      await closeProjectSession();
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("importMetaLangToWebgmex rejects non-webgmex out path", async () => {
+  await assert.rejects(
+    () =>
+      importMetaLangToWebgmex({
+        file: path.join(docsExamples, "state-machine.metalang"),
+        out: "not-a-webgmex.json",
+        templateWebgmex: path.join(
+          fixture,
+          "src",
+          "seeds",
+          "StateModel",
+          "StateModel.webgmex",
+        ),
+      }),
+    /\.webgmex/,
+  );
+});
+
+test("defaultMetaTemplatePath points at bundled StateModel seed", () => {
+  assert.match(defaultMetaTemplatePath(), /StateModel\.webgmex$/);
+  assert.ok(fs.existsSync(defaultMetaTemplatePath()));
+});
+
+test("materializeMetalangOnContext applies host-only metalang onto open session", async () => {
+  const template = path.join(fixture, "src", "seeds", "StateModel", "StateModel.webgmex");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-materialize-"));
+  try {
+    const work = path.join(dir, "Work.webgmex");
+    fs.copyFileSync(template, work);
+    const ctx = await openProjectSession({
+      cwd: fixture,
+      webgmexPath: work,
+      seedName: "Work",
+    });
+    try {
+      const parsed = parseMetalang(`
+domain Tiny
+concept Event;
+concept Machine {
+  description: string;
+  contains Event+;
+  set tags[0..10] -> Event*;
+}
+`);
+      const attached = await materializeMetalangOnContext(ctx, parsed, {
+        cwd: dir,
+        templateWebgmex: template,
+        gmeConfig: loadGmeConfigForProject(fixture),
+      });
+      assert.deepEqual(attached, []);
+      const ir = buildSeedMetaIr(ctx);
+      const names = ir.metaAspectSet.map((n) => n.name);
+      assert.ok(names.includes("Event"));
+      assert.ok(names.includes("Machine"));
+    } finally {
+      await closeProjectSession();
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("materializeMetalangOnContext attaches library onto open host session", async () => {
+  const template = path.join(fixture, "src", "seeds", "StateModel", "StateModel.webgmex");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-materialize-lib-"));
+  try {
+    const work = path.join(dir, "Work.webgmex");
+    fs.copyFileSync(template, work);
+    const ctx = await openProjectSession({
+      cwd: fixture,
+      webgmexPath: work,
+      seedName: "Work",
+    });
+    try {
+      const parsed = parseMetalang(`
+domain Host
+concept Machine { contains SharedMeta.State*; }
+library SharedMeta { concept State { isInitial: bool; } }
+`);
+      const attached = await materializeMetalangOnContext(ctx, parsed, {
+        cwd: dir,
+        templateWebgmex: template,
+        gmeConfig: loadGmeConfigForProject(fixture),
+      });
+      assert.deepEqual(attached, ["SharedMeta"]);
+      const ir = buildSeedMetaIr(ctx);
+      assert.deepEqual(ir.libraries, ["SharedMeta"]);
+    } finally {
+      await closeProjectSession();
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("importMetaLangToWebgmex applies set + global cardinality", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-import-card-"));
+  try {
+    const mlPath = path.join(dir, "Card.metalang");
+    fs.writeFileSync(
+      mlPath,
+      `
+domain CardTest
+concept Pin;
+concept Port {
+  contains[0..5] Pin+;
+  set pins[1..10] -> Pin*;
+}
+`,
+    );
+    const out = path.join(dir, "Card.webgmex");
+    await importMetaLangToWebgmex({
+      cwd: dir,
+      file: mlPath,
+      out,
+      templateWebgmex: path.join(
+        fixture,
+        "src",
+        "seeds",
+        "StateModel",
+        "StateModel.webgmex",
+      ),
+    });
+    const ctx = await openProjectSession({ cwd: fixture, webgmexPath: out, seedName: "Card" });
+    try {
+      const descriptor = irToDescriptor(buildSeedMetaIr(ctx), ctx);
+      assert.ok(descriptor.concepts.Port.contains);
+      assert.ok(descriptor.concepts.Port.sets.pins);
     } finally {
       await closeProjectSession();
     }
