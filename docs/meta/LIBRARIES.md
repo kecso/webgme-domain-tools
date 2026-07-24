@@ -102,16 +102,21 @@ Today, attaching a library in the GUI/engine roughly **imports another project�
 
 ### MetaLang ↔ libraries (authoring surface)
 
-Beyond binary `.webgmex` attach, we still need a path for **textual** library definitions (agents / review). Options to support (Phase 6 partial + Phase 9):
+A `.metalang` file may define **multiple domains**. Domains are closed (bare names). Cross-domain use requires a `library` directive on the host domain.
 
-| Path | Idea |
+**Host = last `domain`.** ImportMetaLang / flatten only materializes that domain and the domains it attaches. Extra domains in the file are ignored unless the host has `library` them.
+
+| Form | Idea |
 |------|------|
-| **A. Library as its own `.metalang` + import** | Author `SharedMeta.metalang` (or emit from a library seed); `library add --from …` accepts `.webgmex` **or** a metalang that is compiled to a temp project then attached like GUI add |
-| **B. In-place `library` blocks in host metalang** | Host file may contain `library SharedMeta { concept State { … } }` (or equivalent); ingest attaches/updates that library rather than merging concepts into host-owned meta |
+| **Same file** | `domain SharedMeta` … `domain Host` / `library SharedMeta` |
+| **External file** | `import SharedMeta from "./shared-meta.metalang"` then `library SharedMeta` (or `library SharedMeta from "…"`) |
+| **Rename** | `library SharedMeta as SM` → FQNs use `SM.Concept` |
 
-**Principle:** whichever spelling we allow, materialization still **mimics `addLibrary`** (append under host root/FCO as a named library) — not a second attachment model. Exact grammar for in-place blocks and ImportMetaLang flags land in **Phase 9 (F49)**; Phase 6 only ensures FQN emit does not paint into a corner.
+**Canonical emit:** separate `domain` sections + `library` directives (not nested `library { }` blocks). Inside a library domain, type refs stay bare; host uses FQNs only after attach.
 
-Exact ImportMetaLang UX stays Phase 9; F35 `.webgmex` CRUD ships first. **Do not extract `webgme-metalang` (F44) until F49 is done.**
+**Materialization:** each attached domain → temp `.webgmex` → `addLibrary` under the `as` namespace. Create-only for now.
+
+**Langium / LSP:** deferred to the extracted `webgme-metalang` package (F44).
 
 ## Remaining implementation
 

@@ -61,11 +61,32 @@ export interface GmeCore {
   loadByPath: (root: GmeNode, nodePath: string) => Promise<GmeNode | null>;
   getPath: (node: GmeNode) => string;
   getAttribute: (node: GmeNode, name: string) => unknown;
+  setAttribute?: (node: GmeNode, name: string, value: unknown) => void;
   getMetaType: (node: GmeNode) => GmeNode | null;
   isMetaNode: (node: GmeNode) => boolean;
   getAllMetaNodes: (root: GmeNode) => Record<string, GmeNode>;
   getJsonMeta: (node: GmeNode) => Record<string, unknown>;
   getBase: (node: GmeNode) => GmeNode | null;
+  setBase?: (node: GmeNode, base: GmeNode | null) => void;
+  createNode?: (parameters: {
+    parent: GmeNode;
+    base?: GmeNode | null;
+    relid?: string;
+  }) => GmeNode;
+  deleteNode?: (node: GmeNode) => void;
+  addMember?: (node: GmeNode, name: string, member: GmeNode) => void;
+  delMember?: (node: GmeNode, name: string, memberPath: string) => void;
+  setAttributeMeta?: (node: GmeNode, name: string, value: Record<string, unknown>) => void;
+  setChildMeta?: (node: GmeNode, child: GmeNode, min?: number, max?: number) => void;
+  setChildrenMetaLimits?: (node: GmeNode, min: number, max: number) => void;
+  setPointerMetaTarget?: (
+    node: GmeNode,
+    name: string,
+    target: GmeNode,
+    min?: number,
+    max?: number,
+  ) => void;
+  setPointerMetaLimits?: (node: GmeNode, name: string, min: number, max: number) => void;
   getChildrenRelids: (node: GmeNode) => string[];
   getChild: (node: GmeNode, relid: string) => GmeNode | null;
   persist: (node: GmeNode) => { rootHash: string; objects: unknown };

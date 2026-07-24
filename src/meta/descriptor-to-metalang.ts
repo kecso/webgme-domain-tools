@@ -1,5 +1,6 @@
 import { formatGlobalCardinality, formatMemberCardinality } from "./cardinality.js";
 import { getMemberGlobal, getMemberMap } from "./ir-to-descriptor.js";
+import { bareInDomainRefs } from "./metalang-to-descriptor.js";
 import type { AttributeDef, ConceptBody, MemberRule, MetaDescriptor, TypeRef } from "./types.js";
 
 function formatTypeRef(ref: TypeRef): string {
@@ -66,25 +67,71 @@ function renderConceptBody(body: ConceptBody): string[] {
   return lines;
 }
 
-function renderConcept(name: string, body: ConceptBody): string[] {
+function renderConcept(displayName: string, body: ConceptBody): string[] {
   const members = renderConceptBody(body);
   if (members.length === 0) {
     if (body.extends) {
-      return [`concept ${name} extends ${body.extends};`];
+      return [`concept ${displayName} extends ${body.extends};`];
     }
-    return [`concept ${name};`];
+    return [`concept ${displayName};`];
   }
 
   const head = body.extends
-    ? `concept ${name} extends ${body.extends} {`
-    : `concept ${name} {`;
+    ? `concept ${displayName} extends ${body.extends} {`
+    : `concept ${displayName} {`;
   return [head, ...members, "}"];
 }
 
+function libraryOf(conceptName: string): string | null {
+  const dot = conceptName.indexOf(".");
+  return dot === -1 ? null : conceptName.slice(0, dot);
+}
+
+function bareName(conceptName: string): string {
+  const dot = conceptName.lastIndexOf(".");
+  return dot === -1 ? conceptName : conceptName.slice(dot + 1);
+}
+
+/**
+ * Canonical MetaLang emit: each library is its own `domain` (bare names inside),
+ * then the host `domain` with `library Lib` directives and host concepts (FQN to libs).
+ */
 export function descriptorToMetalang(descriptor: MetaDescriptor, domain: string): string {
-  const lines: string[] = [`domain ${domain}`, ""];
+  const lines: string[] = [];
+
+  const host: Array<[string, ConceptBody]> = [];
+  const byLibrary = new Map<string, Array<[string, ConceptBody]>>();
 
   for (const [name, body] of Object.entries(descriptor.concepts)) {
+    const lib = libraryOf(name);
+    if (!lib) {
+      host.push([name, body]);
+      continue;
+    }
+    const list = byLibrary.get(lib) ?? [];
+    list.push([name, body]);
+    byLibrary.set(lib, list);
+  }
+
+  const libNames = [...byLibrary.keys()].sort((a, b) => a.localeCompare(b));
+  for (const lib of libNames) {
+    lines.push(`domain ${lib}`);
+    lines.push("");
+    for (const [fqn, body] of byLibrary.get(lib)!) {
+      const bareBody = bareInDomainRefs(body, lib);
+      lines.push(...renderConcept(bareName(fqn), bareBody));
+      lines.push("");
+    }
+  }
+
+  lines.push(`domain ${domain}`);
+  lines.push("");
+  for (const lib of libNames) {
+    lines.push(`library ${lib}`);
+  }
+  if (libNames.length > 0) lines.push("");
+
+  for (const [name, body] of host) {
     lines.push(...renderConcept(name, body));
     lines.push("");
   }

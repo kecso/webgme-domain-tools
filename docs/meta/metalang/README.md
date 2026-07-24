@@ -54,9 +54,51 @@ Descriptor JSON lists the same pointers — no separate connection block. Domain
 
 | Stage | Approach |
 |-------|----------|
-| Now | EBNF + hand-written examples; `descriptor → metalang` renderer in F16c |
-| Later | Langium grammar for validation, formatter, LSP (optional dep) |
-| Later | `metalang → descriptor` parser for authoring |
+| Now | Hand-rolled `metalang → descriptor` parser (`src/meta/metalang-to-descriptor.ts`); canonical emit uses `library` blocks |
+| Now | `ImportMetaLang` plugin / `importMetaLangToWebgmex` — create-only `.webgmex` (GUI-like `addLibrary` for libraries) |
+| Extract (F44) | Langium grammar + LSP in `webgme-metalang` package |
+
+## Libraries in MetaLang
+
+A file may define **multiple domains**. Each domain is a closed scope (bare concept names only). Domains do **not** cross-reference until one attaches another as a library.
+
+**Host rule:** the **last** `domain` in the file is the host. Import / materialize uses only that domain plus domains it attaches with `library`. Any other domains in the file (or pulled in via `import`) are **ignored**.
+
+```metalang
+domain UnusedScratch
+concept Scratch;                 // ignored — not attached by Host
+
+domain SharedMeta
+
+concept State {
+  isInitial: bool;
+}
+
+concept Machine {
+  contains State*;            // bare — same domain
+}
+
+domain Host                   // last domain = host
+
+library SharedMeta            // optional: `as Alias` (default namespace = domain name)
+# or: library SharedMeta from "./shared-meta.metalang"
+# or: import SharedMeta from "./shared-meta.metalang"  then  library SharedMeta
+
+concept App {
+  contains SharedMeta.State*; // FQN — only after library attach
+}
+```
+
+| Form | Meaning |
+|------|---------|
+| `library Dom` | Attach domain `Dom` as library namespace `Dom` |
+| `library Dom as Alias` | Attach with namespace `Alias` |
+| `import Dom from "…"` | Load domains from another `.metalang` |
+| `library Dom from "…" [as Alias]` | Sugar: import + attach |
+
+**Canonical emit** for a host+lib seed: library domains first (`domain Lib` + bare concepts), then host `domain` + `library Lib` directives + host concepts (FQNs to libs).
+
+Descriptor JSON stays flat FQNs (`SharedMeta.State`).
 
 ## Examples
 
