@@ -39,21 +39,21 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 6 — Project libraries** — `review` (branch `feature/phase6-libraries`)
+**Phase 9 — MetaLang authoring** — `pending` (**next**; textual libraries **F49** before package extract **F44**)
+
+**Phase 6 — Project libraries** — `done` (merged to `main` 2026-07-24, branch `feature/phase6-libraries`)
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F31 | Library-bearing fixtures | `review` | Synthetic `test/fixtures/libraries/` covers the known pattern (domain package attached as library). Richer multi-lib / DSS-scale scenarios → **future** (B14) |
-| F32 | List / inspect libraries | `review` | `webdot library list --webgmex …` · tree library-roots-first + `[library-root]` |
-| F33 | Descriptor / MetaLang always FQN | `review` | Host bare; library `Lib.Concept` |
-| F34 | GenerateMetaTs FQN / namespaces | `review` | Nested `namespace Lib { … }` |
-| F35 | Library CLI management | `review` | `add` / `update` / `remove` — no session; always persist |
+| F31 | Library-bearing fixtures | `done` | Synthetic `test/fixtures/libraries/` covers the known pattern (domain package attached as library). Richer multi-lib / DSS-scale scenarios → **future** (B14) |
+| F32 | List / inspect libraries | `done` | `webdot library list --webgmex …` (name, path, origin info) · tree library-roots-first + `[library-root]` |
+| F33 | Descriptor / MetaLang always FQN | `done` | Host bare; library `Lib.Concept` |
+| F34 | GenerateMetaTs FQN / namespaces | `done` | Nested `namespace Lib { … }` |
+| F35 | Library CLI management | `done` | `add` / `update` / `remove` — no session; always persist |
 
 **Review gate:** `npm test` · commands in [Phase 6 review checklist](#phase-6--project-libraries) below
 
-**Hard gate:** Phase 9 may start parser/plugin work in-repo, but **`webgme-metalang` package extract (F44) waits until Phase 6 F31–F34 are done** so namespaces/libraries are part of the language surface we ship externally.
-
-**Phase 9 — MetaLang authoring** — `pending` (after Phase 6 library emit; package extract last)
+**Hard gate:** Do **not** extract `webgme-metalang` (**F44**) until Phase 9 authoring + textual library surface (F16d, F42, F49) are proven in-repo. Phase 6 F31–F34 only unlock FQN emit; finishing libraries in MetaLang is Phase 9.
 
 **Phase 8 — Documentation (tutorials & CLI reference)** — `done` (merged to `main` 2026-07-22, PR [#8](https://github.com/kecso/webgme-domain-tools/pull/8))
 
@@ -355,22 +355,22 @@ webdot session save                              # v2 file keeps full graph
 
 ### Phase 6 — Project libraries
 
-**Status:** `pending` (**next product milestone** — Phase 7/8 are done)  
-**Goal:** Treat attached WebGME libraries as first-class in listing/meta emit, and optionally manage them from the CLI.
+**Status:** `done` (merged to `main` 2026-07-24, branch `feature/phase6-libraries`)  
+**Goal:** Treat attached WebGME libraries as first-class in listing/meta emit, and manage them from the CLI (binary `.webgmex` attach). Textual library authoring follows in **Phase 9**.
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F31 | Library-bearing fixtures | `review` | Synthetic host+lib in `test/fixtures/libraries/`. Known real pattern = domain project imported as read-only library into a thin host — same shape as the fixture. Broader real-world scenarios deferred (**B14**) |
-| F32 | List / inspect libraries | `review` | `library list`; `tree --seed` keeps real structure, **library roots first under ROOT** |
-| F33 | Descriptor / MetaLang always FQN | `review` | Library: `Lib.Concept`; **host: bare name** (no host namespace). Canonical — no short/FQN dual spelling |
-| F34 | GenerateMetaTs FQN / namespaces | `review` | Nested `namespace Lib { … }` for library concepts; host interfaces stay top-level |
-| F35 | Library CLI management | `review` | **No session** — `add`/`update`/`remove` always write the target `.webgmex` immediately; same as GUI `addLibrary` |
+| F31 | Library-bearing fixtures | `done` | Synthetic host+lib in `test/fixtures/libraries/`. Known real pattern = domain project imported as read-only library into a thin host — same shape as the fixture. Broader real-world scenarios deferred (**B14**) |
+| F32 | List / inspect libraries | `done` | `library list` (name, path, **origin info**); `tree --seed` keeps real structure, **library roots first under ROOT** |
+| F33 | Descriptor / MetaLang always FQN | `done` | Library: `Lib.Concept`; **host: bare name** (no host namespace). Canonical — no short/FQN dual spelling |
+| F34 | GenerateMetaTs FQN / namespaces | `done` | Nested `namespace Lib { … }` for library concepts; host interfaces stay top-level |
+| F35 | Library CLI management | `done` | **No session** — `add`/`update`/`remove` always write the target `.webgmex` immediately; same as GUI `addLibrary` |
 
 **Phase 6 — Scenario (boiled down)**  
 Primary real usage today: a **domain** `.webgmex` is attached as a library into a (mostly empty) host so the domain meta is effectively read-only. Authors want `webdot` to **list** that attachment, emit **canonical FQN** types, and **add/update/remove** libraries headlessly.
 
 ```bash
-# Introspection (F32–F34)
+# Introspection (F32–F34) — --webgmex needs no project catalog / -C
 webdot library list --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex
 webdot tree --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex --format tree-verbose
 webdot seed meta --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex --format descriptor
@@ -383,17 +383,42 @@ webdot library remove Domain --webgmex ./Host.webgmex
 
 **Phase 6 review checklist (what to look at)**
 
-1. **FQN emit** — `seed meta --format descriptor` / `metalang` on `HostWithSharedMeta.webgmex`: host concepts bare, library concepts `SharedMeta.…`; no dual short/FQN spelling.
+1. **FQN emit** — `seed meta --webgmex … --format descriptor` / `metalang` on `HostWithSharedMeta.webgmex` (no `-C` / catalog needed): host concepts bare, library concepts `SharedMeta.…`; no dual short/FQN spelling.
 2. **TS emit** — GenerateMetaTs (or unit coverage): library types under `namespace SharedMeta`.
-3. **Tree** — library roots appear first under ROOT; verbose shows `[library-root]`.
+3. **Tree** — `tree --webgmex … --format tree-verbose`: library roots first under ROOT; verbose shows `[library-root]`.
 4. **CLI** — `library list` / `add` / `remove` (and optionally `update`) on a **copy** of a host file; confirm it writes immediately and does **not** use session workspace.
 5. **`npm test`** — including `library-command.test.js`.
 
 **Decisions (2026-07-23 / 2026-07-24):** Always-FQN for library types; no host namespace; session-free library CLI; richer library dogfood scenarios are **future (B14)**, not a Phase 6 blocker. Details: [`docs/meta/LIBRARIES.md`](meta/LIBRARIES.md).
 
-**Notes:** F17 IR fields are already in place. Prefer session write-back + Phase 7 history-aware save when library mutations write `.webgmex`.
+**Notes:** F17 IR fields are already in place. Prefer session write-back + Phase 7 history-aware save when library mutations write `.webgmex`. Textual `library` / import surface is **Phase 9 (F49)** — finish that before any package split (**F44**).
 
-**Before Phase 9 extract:** F31–F34 should land so MetaLang/descriptor/GenerateMetaTs already speak FQNs. Do **not** publish a separate `webgme-metalang` package that still keys only by simple names.
+---
+
+### Phase 9 — MetaLang authoring
+
+**Status:** `pending` (**next** after Phase 6; package extract **last**)  
+**Goal:** Close the authoring loop (metalang → descriptor → WebGME meta), finish **textual library features**, optionally add LSP, then extract MetaLang into its own package **only after** libraries are complete in-language.
+
+| ID | Feature | Status | Notes |
+|----|---------|--------|-------|
+| F16d | MetaLang → descriptor parser | `pending` | In-repo first (grammar + RULES already in `docs/meta/metalang/`); round-trip tests |
+| F42 | ImportMetaLang plugin | `pending` | Installable plugin: ingest `.metalang` → build/update meta in a project / `--out` `.webgmex` |
+| F49 | Textual libraries (import / `library` blocks) | `pending` | Complete library story in MetaLang — separate `.metalang` import and/or in-place `library Lib { … }`; materialize like `addLibrary`. **Required before F44** |
+| F43 | Langium language server | `pending` | Diagnostics / completion against grammar; thin editor extension optional |
+| F44 | Extract `webgme-metalang` package | `pending` | **Last** — only after F16d + F42 + F49 (and ideally F43) are proven in-repo; then move grammar, translate, LSP; webdot depends on the package |
+
+**Phase 9 — Scenario (boiled down)**
+
+```bash
+webdot seed meta --webgmex ./HostWithSharedMeta.webgmex --format metalang > host.metalang
+# edit host.metalang (FQNs + library blocks / imports once F49 lands; LSP once F43)
+webdot plugin run ImportMetaLang --set file=./host.metalang --out ./NewHost.webgmex
+```
+
+**Sequencing (2026-07-24):** Phase 6 ships binary library list/emit/CLI. Phase 9 is next so we **complete library features in text** before splitting the repo. Do **not** publish `webgme-metalang` while libraries are still “FQN names only, no import/`library` definition.”
+
+**Notes:** Descriptor/MetaLang remain lossy vs IR (no sheets/mixins/constraints) — ingest creates a **useful** meta project, not a bit-perfect GUI round-trip. Details: [`docs/meta/LIBRARIES.md`](meta/LIBRARIES.md).
 
 ---
 
@@ -429,31 +454,7 @@ webdot session open --seed StateMachine -C /path/to/studio
 webdot history log --webgmex ./repo.webgmex --branch example
 ```
 
-**Notes:** Tutorials + `CLI.md` (+ selected `docs/meta`) ship in the npm tarball so global installs can open them under `node_modules/webgme-domain-tools/docs/`. Does **not** block Phase 6 libraries; should land **before Phase 9 MetaLang**.
-
----
-
-### Phase 9 — MetaLang authoring (draft)
-
-**Status:** `pending` (after Phase 6 library emit for F31–F34; package extract **last**)  
-**Goal:** Close the authoring loop (metalang → descriptor → WebGME meta), optionally add LSP, then extract MetaLang into its own package last.
-
-| ID | Feature | Status | Notes |
-|----|---------|--------|-------|
-| F16d | MetaLang → descriptor parser | `pending` | In-repo first (grammar + RULES already in `docs/meta/metalang/`); round-trip tests |
-| F42 | ImportMetaLang plugin | `pending` | Installable plugin: ingest `.metalang` → build/update meta in a project / `--out` `.webgmex` |
-| F43 | Langium language server | `pending` | Diagnostics / completion against grammar; thin editor extension optional |
-| F44 | Extract `webgme-metalang` package | `pending` | **Last** — blocked on Phase 6 F31–F34; then move grammar, translate, LSP; webdot depends on the package |
-
-**Phase 9 — Scenario (boiled down)**
-
-```bash
-webdot seed meta --seed StateMachine --format metalang > domain.metalang
-# edit domain.metalang (editor LSP once F43 lands)
-webdot plugin run ImportMetaLang --set file=./domain.metalang --out ./NewDomain.webgmex
-```
-
-**Notes:** Descriptor/MetaLang remain lossy vs IR (no sheets/mixins/constraints) — ingest creates a **useful** meta project, not a bit-perfect GUI round-trip. Separation (F44) waits until Phase 6 F31–F34 + authoring/plugin are proven in-repo.
+**Notes:** Tutorials + `CLI.md` (+ selected `docs/meta`) ship in the npm tarball so global installs can open them under `node_modules/webgme-domain-tools/docs/`. Done on `main`; does not block Phase 6/9.
 
 ---
 
@@ -474,7 +475,7 @@ Tasks not tied to a single milestone — pick up anytime.
 | B9 | compatibility | Repository `.webgmex` / history — see **Phase 7** (F36–F41) | — |
 | B10 | product | Phase 5 installable plugins (F26–F29) — done on `main` | — |
 | B11 | product | Phase 6 library CLI management (F35) | medium |
-| B12 | product | Phase 9 MetaLang authoring + package extract (F16d, F42–F44) | low |
+| B12 | product | Phase 9 MetaLang authoring + textual libraries + package extract (F16d, F42, F49, F43, F44) — **next after Phase 6**; F44 last | high |
 | B13 | docs | Phase 8 tutorials + CLI reference (F45–F47) — done on `main` | — |
 | B14 | meta | Expand library dogfood beyond “domain as read-only library” (multi-lib, collisions, nested libs, DSS-scale) — collect real examples later | low |
 
@@ -488,6 +489,7 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
+| 2026-07-24 | Phase 6 (F31–F35) | maintainer | Approved | Library list (with origin info) / FQN emit / nested TS namespaces / session-free library CLI; `--webgmex` added to `seed meta` + `tree`; richer dogfood → B14; textual libraries moved up as Phase 9 F49 before package extract; merged `feature/phase6-libraries` → `main` |
 | 2026-07-22 | Phase 8 (F45–F47) | maintainer | Approved | Tutorials + CLI reference + slim README; `[default: …]` on help/docs; `branch update`; merged PR #8 → `main` |
 | 2026-07-22 | Phase 7 (F36–F41) | maintainer | Approved | Repository exchange v2 / history / branch CLI; fixture + coverage; merged PR #7 → `main`; Phase 8 docs scheduled before MetaLang |
 | 2026-07-17 | Phase 5 (F26–F29) | maintainer | Approved | Installable plugins registry; portable `owner/repo` parse; merged `feature/phase5-installable-plugins` → `main` |
@@ -504,13 +506,27 @@ Record of completed reviews (newest first).
 
 ### Changelog
 
+### Unreleased — Phase 6 on `main` (2026-07-24)
+- Phase 6: `webdot library list` / `add` / `update` / `remove` (always persists the target `.webgmex`, no session)
+- `library list` shows attached name, library root path, and origin info (`projectId`, `commitHash`, library `hash`)
+- Descriptor / MetaLang always use FQNs for library concepts (`Lib.Concept`); host concepts stay bare
+- GenerateMetaTs emits nested `namespace Lib { … }` for library types
+- `tree --format tree-verbose`: library roots first under ROOT, `[library-root]` / `[library]` tags
+- `seed meta` and `tree` accept `--webgmex <path>` — no `webgme-setup.json` / `-C` needed
+- Fixtures: `test/fixtures/libraries/` (host with attached `SharedMeta` + library source package)
+- Roadmap: **Phase 9** next — textual libraries (**F49**) before `webgme-metalang` extract (**F44**)
+
 ### Unreleased — Phase 7–8 on `main` (2026-07-22)
 - Phase 8: tutorials (`docs/tutorials/`), full CLI reference (`docs/CLI.md`), slim README; docs shipped in npm tarball; consistent `[default: …]` in `--help` / CLI.md
 - `branch update` to move an existing tip; `branch create` refuses to overwrite
 - Phase 7: v1/v2 `.webgmex` detect; history-preserving save for repository packages; `--branch` on session/plugin; `history` / `branch` / `tag` / `session checkout`
 - Fixture: `test/fixtures/repository/StateMachine.webgmex`; catalog StateMachine seed meta fix (Machine contains Variable*)
-- Next product work: **Phase 6** libraries (F31–F35); then **Phase 9** MetaLang (extract gated on F31–F34)
+- Next product work: **Phase 9** MetaLang (textual libraries **F49** before package extract **F44**)
 - Package version still **0.7.0** until the next npm release cut
+
+### Planning (2026-07-24) — roadmap
+- **Phase 9** moved up as next after Phase 6: complete library features in MetaLang (F49) **before** splitting out `webgme-metalang` (F44)
+- Phase 6 remains binary list/emit/CLI; Phase 9 owns parser, ImportMetaLang, textual libraries, then extract
 
 ### 0.7.0 (2026-07-17) — merged to `main`
 - Phase 5: installable plugins — `plugin install` / `list` / `uninstall`, user registry under `WEBDOT_HOME` / `~/.webdot`
@@ -518,10 +534,6 @@ Record of completed reviews (newest first).
 - GitHub install: `owner/repo[@ref]` (always GitHub shorthand) with optional `--subdir`; collision requires `--as` or `--force`
 - Draft **Phase 6** (project libraries): F17 emit fine-tuning + library CLI management (F31–F35)
 - F30 REPL remains optional / not shipped
-
-### Planning (2026-07-22) — not yet released
-- **Phase 6** libraries (F31–F35) — **next** product milestone
-- **Phase 9** MetaLang authoring (F16d, F42–F43); package extract **F44** last and **after** Phase 6 F31–F34
 
 ### 0.6.1 (2026-07-17) — merged to `main`
 - Dropped `webdot session repl` / `session shell` (F24); stateful session workspace (F20–F23) unchanged

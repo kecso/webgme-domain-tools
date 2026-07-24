@@ -28,6 +28,7 @@ webdot tree [options] [scope]
 |-------------------|-------------|
 | `[scope]` | `repo` or `seed` `[default: session model when a session is open, else repo]` |
 | `--seed [name]` | Seed model tree `[default: open session project]` |
+| `--webgmex <path>` | Direct `.webgmex` for seed model tree (no catalog / `-C` required) |
 | `--kind <kinds>` | Repo: `seeds,plugins,visualizers,routers` (comma-separated) `[default: all kinds]` |
 | `--format <fmt>` | Repo: `tree` \| `flat` \| `json`. Seed: `tree` \| `tree-verbose` \| `flat` \| `json` `[default: tree]` |
 | `--at <path>` | Seed: subtree root (e.g. `/1`) `[default: /]` |
@@ -36,6 +37,7 @@ webdot tree [options] [scope]
 ```bash
 webdot tree repo -C /path/to/studio
 webdot tree --seed StateMachine -C /path/to/studio
+webdot tree --webgmex ./HostWithSharedMeta.webgmex --format tree-verbose
 webdot tree --seed StateMachine --format tree-verbose --at /1
 ```
 
@@ -43,7 +45,7 @@ webdot tree --seed StateMachine --format tree-verbose --at /1
 
 ## `seed meta`
 
-MetaAspectSet views from a file-project seed.
+MetaAspectSet views from a file-project seed or any `.webgmex`.
 
 ```text
 webdot seed meta [options]
@@ -52,12 +54,14 @@ webdot seed meta [options]
 | Option | Description |
 |--------|-------------|
 | `--seed [name]` | Seed name `[default: open session project]` |
+| `--webgmex <path>` | Direct `.webgmex` (no catalog / `-C` required) |
 | `--format <fmt>` | `json` (IR) \| `tree` \| `tree-verbose` \| `descriptor` \| `metalang` `[default: json]` |
 
 Specs: [docs/meta/](meta/README.md).
 
 ```bash
 webdot seed meta --seed StateMachine -C /path/to/studio --format metalang
+webdot seed meta --webgmex ./HostWithSharedMeta.webgmex --format descriptor
 ```
 
 ---

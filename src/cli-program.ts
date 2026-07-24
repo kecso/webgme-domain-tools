@@ -147,6 +147,10 @@ Docs (tutorials + full flag reference): see the package README and docs/
       "Load seed model tree [default: open session project]",
     )
     .option(
+      "--webgmex <path>",
+      "Direct .webgmex path for seed model tree (no catalog / -C required)",
+    )
+    .option(
       "--kind <kinds>",
       "Repo scope: seeds,plugins,visualizers,routers (comma-separated) [default: all kinds]",
     )
@@ -164,6 +168,7 @@ Docs (tutorials + full flag reference): see the package README and docs/
     )
     .action((scope: string | undefined, opts: {
       seed?: string;
+      webgmex?: string;
       kind?: string;
       format?: string;
       at?: string;
@@ -173,11 +178,16 @@ Docs (tutorials + full flag reference): see the package README and docs/
       const hasSession = readSessionState(sessionCwd) !== null;
       // With no explicit scope, a session means "show the session model" (seed scope).
       const seedScope =
-        opts.seed !== undefined || scope === "seed" || (scope === undefined && hasSession);
+        opts.seed !== undefined ||
+        Boolean(opts.webgmex) ||
+        scope === "seed" ||
+        (scope === undefined && hasSession);
       if (seedScope) {
         const seedName = optionalArg(opts.seed);
-        if (!seedName && !hasSession) {
-          console.error("tree --seed <name> is required (or open a session first)");
+        if (!seedName && !opts.webgmex && !hasSession) {
+          console.error(
+            "tree seed requires --seed <name>, --webgmex <path>, or an open session",
+          );
           process.exit(2);
         }
         void runCli(() =>
@@ -185,6 +195,7 @@ Docs (tutorials + full flag reference): see the package README and docs/
             cwd: projectCwdFor(cmd, sessionCwd),
             sessionCwd,
             seed: seedName,
+            webgmex: opts.webgmex,
             seedModel: true,
             kind: opts.kind,
             format: (opts.format ?? "tree") as RepoTreeFormat | SeedTreeFormat,
@@ -212,13 +223,19 @@ Docs (tutorials + full flag reference): see the package README and docs/
     .description("MetaAspectSet IR from a file-project seed")
     .option("--seed [name]", "Seed name [default: open session project]")
     .option(
+      "--webgmex <path>",
+      "Direct .webgmex path (no catalog / -C required)",
+    )
+    .option(
       "--format <fmt>",
       "json | tree | tree-verbose | descriptor | metalang [default: json]",
     )
-    .action((opts: { seed?: string | boolean; format?: string }, cmd) => {
+    .action((opts: { seed?: string | boolean; webgmex?: string; format?: string }, cmd) => {
       const sessionCwd = executionCwd();
-      if (opts.seed === undefined && !readSessionState(sessionCwd)) {
-        console.error("seed meta requires --seed <name> (or open a session first)");
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error(
+          "seed meta requires --seed <name>, --webgmex <path>, or an open session",
+        );
         process.exit(2);
       }
       void runCli(() =>
@@ -226,6 +243,7 @@ Docs (tutorials + full flag reference): see the package README and docs/
           cwd: projectCwdFor(cmd, sessionCwd),
           sessionCwd,
           seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
           format: opts.format as SeedMetaFormat | undefined,
         }),
       );

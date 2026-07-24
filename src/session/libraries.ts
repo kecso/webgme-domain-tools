@@ -239,6 +239,26 @@ export async function runLibraryRemove(
   });
 }
 
+/** Preferred keys from core.getLibraryInfo (origin / identity of the attached package). */
+const LIBRARY_INFO_KEYS = ["projectId", "branchName", "commitHash", "hash"] as const;
+
+function formatLibraryInfoLines(info: Record<string, unknown> | null): string[] {
+  if (!info || typeof info !== "object") return [];
+  const lines: string[] = [];
+  const seen = new Set<string>();
+  for (const key of LIBRARY_INFO_KEYS) {
+    if (info[key] === undefined || info[key] === null) continue;
+    seen.add(key);
+    lines.push("    " + key + ": " + String(info[key]));
+  }
+  for (const key of Object.keys(info).sort()) {
+    if (seen.has(key)) continue;
+    if (info[key] === undefined || info[key] === null) continue;
+    lines.push("    " + key + ": " + String(info[key]));
+  }
+  return lines;
+}
+
 export function formatLibraryList(result: LibraryListResult): string {
   const lines = ["libraries (" + result.webgmex + "):"];
   if (result.libraries.length === 0) {
@@ -247,6 +267,7 @@ export function formatLibraryList(result: LibraryListResult): string {
     for (const entry of result.libraries) {
       const pathPart = entry.path ? "  " + entry.path : "";
       lines.push("  " + entry.name + pathPart);
+      lines.push(...formatLibraryInfoLines(entry.info));
     }
   }
   return lines.join("\n");

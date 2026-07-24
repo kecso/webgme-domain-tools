@@ -107,9 +107,49 @@ test("cli tree seed without --seed exits 2", () => {
   try {
     const result = runWebdot(["tree", "seed", "-C", fixture], { cwd: execDir });
     assert.equal(result.status, 2);
-    assert.match(result.stderr, /tree --seed.*required.*open a session/i);
+    assert.match(result.stderr, /tree seed requires --seed.*--webgmex.*open session/i);
   } finally {
     fs.rmSync(execDir, { recursive: true, force: true });
+  }
+});
+
+test("cli seed meta --help documents --webgmex", () => {
+  const result = runWebdot(["seed", "meta", "--help"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /--webgmex <path>/);
+  assert.match(result.stdout, /no catalog/i);
+});
+
+test("cli seed meta via --webgmex without a project catalog", () => {
+  const host = path.join(__dirname, "fixtures", "libraries", "HostWithSharedMeta.webgmex");
+  const empty = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-meta-webgmex-"));
+  try {
+    const result = runWebdot(
+      ["seed", "meta", "--webgmex", host, "--format", "descriptor"],
+      { cwd: empty },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const descriptor = JSON.parse(result.stdout);
+    assert.equal(descriptor.version, 1);
+    const libKeys = Object.keys(descriptor.concepts).filter((k) => k.includes("."));
+    assert.ok(libKeys.length > 0, "expected SharedMeta.* FQN keys");
+  } finally {
+    fs.rmSync(empty, { recursive: true, force: true });
+  }
+});
+
+test("cli tree via --webgmex without a project catalog", () => {
+  const host = path.join(__dirname, "fixtures", "libraries", "HostWithSharedMeta.webgmex");
+  const empty = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-tree-webgmex-"));
+  try {
+    const result = runWebdot(
+      ["tree", "--webgmex", host, "--format", "tree-verbose"],
+      { cwd: empty },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /library-root/);
+  } finally {
+    fs.rmSync(empty, { recursive: true, force: true });
   }
 });
 

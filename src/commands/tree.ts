@@ -25,6 +25,8 @@ export interface TreeCommandOptions {
   cwd: string;
   sessionCwd?: string;
   seed?: string;
+  /** Direct .webgmex path; implies seed-model tree without a catalog. */
+  webgmex?: string;
   /** When true, load a seed model tree (seed name from --seed or open session). */
   seedModel?: boolean;
   kind?: string;
@@ -34,7 +36,7 @@ export interface TreeCommandOptions {
 }
 
 export async function runTreeCommand(options: TreeCommandOptions): Promise<string> {
-  if (options.seedModel || options.seed !== undefined) {
+  if (options.seedModel || options.seed !== undefined || options.webgmex) {
     return runSeedTreeCommand({
       ...options,
       format: options.format as SeedTreeFormat | undefined,

@@ -29,7 +29,7 @@ Stable refs: `seed:StateMachine`, `plugin:TextToModel`, `viz:MonacoEditor`, `rou
 | Scope | Invocation | Data source |
 |-------|------------|-------------|
 | Repo (default) | `tree` / `tree repo` | SetupCatalog only |
-| Seed model | `tree --seed <name>` | File-project load from `.webgmex` |
+| Seed model | `tree --seed <name>` or `tree --webgmex <path>` | File-project load from `.webgmex` |
 
 Seed scope options: `--at <path>` (subtree root, `[default: /]`), `--nodes <paths>` (comma-separated; `[default: all nodes under --at]`). Ambiguous seed names exit 2 with candidates.
 
@@ -39,7 +39,7 @@ Seed scope options: `--at <path>` (subtree root, `[default: /]`), `--nodes <path
 
 | Subcommand | Invocation | Output |
 |------------|------------|--------|
-| Meta IR | `seed meta --seed <name>` | MetaAspectSet JSON (`getJsonMeta` per meta node); see [`docs/meta/`](meta/README.md) |
+| Meta IR | `seed meta --seed <name>` or `--webgmex <path>` | MetaAspectSet JSON (`getJsonMeta` per meta node); see [`docs/meta/`](meta/README.md) |
 
 ## Plugin execution
 
@@ -104,11 +104,11 @@ See [PROJECT.md](PROJECT.md) Phase 5 (F26–F29, optional F30).
 | Meta emit | Library types always `Lib.Concept`; **host stays bare** (no host namespace) |
 | TS emit | Nested `namespace Lib` for library concepts; host interfaces top-level |
 | Manage (CLI) | **Outside sessions** — always write target `.webgmex`; mimic GUI `addLibrary` |
-| Textual libs | Later: metalang import and/or in-place `library` blocks → same attach semantics |
+| Textual libs | **Phase 9 (F49)** — metalang import and/or in-place `library` blocks → same attach semantics; **before** package extract |
 | Fixtures | Synthetic host+lib (domain-as-library pattern). Richer dogfood → backlog **B14** |
 
 Phase 4 already records IR `libraries[]` and per-node `namespace` / `fullyQualifiedName` / `libraryElement`. Phase 6 finishes consumer-facing listing/emit and management. Decisions: [`meta/LIBRARIES.md`](meta/LIBRARIES.md).
 
-**Sequencing:** Complete Phase 6 (at least F31–F34) **before** extracting MetaLang to a separate package (Phase 9 F44), so the external language surface already handles namespaces.
+**Sequencing:** Phase 6 (binary libraries) → **Phase 9** (MetaLang authoring + **textual libraries F49**) → only then extract `webgme-metalang` (**F44**). Do not split the language package while libraries are still FQN-only with no import/`library` definition.
 
-See [PROJECT.md](PROJECT.md) Phase 6 (F31–F35) and [`meta/LIBRARIES.md`](meta/LIBRARIES.md).
+See [PROJECT.md](PROJECT.md) Phase 6 (F31–F35) / Phase 9 (F16d, F42, F49, F43, F44) and [`meta/LIBRARIES.md`](meta/LIBRARIES.md).

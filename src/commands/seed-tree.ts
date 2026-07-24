@@ -13,6 +13,8 @@ export interface TreeCommandOptions {
   cwd: string;
   sessionCwd?: string;
   seed?: string;
+  /** Direct .webgmex path (relative to sessionCwd / execution dir); no catalog required. */
+  webgmex?: string;
   kind?: string;
   format?: SeedTreeFormat;
   at?: string;
@@ -28,6 +30,7 @@ function parseSelect(raw: string | undefined): string[] | undefined {
 export async function runSeedTreeCommand(options: TreeCommandOptions): Promise<string> {
   const model = resolveSessionModelSource(options.sessionCwd ?? options.cwd, {
     seed: options.seed,
+    webgmex: options.webgmex,
     projectCwd: options.cwd,
   });
 

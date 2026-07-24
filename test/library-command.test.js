@@ -76,7 +76,13 @@ test("library add / list / remove on a copied host (always persists)", async () 
     const listed = await runLibraryList({ webgmex: dest, cwd: fixtureCwd });
     assert.equal(listed.libraries.length, 1);
     assert.equal(listed.libraries[0].name, "SharedMeta");
-    assert.match(formatLibraryList(listed), /SharedMeta/);
+    assert.ok(listed.libraries[0].info, "getLibraryInfo should return origin metadata");
+    assert.equal(typeof listed.libraries[0].info.projectId, "string");
+    assert.equal(typeof listed.libraries[0].info.commitHash, "string");
+    const formatted = formatLibraryList(listed);
+    assert.match(formatted, /SharedMeta/);
+    assert.match(formatted, /projectId:/);
+    assert.match(formatted, /commitHash:/);
 
     const ctx = await openProjectSession({
       cwd: fixtureCwd,

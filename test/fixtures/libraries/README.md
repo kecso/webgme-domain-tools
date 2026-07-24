@@ -11,5 +11,8 @@
 
 ```bash
 webdot library list --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex
+webdot tree --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex --format tree-verbose
 webdot seed meta --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex --format metalang
 ```
+
+`--webgmex` works from any cwd (no `webgme-setup.json` / `-C`). `--seed <name>` still needs a project catalog.

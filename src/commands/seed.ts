@@ -8,6 +8,8 @@ export interface SeedMetaCommandOptions {
   cwd: string;
   sessionCwd?: string;
   seed?: string;
+  /** Direct .webgmex path (relative to sessionCwd / execution dir); no catalog required. */
+  webgmex?: string;
   format?: SeedMetaFormat;
 }
 
@@ -24,6 +26,7 @@ export function parseSeedMetaFormat(raw: string | undefined): SeedMetaFormat {
 export async function runSeedMetaCommand(options: SeedMetaCommandOptions): Promise<string> {
   const model = resolveSessionModelSource(options.sessionCwd ?? options.cwd, {
     seed: options.seed,
+    webgmex: options.webgmex,
     projectCwd: options.cwd,
   });
   const format = parseSeedMetaFormat(options.format);

@@ -8,6 +8,7 @@ WebGME projects may attach **libraries** (`core.addLibrary`). Meta nodes that co
 |--------|------|
 | `getLibraryNames(root)` | Attached library root names |
 | `getLibraryRoot(root, name)` | Library root node |
+| `getLibraryInfo(root, name)` | Origin metadata stored at attach time (`projectId`, `branchName`, `commitHash`, library root `hash`, …) |
 | `getLibraryMetaNodes(root, name)` | Meta nodes belonging to a library |
 | `getNamespace(node)` | Namespace string (empty when owned by the host project) |
 | `getFullyQualifiedName(node)` | Qualified concept id |
@@ -92,7 +93,7 @@ Today, attaching a library in the GUI/engine roughly **imports another project�
 
 | Command | Meaning |
 |---------|---------|
-| `library list` | Names + roots already attached (read-only) |
+| `library list` | Names + roots + **origin info** from `getLibraryInfo` (`projectId`, `commitHash`, library `hash`, …) |
 | `library add --from <lib.webgmex> --as <Name>` | Attach from a `.webgmex` (same semantics as GUI add) |
 | `library update <Name> --from <lib.webgmex>` | Replace that library’s content from a new package |
 | `library remove <Name>` | Detach library |
@@ -108,17 +109,19 @@ Beyond binary `.webgmex` attach, we still need a path for **textual** library de
 | **A. Library as its own `.metalang` + import** | Author `SharedMeta.metalang` (or emit from a library seed); `library add --from …` accepts `.webgmex` **or** a metalang that is compiled to a temp project then attached like GUI add |
 | **B. In-place `library` blocks in host metalang** | Host file may contain `library SharedMeta { concept State { … } }` (or equivalent); ingest attaches/updates that library rather than merging concepts into host-owned meta |
 
-**Principle:** whichever spelling we allow, materialization still **mimics `addLibrary`** (append under host root/FCO as a named library) — not a second attachment model. Exact grammar for in-place blocks and ImportMetaLang flags can land with Phase 9 parser work; Phase 6 should at least not paint into a corner (FQN emit already uses `Lib.Concept`).
+**Principle:** whichever spelling we allow, materialization still **mimics `addLibrary`** (append under host root/FCO as a named library) — not a second attachment model. Exact grammar for in-place blocks and ImportMetaLang flags land in **Phase 9 (F49)**; Phase 6 only ensures FQN emit does not paint into a corner.
 
-Exact ImportMetaLang UX stays Phase 9; F35 `.webgmex` CRUD can ship first.
+Exact ImportMetaLang UX stays Phase 9; F35 `.webgmex` CRUD ships first. **Do not extract `webgme-metalang` (F44) until F49 is done.**
 
 ## Remaining implementation
 
 Phase 6 core (F31–F35) is on `feature/phase6-libraries` for review. Synthetic fixture matches the known real pattern: **domain package attached as a library** (host uses domain meta as effectively read-only).
 
+**Next:** Phase 9 — parser / ImportMetaLang / **textual libraries (F49)** before package split.
+
 **Future (B14):** gather richer real-life library scenarios (multi-library hosts, collisions, nested libs, large DSS seeds) when they show up — not a Phase 6 blocker.
 
-See [PROJECT.md](../PROJECT.md) Phase 6.
+See [PROJECT.md](../PROJECT.md) Phase 6 and Phase 9.
 
 ## Future (engine / WebGME — not Phase 6)
 
