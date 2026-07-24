@@ -1,5 +1,6 @@
 import { formatGlobalCardinality, formatMemberCardinality } from "./cardinality.js";
 import { getMemberGlobal, getMemberMap } from "./ir-to-descriptor.js";
+import { bareInDomainRefs } from "./metalang-to-descriptor.js";
 import type { AttributeDef, ConceptBody, MemberRule, MetaDescriptor, TypeRef } from "./types.js";
 
 function formatTypeRef(ref: TypeRef): string {
@@ -38,48 +39,47 @@ function formatMemberRuleKeyword(keyword: "contains" | "set", name: string | und
   return `  set ${name}${globalSuffix} -> ${memberList};`;
 }
 
-function renderConceptBody(body: ConceptBody, indent: string): string[] {
+function renderConceptBody(body: ConceptBody): string[] {
   const lines: string[] = [];
 
   if (body.attributes) {
     for (const [name, def] of Object.entries(body.attributes)) {
-      lines.push(indent + formatAttributeDef(name, def).trimStart());
+      lines.push(formatAttributeDef(name, def));
     }
   }
 
   if (body.pointers) {
     for (const [name, target] of Object.entries(body.pointers)) {
-      lines.push(`${indent}${name} -> ${formatTypeRef(target)};`);
+      lines.push(`  ${name} -> ${formatTypeRef(target)};`);
     }
   }
 
   if (body.contains) {
-    lines.push(indent + formatMemberRuleKeyword("contains", undefined, body.contains).trimStart());
+    lines.push(formatMemberRuleKeyword("contains", undefined, body.contains));
   }
 
   if (body.sets) {
     for (const [setName, rule] of Object.entries(body.sets)) {
-      lines.push(indent + formatMemberRuleKeyword("set", setName, rule).trimStart());
+      lines.push(formatMemberRuleKeyword("set", setName, rule));
     }
   }
 
   return lines;
 }
 
-/** Emit a concept using a display name (bare inside library blocks, FQN or bare at host level). */
-function renderConcept(displayName: string, body: ConceptBody, indent = ""): string[] {
-  const members = renderConceptBody(body, indent + "  ");
+function renderConcept(displayName: string, body: ConceptBody): string[] {
+  const members = renderConceptBody(body);
   if (members.length === 0) {
     if (body.extends) {
-      return [`${indent}concept ${displayName} extends ${body.extends};`];
+      return [`concept ${displayName} extends ${body.extends};`];
     }
-    return [`${indent}concept ${displayName};`];
+    return [`concept ${displayName};`];
   }
 
   const head = body.extends
-    ? `${indent}concept ${displayName} extends ${body.extends} {`
-    : `${indent}concept ${displayName} {`;
-  return [head, ...members, `${indent}}`];
+    ? `concept ${displayName} extends ${body.extends} {`
+    : `concept ${displayName} {`;
+  return [head, ...members, "}"];
 }
 
 function libraryOf(conceptName: string): string | null {
@@ -93,11 +93,11 @@ function bareName(conceptName: string): string {
 }
 
 /**
- * Canonical MetaLang emit: host concepts top-level; library concepts grouped in
- * `library Lib { … }` blocks so definition origin is explicit.
+ * Canonical MetaLang emit: each library is its own `domain` (bare names inside),
+ * then the host `domain` with `library Lib` directives and host concepts (FQN to libs).
  */
 export function descriptorToMetalang(descriptor: MetaDescriptor, domain: string): string {
-  const lines: string[] = [`domain ${domain}`, ""];
+  const lines: string[] = [];
 
   const host: Array<[string, ConceptBody]> = [];
   const byLibrary = new Map<string, Array<[string, ConceptBody]>>();
@@ -113,21 +113,26 @@ export function descriptorToMetalang(descriptor: MetaDescriptor, domain: string)
     byLibrary.set(lib, list);
   }
 
-  for (const [name, body] of host) {
-    lines.push(...renderConcept(name, body));
-    lines.push("");
-  }
-
   const libNames = [...byLibrary.keys()].sort((a, b) => a.localeCompare(b));
   for (const lib of libNames) {
-    lines.push(`library ${lib} {`);
+    lines.push(`domain ${lib}`);
+    lines.push("");
     for (const [fqn, body] of byLibrary.get(lib)!) {
-      lines.push(...renderConcept(bareName(fqn), body, "  "));
+      const bareBody = bareInDomainRefs(body, lib);
+      lines.push(...renderConcept(bareName(fqn), bareBody));
       lines.push("");
     }
-    // drop trailing blank inside block before closing
-    if (lines[lines.length - 1] === "") lines.pop();
-    lines.push("}");
+  }
+
+  lines.push(`domain ${domain}`);
+  lines.push("");
+  for (const lib of libNames) {
+    lines.push(`library ${lib}`);
+  }
+  if (libNames.length > 0) lines.push("");
+
+  for (const [name, body] of host) {
+    lines.push(...renderConcept(name, body));
     lines.push("");
   }
 

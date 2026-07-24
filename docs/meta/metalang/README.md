@@ -60,29 +60,40 @@ Descriptor JSON lists the same pointers — no separate connection block. Domain
 
 ## Libraries in MetaLang
 
-**Canonical emit** groups library concepts:
+A file may define **multiple domains**. Each domain is a closed scope (bare concept names only). Domains do **not** cross-reference until one attaches another as a library.
 
 ```metalang
-domain Host
+domain SharedMeta
+
+concept State {
+  isInitial: bool;
+}
 
 concept Machine {
-  contains SharedMeta.State*;
+  contains State*;            // bare — same domain
 }
 
-library SharedMeta {
-  concept State {
-    isInitial: bool;
-  }
+domain Host
+
+library SharedMeta            // optional: `as Alias` (default namespace = domain name)
+# or: library SharedMeta from "./shared-meta.metalang"
+# or: import SharedMeta from "./shared-meta.metalang"  then  library SharedMeta
+
+concept App {
+  contains SharedMeta.State*; // FQN — only after library attach
 }
 ```
 
-**Import (path A):**
+| Form | Meaning |
+|------|---------|
+| `library Dom` | Attach domain `Dom` as library namespace `Dom` |
+| `library Dom as Alias` | Attach with namespace `Alias` |
+| `import Dom from "…"` | Load domains from another `.metalang` |
+| `library Dom from "…" [as Alias]` | Sugar: import + attach |
 
-```metalang
-import SharedMeta from "./SharedMeta.metalang"
-```
+**Canonical emit** for a host+lib seed: library domains first (`domain Lib` + bare concepts), then host `domain` + `library Lib` directives + host concepts (FQNs to libs).
 
-**In-place block (path B):** `library SharedMeta { … }` as above. Descriptor JSON stays flat FQNs (`SharedMeta.State`).
+Descriptor JSON stays flat FQNs (`SharedMeta.State`).
 
 ## Examples
 

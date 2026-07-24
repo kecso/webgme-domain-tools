@@ -414,7 +414,7 @@ webdot library remove Domain --webgmex ./Host.webgmex
 |----|---------|--------|-------|
 | F16d | MetaLang → descriptor parser | `review` | **Hand-rolled** in-repo (matches `grammar.ebnf`); Langium deferred to extract package |
 | F42 | ImportMetaLang plugin | `review` | **Create-only**; `importMetaLangToWebgmex` + `plugins/ImportMetaLang`; GUI-like `addLibrary` |
-| F49 | Textual libraries (import **and** `library` blocks) | `review` | **Both** A and B; canonical emit uses `library` blocks. **Required before F44** |
+| F49 | Textual libraries (multi-domain + `library` directive) | `review` | Domains are scopes; `library Dom [as Alias]`; import from files; canonical emit. **Required before F44** |
 | F43 | Langium language server | `deferred` → **F44 package** | LSP ships with `webgme-metalang`, not webdot CLI |
 | F44 | Extract `webgme-metalang` package | `pending` | **Last** — after F16d + F42 + F49; move grammar, translate, **Langium/LSP**; webdot depends on the package |
 
@@ -427,12 +427,12 @@ webdot seed meta --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex --
 node -e "import('./dist/meta/import-metalang.js').then(m=>m.importMetaLangToWebgmex({file:'docs/meta/examples/state-machine.metalang',out:'Out.webgmex'}))"
 ```
 
-**Decisions (2026-07-24):** Both import + `library` blocks; hand-rolled parser in-repo; Langium/LSP only in F44 extract; ImportMetaLang create-only (GUI-like `addLibrary`); canonical emit uses `library` blocks.
+**Decisions (2026-07-24):** Multi-domain file + `library Dom [as Alias]` (optional `as`); keep `import` / `library … from`; no nested `library { }` blocks; hand-rolled parser in-repo; Langium/LSP only in F44 extract; ImportMetaLang create-only (GUI-like `addLibrary`); bare names in-domain, FQN only after library attach.
 
 **Phase 9 review checklist**
 
 1. **Parse** — `parseMetalang` round-trips `docs/meta/examples/state-machine.metalang` and library block / import forms.
-2. **Canonical emit** — `seed meta --format metalang` on `HostWithSharedMeta.webgmex` shows `library SharedMeta { … }` (not flat `concept SharedMeta.X`).
+2. **Canonical emit** — `seed meta --format metalang` on `HostWithSharedMeta.webgmex` shows `domain SharedMeta` … `domain Host` / `library SharedMeta` (bare refs inside SharedMeta; FQNs on host).
 3. **Import create** — `importMetaLangToWebgmex` (or plugin) builds a new `.webgmex` from metalang; libraries appear in `library list`.
 4. **`npm test`** — including `metalang-parse.test.js`, `import-metalang.test.js`.
 

@@ -1,6 +1,10 @@
 ; MetaLang v0 grammar (EBNF) — pointer-first
 ; Connections are NOT primitive; src/dst are pointer names. See CONNECTIONS.md.
 ; Cardinality: global [min..max] on contains/set name; per-type suffix on members — see CARDINALITY.md.
+;
+; Libraries: a file may define multiple domains. Domains are closed scopes (bare names only).
+; A domain attaches another domain as a library with `library Dom [as Alias]`; only then
+; may it refer to that library via FQN (Alias.Concept). External domains load via import.
 
 document     = { statement } ;
 
@@ -9,13 +13,19 @@ statement    = domain_decl
                | library_decl
                | concept_decl ;
 
+; Starts a domain scope; following concepts belong to this domain until the next domain_decl.
 domain_decl  = "domain" , qualified_name , { newline } ;
 
-; Path A — load another .metalang as a named library (concepts prefixed with the import name).
+; Load domains from another .metalang (available for `library` attach).
+; Ident should match a domain name defined in that file.
 import_decl  = "import" , identifier , "from" , string_literal , { newline } ;
 
-; Path B — in-place library definition (concepts inside use bare names; emit as Lib.Concept).
-library_decl = "library" , identifier , "{" , { concept_decl } , "}" , { newline } ;
+; Attach an already-known domain (same file or imported) as a library of the *current* domain.
+; Optional `as` sets the namespace (default: domain name). Optional `from` is sugar for import+attach.
+library_decl = "library" , identifier ,
+               [ "from" , string_literal ] ,
+               [ "as" , identifier ] ,
+               { newline } ;
 
 concept_decl = "concept" , type_ref , [ "extends" , type_ref ] ,
                concept_body , { newline } ;

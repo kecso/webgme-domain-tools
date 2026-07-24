@@ -102,16 +102,19 @@ Today, attaching a library in the GUI/engine roughly **imports another project�
 
 ### MetaLang ↔ libraries (authoring surface)
 
-| Path | Idea |
+A `.metalang` file may define **multiple domains**. Domains are closed (bare names). Cross-domain use requires a `library` directive on the host domain:
+
+| Form | Idea |
 |------|------|
-| **A. Library as its own `.metalang` + import** | `import SharedMeta from "./SharedMeta.metalang"` — concepts prefixed with the import name |
-| **B. In-place `library` blocks** | `library SharedMeta { concept State { … } }` in the host file |
+| **Same file** | `domain SharedMeta` … `domain Host` / `library SharedMeta` |
+| **External file** | `import SharedMeta from "./shared-meta.metalang"` then `library SharedMeta` (or `library SharedMeta from "…"`) |
+| **Rename** | `library SharedMeta as SM` → FQNs use `SM.Concept` |
 
-**Canonical emit:** `library Lib { … }` blocks (not flat `concept Lib.X`). Descriptor remains flat FQNs.
+**Canonical emit:** separate `domain` sections + `library` directives (not nested `library { }` blocks). Inside a library domain, type refs stay bare; host uses FQNs only after attach.
 
-**Materialization:** ImportMetaLang / `importMetaLangToWebgmex` builds each library as a temp `.webgmex` and attaches via `addLibrary` (GUI-like). Create-only (`--out`) for now.
+**Materialization:** each attached domain → temp `.webgmex` → `addLibrary` under the `as` namespace. Create-only for now.
 
-**Langium / LSP:** deferred to the extracted `webgme-metalang` package (F44) — not part of webdot CLI.
+**Langium / LSP:** deferred to the extracted `webgme-metalang` package (F44).
 
 ## Remaining implementation
 

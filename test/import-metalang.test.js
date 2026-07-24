@@ -62,16 +62,18 @@ test("importMetaLangToWebgmex attaches library blocks like GUI addLibrary", asyn
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-import-lib-"));
   try {
     const metalang = `
+domain SharedMeta
+
+concept State {
+  isInitial: bool;
+}
+
 domain Host
+
+library SharedMeta
 
 concept Machine {
   contains SharedMeta.State*;
-}
-
-library SharedMeta {
-  concept State {
-    isInitial: bool;
-  }
 }
 `;
     const mlPath = path.join(dir, "Host.metalang");
@@ -191,9 +193,12 @@ test("materializeMetalangOnContext attaches library onto open host session", asy
     });
     try {
       const parsed = parseMetalang(`
+domain SharedMeta
+concept State { isInitial: bool; }
+
 domain Host
+library SharedMeta
 concept Machine { contains SharedMeta.State*; }
-library SharedMeta { concept State { isInitial: bool; } }
 `);
       const attached = await materializeMetalangOnContext(ctx, parsed, {
         cwd: dir,

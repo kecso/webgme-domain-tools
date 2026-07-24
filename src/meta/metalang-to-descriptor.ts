@@ -10,10 +10,21 @@ import type {
 } from "./types.js";
 import { isStructuredMemberRule } from "./types.js";
 
+/** One domain scope: bare concept names only; libraries attached via `library` directives. */
+export interface MetalangDomain {
+  name: string;
+  concepts: Record<string, ConceptBody>;
+  /** Attached libraries: source domain name → namespace used in FQNs. */
+  libraries: Array<{ domain: string; as: string }>;
+}
+
 export interface MetalangParseResult {
+  /** Host / primary domain (last domain in the document). */
   domain: string;
+  domains: Record<string, MetalangDomain>;
+  /** Flat MetaDescriptor for the primary domain + its attached libraries (FQN keys). */
   descriptor: MetaDescriptor;
-  /** Library names introduced via `library` blocks or `import` (sorted). */
+  /** Namespace names attached to the primary domain (sorted). */
   libraries: string[];
 }
 
@@ -205,6 +216,37 @@ function qualifyConceptBody(
   return next;
 }
 
+/** Strip `Lib.` prefix from type refs that point at the same library (for in-domain emit). */
+export function bareInDomainRefs(body: ConceptBody, library: string): ConceptBody {
+  const prefix = library + ".";
+  const strip = (ref: string) => (ref.startsWith(prefix) ? ref.slice(prefix.length) : ref);
+  const stripRef = (ref: TypeRef): TypeRef =>
+    typeof ref === "string" ? strip(ref) : ref.map(strip);
+  const stripRule = (rule: MemberRule): MemberRule => {
+    const members = isStructuredMemberRule(rule) ? rule.members : rule;
+    const next: Record<string, string> = {};
+    for (const [k, v] of Object.entries(members)) next[strip(k)] = v;
+    if (isStructuredMemberRule(rule)) {
+      return rule.global ? { global: rule.global, members: next } : { members: next };
+    }
+    return next;
+  };
+  const out: ConceptBody = { ...body };
+  if (out.extends) out.extends = strip(out.extends);
+  if (out.pointers) {
+    const pointers: Record<string, TypeRef> = {};
+    for (const [k, v] of Object.entries(out.pointers)) pointers[k] = stripRef(v);
+    out.pointers = pointers;
+  }
+  if (out.contains) out.contains = stripRule(out.contains);
+  if (out.sets) {
+    const sets: Record<string, MemberRule> = {};
+    for (const [k, v] of Object.entries(out.sets)) sets[k] = stripRule(v);
+    out.sets = sets;
+  }
+  return out;
+}
+
 function parseAttributeType(sc: Scanner): AttributeDef {
   sc.skipTrivia();
   if (sc.tryKeyword("enum")) {
@@ -331,45 +373,21 @@ function parseConceptBody(sc: Scanner): ConceptBody {
   return body;
 }
 
-function parseConceptDecl(sc: Scanner): { name: string; body: ConceptBody } {
-  if (!sc.tryKeyword("concept")) {
-    throw new MetalangParseError('Expected "concept"', sc.line, sc.column);
-  }
-  const name = sc.readQualifiedName();
-  let extendsName: string | undefined;
-  if (sc.tryKeyword("extends")) {
-    extendsName = sc.readQualifiedName();
-  }
-  sc.skipTrivia();
-  let body: ConceptBody;
-  if (sc.peek() === "{") {
-    body = parseConceptBody(sc);
-  } else {
-    sc.expect(";");
-    body = {};
-  }
-  if (extendsName) body.extends = extendsName;
-  return { name, body };
-}
-
-function mergeConcepts(
-  into: Record<string, ConceptBody>,
+function ensureDomain(
+  domains: Record<string, MetalangDomain>,
   name: string,
-  body: ConceptBody,
-  sc: Scanner,
-): void {
-  if (into[name]) {
-    throw new MetalangParseError('Duplicate concept "' + name + '"', sc.line, sc.column);
+): MetalangDomain {
+  if (!domains[name]) {
+    domains[name] = { name, concepts: {}, libraries: [] };
   }
-  into[name] = body;
+  return domains[name]!;
 }
 
-function loadImportedLibrary(
-  libraryName: string,
+function loadImportedDomains(
   fromPath: string,
   baseDir: string,
   seen: Set<string>,
-): { concepts: Record<string, ConceptBody> } {
+): Record<string, MetalangDomain> {
   const abs = path.resolve(baseDir, fromPath);
   if (seen.has(abs)) {
     throw new Error('Circular metalang import: "' + abs + '"');
@@ -380,98 +398,169 @@ function loadImportedLibrary(
   }
   const source = fs.readFileSync(abs, "utf8");
   const nested = parseMetalang(source, { baseDir: path.dirname(abs), seenImports: seen });
-  // Imported file's host concepts become Lib.*; nested libraries keep their FQNs.
-  const concepts: Record<string, ConceptBody> = {};
-  const localNames = new Set(
-    Object.keys(nested.descriptor.concepts).filter((k) => !k.includes(".")),
-  );
-  for (const [name, body] of Object.entries(nested.descriptor.concepts)) {
-    if (name.includes(".")) {
-      concepts[name] = body;
-      continue;
-    }
-    const qName = libraryName + "." + name;
-    concepts[qName] = qualifyConceptBody(body, libraryName, localNames);
+  return nested.domains;
+}
+
+function flattenPrimaryDomain(
+  domains: Record<string, MetalangDomain>,
+  primaryName: string,
+): { descriptor: MetaDescriptor; libraries: string[] } {
+  const primary = domains[primaryName];
+  if (!primary) {
+    return { descriptor: { version: 1, concepts: {} }, libraries: [] };
   }
-  return { concepts };
+
+  const concepts: Record<string, ConceptBody> = {};
+  const libNamespaces: string[] = [];
+
+  for (const attach of primary.libraries) {
+    const src = domains[attach.domain];
+    if (!src) {
+      throw new Error(
+        'library "' +
+          attach.domain +
+          '" on domain "' +
+          primaryName +
+          '" — unknown domain (define it in this file or import it)',
+      );
+    }
+    libNamespaces.push(attach.as);
+    const localNames = new Set(Object.keys(src.concepts));
+    for (const [bare, body] of Object.entries(src.concepts)) {
+      const qName = attach.as + "." + bare;
+      concepts[qName] = qualifyConceptBody(body, attach.as, localNames);
+    }
+  }
+
+  for (const [bare, body] of Object.entries(primary.concepts)) {
+    concepts[bare] = body;
+  }
+
+  return {
+    descriptor: { version: 1, concepts },
+    libraries: [...new Set(libNamespaces)].sort((a, b) => a.localeCompare(b)),
+  };
 }
 
 export interface ParseMetalangOptions {
-  /** Directory used to resolve `import … from "…"` paths. */
+  /** Directory used to resolve `import` / `library … from` paths. */
   baseDir?: string;
   /** Internal: track import cycles. */
   seenImports?: Set<string>;
 }
 
 /**
- * Parse MetaLang source into a flat MetaDescriptor (library concepts keyed by FQN).
+ * Parse MetaLang into domains. Primary domain is the last `domain` in the file.
+ * Flat descriptor keys library concepts by namespace FQN for the primary domain.
  */
 export function parseMetalang(
   source: string,
   options: ParseMetalangOptions = {},
 ): MetalangParseResult {
   const sc = new Scanner(source);
-  const concepts: Record<string, ConceptBody> = {};
-  const libraries = new Set<string>();
-  let domain = "Domain";
+  const domains: Record<string, MetalangDomain> = {};
+  let current: MetalangDomain | null = null;
+  let primaryName = "Domain";
   const baseDir = options.baseDir ?? process.cwd();
   const seen = options.seenImports ?? new Set<string>();
+
+  const requireCurrent = (): MetalangDomain => {
+    if (!current) {
+      // Implicit domain if concepts appear before any domain_decl.
+      current = ensureDomain(domains, "Domain");
+      primaryName = "Domain";
+    }
+    return current;
+  };
 
   sc.skipTrivia();
   while (!sc.eof()) {
     if (sc.tryKeyword("domain")) {
-      domain = sc.readQualifiedName();
+      const name = sc.readQualifiedName();
+      current = ensureDomain(domains, name);
+      primaryName = name;
       sc.skipTrivia();
       continue;
     }
+
     if (sc.tryKeyword("import")) {
-      const libName = sc.readIdentifier();
+      const domainName = sc.readIdentifier();
       if (!sc.tryKeyword("from")) {
         throw new MetalangParseError('Expected "from"', sc.line, sc.column);
       }
       const fromPath = sc.readString();
-      libraries.add(libName);
-      const imported = loadImportedLibrary(libName, fromPath, baseDir, seen);
-      for (const [name, body] of Object.entries(imported.concepts)) {
-        mergeConcepts(concepts, name, body, sc);
-      }
-      sc.skipTrivia();
-      continue;
-    }
-    if (sc.tryKeyword("library")) {
-      const libName = sc.readIdentifier();
-      libraries.add(libName);
-      sc.expect("{");
-      const local: { name: string; body: ConceptBody }[] = [];
-      for (;;) {
-        sc.skipTrivia();
-        if (sc.peek() === "}") {
-          sc.advance();
-          break;
-        }
-        local.push(parseConceptDecl(sc));
-      }
-      const localNames = new Set(local.map((c) => c.name.split(".").pop()!));
-      for (const entry of local) {
-        const bare = entry.name.includes(".")
-          ? entry.name.slice(entry.name.lastIndexOf(".") + 1)
-          : entry.name;
-        const qName = libName + "." + bare;
-        mergeConcepts(
-          concepts,
-          qName,
-          qualifyConceptBody(entry.body, libName, localNames),
-          sc,
+      const loaded = loadImportedDomains(fromPath, baseDir, seen);
+      if (!loaded[domainName]) {
+        const available = Object.keys(loaded).sort().join(", ") || "<none>";
+        throw new MetalangParseError(
+          'import "' +
+            domainName +
+            '" — domain not found in "' +
+            fromPath +
+            '" (available: ' +
+            available +
+            ")",
+          sc.line,
+          sc.column,
         );
       }
+      // Merge imported domains (do not overwrite same-file definitions).
+      for (const [name, dom] of Object.entries(loaded)) {
+        if (!domains[name]) domains[name] = dom;
+      }
       sc.skipTrivia();
       continue;
     }
+
+    if (sc.tryKeyword("library")) {
+      const dom = requireCurrent();
+      const domainName = sc.readIdentifier();
+      let fromPath: string | undefined;
+      let asName = domainName;
+      sc.skipTrivia();
+      if (sc.tryKeyword("from")) {
+        fromPath = sc.readString();
+      }
+      if (sc.tryKeyword("as")) {
+        asName = sc.readIdentifier();
+      }
+      if (fromPath) {
+        const loaded = loadImportedDomains(fromPath, baseDir, seen);
+        if (!loaded[domainName]) {
+          throw new MetalangParseError(
+            'library from "' + fromPath + '" — missing domain "' + domainName + '"',
+            sc.line,
+            sc.column,
+          );
+        }
+        for (const [name, d] of Object.entries(loaded)) {
+          if (!domains[name]) domains[name] = d;
+        }
+      }
+      if (dom.libraries.some((l) => l.as === asName)) {
+        throw new MetalangParseError(
+          'Duplicate library namespace "' + asName + '" on domain "' + dom.name + '"',
+          sc.line,
+          sc.column,
+        );
+      }
+      dom.libraries.push({ domain: domainName, as: asName });
+      sc.skipTrivia();
+      continue;
+    }
+
     if (sc.tryKeyword("concept")) {
-      // Rewind keyword consumption: parseConceptDecl expects "concept".
-      // tryKeyword already consumed it — feed a tiny scanner shim by re-parsing.
-      // Easiest: unread isn't available; call body parse manually.
+      const dom = requireCurrent();
       const name = sc.readQualifiedName();
+      if (name.includes(".")) {
+        throw new MetalangParseError(
+          'Concept names inside a domain must be bare (got "' +
+            name +
+            '"); use `library` to attach other domains',
+          sc.line,
+          sc.column,
+        );
+      }
       let extendsName: string | undefined;
       if (sc.tryKeyword("extends")) extendsName = sc.readQualifiedName();
       sc.skipTrivia();
@@ -482,10 +571,18 @@ export function parseMetalang(
         body = {};
       }
       if (extendsName) body.extends = extendsName;
-      mergeConcepts(concepts, name, body, sc);
+      if (dom.concepts[name]) {
+        throw new MetalangParseError(
+          'Duplicate concept "' + name + '" in domain "' + dom.name + '"',
+          sc.line,
+          sc.column,
+        );
+      }
+      dom.concepts[name] = body;
       sc.skipTrivia();
       continue;
     }
+
     if (sc.eof()) break;
     throw new MetalangParseError(
       'Unexpected token near "' + sc.peek() + '"',
@@ -494,10 +591,16 @@ export function parseMetalang(
     );
   }
 
+  if (!domains[primaryName]) {
+    ensureDomain(domains, primaryName);
+  }
+
+  const flat = flattenPrimaryDomain(domains, primaryName);
   return {
-    domain,
-    descriptor: { version: 1, concepts },
-    libraries: [...libraries].sort((a, b) => a.localeCompare(b)),
+    domain: primaryName,
+    domains,
+    descriptor: flat.descriptor,
+    libraries: flat.libraries,
   };
 }
 
