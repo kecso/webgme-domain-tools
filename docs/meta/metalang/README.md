@@ -62,7 +62,12 @@ Descriptor JSON lists the same pointers — no separate connection block. Domain
 
 A file may define **multiple domains**. Each domain is a closed scope (bare concept names only). Domains do **not** cross-reference until one attaches another as a library.
 
+**Host rule:** the **last** `domain` in the file is the host. Import / materialize uses only that domain plus domains it attaches with `library`. Any other domains in the file (or pulled in via `import`) are **ignored**.
+
 ```metalang
+domain UnusedScratch
+concept Scratch;                 // ignored — not attached by Host
+
 domain SharedMeta
 
 concept State {
@@ -73,7 +78,7 @@ concept Machine {
   contains State*;            // bare — same domain
 }
 
-domain Host
+domain Host                   // last domain = host
 
 library SharedMeta            // optional: `as Alias` (default namespace = domain name)
 # or: library SharedMeta from "./shared-meta.metalang"

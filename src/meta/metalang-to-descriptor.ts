@@ -19,13 +19,19 @@ export interface MetalangDomain {
 }
 
 export interface MetalangParseResult {
-  /** Host / primary domain (last domain in the document). */
+  /** Host / primary domain — always the **last** `domain` in the document. */
   domain: string;
+  /** All domains parsed (including unused). Import/materialize only uses {@link domain} + its libraries. */
   domains: Record<string, MetalangDomain>;
-  /** Flat MetaDescriptor for the primary domain + its attached libraries (FQN keys). */
+  /** Flat MetaDescriptor for the primary domain + libraries it attaches (FQN keys). */
   descriptor: MetaDescriptor;
   /** Namespace names attached to the primary domain (sorted). */
   libraries: string[];
+  /**
+   * Domains present in the file (or pulled in via import) but **not** attached by the
+   * primary domain's `library` directives — ignored by ImportMetaLang / flatten.
+   */
+  ignoredDomains: string[];
 }
 
 export class MetalangParseError extends Error {
@@ -450,8 +456,13 @@ export interface ParseMetalangOptions {
 }
 
 /**
- * Parse MetaLang into domains. Primary domain is the last `domain` in the file.
- * Flat descriptor keys library concepts by namespace FQN for the primary domain.
+ * Parse MetaLang into domains.
+ *
+ * **Host rule:** the last `domain` declaration is the host/primary domain.
+ * Only that domain's concepts and the domains it attaches via `library` appear in
+ * {@link MetalangParseResult.descriptor}. Other domains in the file (or loaded via
+ * `import`) are kept on {@link MetalangParseResult.domains} but listed in
+ * {@link MetalangParseResult.ignoredDomains} and ignored by ImportMetaLang.
  */
 export function parseMetalang(
   source: string,
@@ -596,11 +607,20 @@ export function parseMetalang(
   }
 
   const flat = flattenPrimaryDomain(domains, primaryName);
+  const used = new Set<string>([primaryName]);
+  for (const attach of domains[primaryName]?.libraries ?? []) {
+    used.add(attach.domain);
+  }
+  const ignoredDomains = Object.keys(domains)
+    .filter((name) => !used.has(name))
+    .sort((a, b) => a.localeCompare(b));
+
   return {
     domain: primaryName,
     domains,
     descriptor: flat.descriptor,
     libraries: flat.libraries,
+    ignoredDomains,
   };
 }
 

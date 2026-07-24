@@ -102,7 +102,9 @@ Today, attaching a library in the GUI/engine roughly **imports another projectâ€
 
 ### MetaLang â†” libraries (authoring surface)
 
-A `.metalang` file may define **multiple domains**. Domains are closed (bare names). Cross-domain use requires a `library` directive on the host domain:
+A `.metalang` file may define **multiple domains**. Domains are closed (bare names). Cross-domain use requires a `library` directive on the host domain.
+
+**Host = last `domain`.** ImportMetaLang / flatten only materializes that domain and the domains it attaches. Extra domains in the file are ignored unless the host has `library` them.
 
 | Form | Idea |
 |------|------|

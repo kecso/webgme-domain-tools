@@ -118,7 +118,56 @@ concept Machine {
   }
 });
 
-test("importMetaLangToWebgmex rejects non-webgmex out path", async () => {
+test("importMetaLangToWebgmex ignores domains not attached by the last (host) domain", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "webdot-import-ignore-"));
+  try {
+    const mlPath = path.join(dir, "Host.metalang");
+    fs.writeFileSync(
+      mlPath,
+      `
+domain UnusedScratch
+concept Scratch { note: string; }
+
+domain SharedMeta
+concept State { isInitial: bool; }
+
+domain Host
+library SharedMeta
+concept Machine { contains SharedMeta.State*; }
+`,
+    );
+    const out = path.join(dir, "Out.webgmex");
+    const result = await importMetaLangToWebgmex({
+      cwd: dir,
+      file: mlPath,
+      out,
+      templateWebgmex: path.join(
+        fixture,
+        "src",
+        "seeds",
+        "StateModel",
+        "StateModel.webgmex",
+      ),
+    });
+    assert.equal(result.domain, "Host");
+    assert.deepEqual(result.libraries, ["SharedMeta"]);
+    const listed = await runLibraryList({ webgmex: out, cwd: dir });
+    assert.deepEqual(
+      listed.libraries.map((l) => l.name),
+      ["SharedMeta"],
+    );
+    const ctx = await openProjectSession({ cwd: fixture, webgmexPath: out, seedName: "Out" });
+    try {
+      const names = buildSeedMetaIr(ctx).metaAspectSet.map((n) => n.name);
+      assert.ok(names.includes("Machine"));
+      assert.ok(!names.includes("Scratch"));
+    } finally {
+      await closeProjectSession();
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
   await assert.rejects(
     () =>
       importMetaLangToWebgmex({

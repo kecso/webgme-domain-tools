@@ -3,6 +3,8 @@
 ; Cardinality: global [min..max] on contains/set name; per-type suffix on members — see CARDINALITY.md.
 ;
 ; Libraries: a file may define multiple domains. Domains are closed scopes (bare names only).
+; The **last** domain_decl is the host. Only domains it attaches via `library` are used;
+; other domains in the file (or loaded via import) are ignored by flatten / ImportMetaLang.
 ; A domain attaches another domain as a library with `library Dom [as Alias]`; only then
 ; may it refer to that library via FQN (Alias.Concept). External domains load via import.
 

@@ -110,6 +110,28 @@ test("parseMetalang library from is import+attach sugar", () => {
   }
 });
 
+test("last domain is host; unused domains are ignored on flatten/import", () => {
+  const parsed = parseMetalang(`
+domain UnusedScratch
+concept Scratch { note: string; }
+
+domain SharedMeta
+concept State { isInitial: bool; }
+
+domain Host
+library SharedMeta
+concept Machine { contains SharedMeta.State*; }
+`);
+  assert.equal(parsed.domain, "Host");
+  assert.deepEqual(parsed.libraries, ["SharedMeta"]);
+  assert.deepEqual(parsed.ignoredDomains, ["UnusedScratch"]);
+  assert.ok(parsed.domains.UnusedScratch);
+  assert.ok(parsed.descriptor.concepts.Machine);
+  assert.ok(parsed.descriptor.concepts["SharedMeta.State"]);
+  assert.equal(parsed.descriptor.concepts.Scratch, undefined);
+  assert.equal(parsed.descriptor.concepts["UnusedScratch.Scratch"], undefined);
+});
+
 test("descriptorToMetalang emits multi-domain + library directives (canonical)", () => {
   const metalang = descriptorToMetalang(
     {
