@@ -45,7 +45,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 |----|---------|--------|--------|
 | F16d | MetaLang → descriptor parser | `review` | Hand-rolled; round-trip with examples + library blocks/imports |
 | F42 | ImportMetaLang plugin | `review` | `importMetaLangToWebgmex` / `plugins/ImportMetaLang` create-only |
-| F49 | Textual libraries (import + `library` blocks) | `review` | Canonical emit uses `library` blocks; materialize via `addLibrary` |
+| F49 | Textual libraries (multi-domain + `library` directive) | `review` | Domains are scopes; `library Dom [as Alias]`; file import; canonical emit |
 | F43 | Langium LSP | `deferred` → F44 package | Not in webdot |
 | F44 | Extract `webgme-metalang` | `pending` | Last |
 
