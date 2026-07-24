@@ -28,7 +28,14 @@
     var map = {};
     var paths = Object.keys(metaByPath);
     for (var i = 0; i < paths.length; i += 1) {
-      map[paths[i]] = metaNodeName(core, metaByPath[paths[i]]);
+      var node = metaByPath[paths[i]];
+      var simple = metaNodeName(core, node);
+      if (typeof core.getFullyQualifiedName === "function") {
+        var fqn = core.getFullyQualifiedName(node);
+        map[paths[i]] = typeof fqn === "string" && fqn.length > 0 ? fqn : simple;
+      } else {
+        map[paths[i]] = simple;
+      }
     }
     return map;
   }
@@ -152,13 +159,18 @@
       var nodePath = paths[i];
       var metaNode = metaByPath[nodePath];
       var name = pathToName[nodePath];
-      if (!name || SYSTEM_CONCEPTS[name]) continue;
+      if (!name) continue;
+      var simpleName = metaNodeName(core, metaNode);
+      if (SYSTEM_CONCEPTS[simpleName]) continue;
 
       var body = {};
       var base = core.getBase(metaNode);
       if (base) {
-        var baseName = metaNodeName(core, base);
-        if (baseName !== "FCO") body.extends = baseName;
+        var baseSimple = metaNodeName(core, base);
+        if (baseSimple !== "FCO") {
+          var basePath = core.getPath(base);
+          body.extends = pathToName[basePath] || baseSimple;
+        }
       }
 
       var meta = core.getJsonMeta(metaNode);

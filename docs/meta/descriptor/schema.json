@@ -17,7 +17,8 @@
   "$defs": {
     "conceptName": {
       "type": "string",
-      "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)*$",
+      "description": "Host: bare name. Library: FullyQualifiedName (Library.Concept)."
     },
     "cardinality": {
       "type": "string",
@@ -46,7 +47,10 @@
     "attributeDef": {
       "oneOf": [{ "$ref": "#/$defs/attributeType" }, { "$ref": "#/$defs/attributeMeta" }]
     },
-    "typeRef": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+    "typeRef": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)*$"
+    },
     "typeRefOrList": {
       "oneOf": [
         { "$ref": "#/$defs/typeRef" },
@@ -78,7 +82,10 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "extends": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+        "extends": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)*$"
+        },
         "contains": { "$ref": "#/$defs/memberRule" },
         "pointers": {
           "type": "object",

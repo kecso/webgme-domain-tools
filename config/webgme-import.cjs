@@ -208,6 +208,128 @@ async function exportProjectToFile(parameters) {
   return outFile;
 }
 
+/**
+ * Unpack a .webgmex into project JSON (includes rootHash used by addLibrary).
+ */
+async function loadProjectJsonFromWebgmex(webgmexPath, gmeConfig, logger) {
+  if (typeof webgmexPath !== "string" || !webgmexPath.toLowerCase().includes(".webgmex")) {
+    throw new Error("webgmexPath must be a path to a .webgmex file");
+  }
+  const BC = require("webgme-engine/src/server/middleware/blob/BlobClientWithFSBackend");
+  const cliImport = loadCliImport();
+  const blobClient = new BC(gmeConfig, logger);
+  return cliImport._addProjectPackageToBlob(blobClient, webgmexPath);
+}
+
+/**
+ * Insert library project objects into an open host project, then core.addLibrary.
+ * Caller must persist/commit afterward.
+ */
+async function attachLibraryFromWebgmex(parameters) {
+  const requireJS = global.requireJS;
+  const storageUtils = requireJS("common/storage/util");
+
+  const project = parameters.project;
+  const core = parameters.core;
+  const rootNode = parameters.rootNode;
+  const libraryName = parameters.libraryName;
+  const libraryWebgmex = parameters.libraryWebgmex;
+  const gmeConfig = parameters.gmeConfig;
+  const logger = parameters.logger;
+
+  if (typeof libraryName !== "string" || !libraryName.trim()) {
+    throw new Error("libraryName is required");
+  }
+  const existing = typeof core.getLibraryNames === "function" ? core.getLibraryNames(rootNode) : [];
+  if (existing.indexOf(libraryName) !== -1) {
+    throw new Error('Library name already attached: "' + libraryName + '"');
+  }
+
+  const projectJson = await loadProjectJsonFromWebgmex(libraryWebgmex, gmeConfig, logger);
+  await storageUtils.insertProjectJson(project, projectJson, {
+    commitMessage: "library package for " + libraryName,
+  });
+
+  await core.addLibrary(rootNode, libraryName, projectJson.rootHash, {
+    projectId: projectJson.projectId,
+    branchName: projectJson.branchName,
+    commitHash: projectJson.commitHash,
+  });
+
+  return {
+    libraryName: libraryName,
+    libraryRootHash: projectJson.rootHash,
+    libraryInfo: {
+      projectId: projectJson.projectId,
+      branchName: projectJson.branchName,
+      commitHash: projectJson.commitHash,
+    },
+  };
+}
+
+/**
+ * Replace an attached library from a .webgmex (core.updateLibrary).
+ */
+async function updateLibraryFromWebgmex(parameters) {
+  const requireJS = global.requireJS;
+  const storageUtils = requireJS("common/storage/util");
+
+  const project = parameters.project;
+  const core = parameters.core;
+  const rootNode = parameters.rootNode;
+  const libraryName = parameters.libraryName;
+  const libraryWebgmex = parameters.libraryWebgmex;
+  const gmeConfig = parameters.gmeConfig;
+  const logger = parameters.logger;
+
+  const existing = typeof core.getLibraryNames === "function" ? core.getLibraryNames(rootNode) : [];
+  if (existing.indexOf(libraryName) === -1) {
+    throw new Error('Library not attached: "' + libraryName + '"');
+  }
+
+  const projectJson = await loadProjectJsonFromWebgmex(libraryWebgmex, gmeConfig, logger);
+  await storageUtils.insertProjectJson(project, projectJson, {
+    commitMessage: "library update package for " + libraryName,
+  });
+
+  await core.updateLibrary(rootNode, libraryName, projectJson.rootHash, {
+    projectId: projectJson.projectId,
+    branchName: projectJson.branchName,
+    commitHash: projectJson.commitHash,
+  });
+
+  return {
+    libraryName: libraryName,
+    libraryRootHash: projectJson.rootHash,
+  };
+}
+
+/**
+ * Persist in-memory core changes and make a commit on the given branch.
+ */
+async function persistProjectCommit(parameters) {
+  const project = parameters.project;
+  const core = parameters.core;
+  const rootNode = parameters.rootNode;
+  const branchName = parameters.branchName || "master";
+  const parentCommitHash = parameters.parentCommitHash;
+  const message = parameters.message || "webdot library change";
+
+  const persisted = core.persist(rootNode);
+  const result = await project.makeCommit(
+    branchName,
+    [parentCommitHash],
+    persisted.rootHash,
+    persisted.objects,
+    message,
+  );
+  return {
+    commitHash: result.hash || result,
+    rootHash: persisted.rootHash,
+    status: result.status,
+  };
+}
+
 module.exports = {
   importSeedProject,
   createMemoryStorage,
@@ -217,4 +339,8 @@ module.exports = {
   executePlugin,
   exportProjectToFile,
   isRepositoryProjectJson,
+  loadProjectJsonFromWebgmex,
+  attachLibraryFromWebgmex,
+  updateLibraryFromWebgmex,
+  persistProjectCommit,
 };

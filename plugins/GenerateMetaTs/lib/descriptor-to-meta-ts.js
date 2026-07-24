@@ -85,14 +85,46 @@
     return lines.join("\n");
   }
 
+  function localName(fqn) {
+    var i = fqn.lastIndexOf(".");
+    return i < 0 ? fqn : fqn.slice(i + 1);
+  }
+
+  function namespaceOf(fqn) {
+    var i = fqn.lastIndexOf(".");
+    return i < 0 ? "" : fqn.slice(0, i);
+  }
+
+  function assertValidFqn(fqn) {
+    var parts = fqn.split(".");
+    for (var i = 0; i < parts.length; i += 1) {
+      if (!isValidTsIdentifier(parts[i])) {
+        throw new Error(
+          'Concept name "' +
+            fqn +
+            '" is not a valid TypeScript identifier path; rename in the metamodel or extend the generator',
+        );
+      }
+    }
+  }
+
+  function extendsClauseFor(fqn, baseFqn) {
+    if (!baseFqn) return "";
+    if (namespaceOf(fqn) && namespaceOf(fqn) === namespaceOf(baseFqn)) {
+      return " extends " + localName(baseFqn);
+    }
+    return " extends " + baseFqn;
+  }
+
   /**
    * Domain instance interfaces with WebGME scopes kept separate:
    * attributes / pointers / sets / children (unnamed containment list).
+   * `fqn` may be `Lib.Concept` — interface is emitted as local name inside a namespace.
    */
-  function renderConceptInterface(name, body) {
+  function renderConceptInterface(fqn, body) {
     var lines = [];
-    var extendsClause = body.extends ? " extends " + body.extends : "";
-    lines.push("export interface " + name + extendsClause + " {");
+    var name = localName(fqn);
+    lines.push("export interface " + name + extendsClauseFor(fqn, body.extends) + " {");
 
     var attrFields = ["name?: string;"];
     var attrs = body.attributes || {};
@@ -149,8 +181,7 @@
     return lines.filter(Boolean).join("\n");
   }
 
-  function topologicalConceptOrder(concepts) {
-    var names = Object.keys(concepts);
+  function topologicalConceptOrder(concepts, names) {
     var remaining = {};
     names.forEach(function (n) {
       remaining[n] = true;
@@ -190,16 +221,29 @@
     });
     var i;
     for (i = 0; i < conceptNames.length; i += 1) {
-      if (!isValidTsIdentifier(conceptNames[i])) {
-        throw new Error(
-          'Concept name "' +
-            conceptNames[i] +
-            '" is not a valid TypeScript identifier; rename in the metamodel or extend the generator',
-        );
-      }
+      assertValidFqn(conceptNames[i]);
     }
 
-    var order = topologicalConceptOrder(concepts);
+    var byNs = {};
+    var hostNames = [];
+    var nsNames = [];
+    for (i = 0; i < conceptNames.length; i += 1) {
+      var fqn = conceptNames[i];
+      var ns = namespaceOf(fqn);
+      if (!ns) {
+        hostNames.push(fqn);
+      } else {
+        if (!byNs[ns]) {
+          byNs[ns] = [];
+          nsNames.push(ns);
+        }
+        byNs[ns].push(fqn);
+      }
+    }
+    nsNames.sort(function (a, b) {
+      return a.localeCompare(b);
+    });
+
     var blocks = [];
 
     if (conceptNames.length === 0) {
@@ -216,9 +260,38 @@
       blocks.push("");
     }
 
-    for (i = 0; i < order.length; i += 1) {
-      var name = order[i];
-      blocks.push(renderConceptInterface(name, concepts[name]), "");
+    // Library namespaces first so host interfaces can extend Lib.Concept.
+    for (i = 0; i < nsNames.length; i += 1) {
+      var libNs = nsNames[i];
+      var libConcepts = byNs[libNs];
+      var libOrder = topologicalConceptOrder(concepts, libConcepts);
+      var nsParts = libNs.split(".");
+      for (var p = 0; p < nsParts.length; p += 1) {
+        assertValidFqn(nsParts[p]);
+      }
+      var inner = [];
+      for (var j = 0; j < libOrder.length; j += 1) {
+        inner.push(renderConceptInterface(libOrder[j], concepts[libOrder[j]]), "");
+      }
+      var nested = inner.join("\n").replace(/\n+$/, "");
+      // Support multi-segment namespaces (A.B) via nested export namespace.
+      var open = "";
+      var close = "";
+      var indent = 0;
+      for (p = 0; p < nsParts.length; p += 1) {
+        open +=
+          (p === 0 ? "" : "\n") +
+          indentBlock("export namespace " + nsParts[p] + " {", indent);
+        close = indentBlock("}", indent) + (close ? "\n" + close : "");
+        indent += 2;
+      }
+      blocks.push(open + "\n" + indentBlock(nested, indent) + "\n" + close, "");
+    }
+
+    var hostOrder = topologicalConceptOrder(concepts, hostNames);
+    for (i = 0; i < hostOrder.length; i += 1) {
+      var hostName = hostOrder[i];
+      blocks.push(renderConceptInterface(hostName, concepts[hostName]), "");
     }
 
     return blocks.join("\n").replace(/\n+$/, "") + "\n";

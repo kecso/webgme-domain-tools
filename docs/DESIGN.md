@@ -4,6 +4,16 @@ Headless CLI for WebGME domain studios. Complements webgme-cli (scaffold + serve
 
 **User-facing how-tos:** [tutorials](tutorials/README.md) · **Command flags:** [CLI.md](CLI.md) · **`--help`** on each command remains authoritative for the live flag surface.
 
+## Positioning
+
+**Primary audience:** academics and small labs building domain toolchains (DSMLs, generators, analysis plugins) who need something workable quickly without adopting a large commercial or Eclipse-scale stack.
+
+**Product bet:** WebGME remains the modeling runtime (browser collab, versioned models, JS plugins). `webdot` + meta IR/descriptor/MetaLang lower the *cost of operating* that stack — headless CI, reviewable meta, installable toolbox plugins, session/history on `.webgmex` — so a domain studio can stand up and evolve in days/weeks, not quarters.
+
+**Stack shift (not “CLI for its own sake”):** We stay **diagram-driven and visual-first**. The textual / structured meta surface (IR → descriptor → MetaLang, plus headless mutation paths) is about **opening the stack to automated agents** and other non-GUI manipulators. Agents will be part of normal academic and engineering workflows; a framework that only exposes a canvas will simply not get used. Text is an access ramp for agents, CI, and review — not a replacement for the WebGME GUI.
+
+**Non-goals:** Drawing users away from EMF, MetaEdit+, SysML v2, etc. Those ecosystems win on depth and industry lock-in. We are a **low-cost alternative for rapid domain toolchain development**, not a MOF/metaCASE competitor. MetaLang is not “compete with MOF syntax”; it is “make WebGME meta agent-reachable and git-reachable.”
+
 ## SetupCatalog
 
 Loaded from `{cwd}/webgme-setup.json`. Every command that names a seed, plugin, or component kind resolves through the catalog. Errors cite:
@@ -19,7 +29,7 @@ Stable refs: `seed:StateMachine`, `plugin:TextToModel`, `viz:MonacoEditor`, `rou
 | Scope | Invocation | Data source |
 |-------|------------|-------------|
 | Repo (default) | `tree` / `tree repo` | SetupCatalog only |
-| Seed model | `tree --seed <name>` | File-project load from `.webgmex` |
+| Seed model | `tree --seed <name>` or `tree --webgmex <path>` | File-project load from `.webgmex` |
 
 Seed scope options: `--at <path>` (subtree root, `[default: /]`), `--nodes <paths>` (comma-separated; `[default: all nodes under --at]`). Ambiguous seed names exit 2 with candidates.
 
@@ -29,7 +39,7 @@ Seed scope options: `--at <path>` (subtree root, `[default: /]`), `--nodes <path
 
 | Subcommand | Invocation | Output |
 |------------|------------|--------|
-| Meta IR | `seed meta --seed <name>` | MetaAspectSet JSON (`getJsonMeta` per meta node); see [`docs/meta/`](meta/README.md) |
+| Meta IR | `seed meta --seed <name>` or `--webgmex <path>` | MetaAspectSet JSON (`getJsonMeta` per meta node); see [`docs/meta/`](meta/README.md) |
 
 ## Plugin execution
 
@@ -84,17 +94,21 @@ Optional **F30** interactive session REPL is out of scope for the core Phase 5 d
 
 See [PROJECT.md](PROJECT.md) Phase 5 (F26–F29, optional F30).
 
-## Project libraries (Phase 6 — planned)
+## Project libraries (Phase 6 — next)
 
 **Scenario:** Domain studios attach WebGME **libraries** into a host `.webgmex` (shared metamodel packages). Authors need both **introspection that respects namespaces** and optional **CLI management** of those attachments.
 
 | Area | Behavior |
 |------|----------|
-| List / inspect | Show attached library names, roots, and which meta nodes are library-sourced vs host-owned |
-| Meta emit | Descriptor / MetaLang / `tree --seed` / GenerateMetaTs use FQN or `library` blocks when simple names collide |
-| Manage (CLI) | Attach / update / remove a library `.webgmex` on the open session or a seed (engine `addLibrary` / update / remove APIs) |
-| Fixture | Library-bearing `.webgmex` in `test/fixtures/` so representation + CLI are testable |
+| List / inspect | `library list`; `tree --seed` keeps real containment, **library roots first under ROOT** |
+| Meta emit | Library types always `Lib.Concept`; **host stays bare** (no host namespace) |
+| TS emit | Nested `namespace Lib` for library concepts; host interfaces top-level |
+| Manage (CLI) | **Outside sessions** — always write target `.webgmex`; mimic GUI `addLibrary` |
+| Textual libs | **Phase 9 (F49)** — metalang import and/or in-place `library` blocks → same attach semantics; **before** package extract |
+| Fixtures | Synthetic host+lib (domain-as-library pattern). Richer dogfood → backlog **B14** |
 
-Phase 4 already records IR `libraries[]` and per-node `namespace` / `fullyQualifiedName` / `libraryElement`. Phase 6 finishes consumer-facing listing/emit and adds management commands.
+Phase 4 already records IR `libraries[]` and per-node `namespace` / `fullyQualifiedName` / `libraryElement`. Phase 6 finishes consumer-facing listing/emit and management. Decisions: [`meta/LIBRARIES.md`](meta/LIBRARIES.md).
 
-See [PROJECT.md](PROJECT.md) Phase 6 (F31–F35) and [`meta/LIBRARIES.md`](meta/LIBRARIES.md).
+**Sequencing:** Phase 6 (binary libraries) → **Phase 9** (MetaLang authoring + **textual libraries F49**) → only then extract `webgme-metalang` (**F44**). Do not split the language package while libraries are still FQN-only with no import/`library` definition.
+
+See [PROJECT.md](PROJECT.md) Phase 6 (F31–F35) / Phase 9 (F16d, F42, F49, F43, F44) and [`meta/LIBRARIES.md`](meta/LIBRARIES.md).

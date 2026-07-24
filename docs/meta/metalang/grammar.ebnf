@@ -9,7 +9,7 @@ statement    = domain_decl
 
 domain_decl  = "domain" , qualified_name , { newline } ;
 
-concept_decl = "concept" , identifier , [ "extends" , identifier ] ,
+concept_decl = "concept" , type_ref , [ "extends" , type_ref ] ,
                concept_body , { newline } ;
 
 concept_body = block_body | ";" ;
@@ -63,7 +63,7 @@ enum_type    = "enum" , "[" , enum_value , { "," , enum_value } , "]" ;
 
 enum_value   = identifier | string_literal ;
 
-type_ref     = identifier ;
+type_ref     = qualified_name ;
 
 qualified_name = identifier , { "." , identifier } ;
 

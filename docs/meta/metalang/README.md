@@ -12,23 +12,30 @@ Human-readable metamodel surface syntax. **Target semantics:** MetaDescriptor v1
 ## Design principles
 
 1. **Concise** — omit FCO/META system nodes; `name` attribute is implicit on all concepts.
-2. **Inheritance explicit** — when a concept’s base is **not FCO**, MetaLang **must** show `extends Base` (see below).
+2. **Inheritance explicit** — primary base via `extends` when ≠ FCO; **mixins** exist in WebGME but are not in MetaLang v0 yet (IR keeps them).
 3. **Pointer-first** — all references in `concepts.*.pointers`; no connection/relationship layer in descriptor JSON.
 4. **Readable** — `contains[0..10] Child*`; `set ports[1..10] -> Pin*`; `dst -> A | B`.
 5. **Rules separate from grammar** — grammar defines parsing; RULES define meaning and mapping to JSON Patch / descriptor ops.
 
-## Inheritance (`extends`)
+## Inheritance (`extends` + mixins)
 
-WebGME meta uses single inheritance (`core.getBase`). MetaLang maps it as:
+WebGME meta supports **both**:
 
-| Base (from core) | MetaLang | Descriptor `extends` |
-|------------------|----------|----------------------|
+| Mechanism | Engine | In MetaLang / descriptor v1? |
+|-----------|--------|------------------------------|
+| **Primary base** | `core.getBase` (one parent) | Yes — `extends Base` when base ≠ `FCO` |
+| **Mixins** | mixin targets on the meta node (additional bases → multiple inheritance) | **Not yet** — retained in IR; lossy in descriptor/MetaLang (future `add-mixin` in [`RULES.md`](RULES.md)) |
+
+Primary base maps as:
+
+| Base (from `getBase`) | MetaLang | Descriptor `extends` |
+|-----------------------|----------|----------------------|
 | FCO | `concept Foo;` or `concept Foo { … }` | omitted |
 | Any other concept | `concept Pin extends PortBase;` | `"extends": "PortBase"` |
 
-**Renderer rule (F16c):** `irToDescriptor` / `descriptorToMetalang` use `core.getBase`; emit `extends` only when base name ≠ `FCO`. Never print `extends FCO`.
+**Renderer rule (F16c):** `irToDescriptor` / `descriptorToMetalang` use `core.getBase`; emit `extends` only when base name ≠ `FCO`. Never print `extends FCO`. Mixins are not emitted.
 
-**Parser rule:** `concept X;` with no `extends` ⇒ base FCO. `concept X extends Y` ⇒ descriptor `concepts.X.extends = "Y"`.
+**Parser rule:** `concept X;` with no `extends` ⇒ base FCO. `concept X extends Y` ⇒ descriptor `concepts.X.extends = "Y"`. Mixin authoring waits on a later MetaLang revision once the descriptor carries them.
 
 ## Pointers vs connections
 

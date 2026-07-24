@@ -9,7 +9,15 @@ import {
   installPlugin,
   uninstallPlugin,
 } from "./plugin/install.js";
+import {
+  runLibraryAdd,
+  runLibraryList,
+  runLibraryRemove,
+  runLibraryUpdate,
+  formatLibraryList,
+} from "./commands/library.js";
 import { loadSetupCatalog } from "./catalog/setup-catalog.js";
+import { primaryWebgmexPath, resolveSeedSelection } from "./session/seed-resolution.js";
 import {
   runSessionCheckoutCommand,
   runSessionCloseCommand,
@@ -139,6 +147,10 @@ Docs (tutorials + full flag reference): see the package README and docs/
       "Load seed model tree [default: open session project]",
     )
     .option(
+      "--webgmex <path>",
+      "Direct .webgmex path for seed model tree (no catalog / -C required)",
+    )
+    .option(
       "--kind <kinds>",
       "Repo scope: seeds,plugins,visualizers,routers (comma-separated) [default: all kinds]",
     )
@@ -156,6 +168,7 @@ Docs (tutorials + full flag reference): see the package README and docs/
     )
     .action((scope: string | undefined, opts: {
       seed?: string;
+      webgmex?: string;
       kind?: string;
       format?: string;
       at?: string;
@@ -165,11 +178,16 @@ Docs (tutorials + full flag reference): see the package README and docs/
       const hasSession = readSessionState(sessionCwd) !== null;
       // With no explicit scope, a session means "show the session model" (seed scope).
       const seedScope =
-        opts.seed !== undefined || scope === "seed" || (scope === undefined && hasSession);
+        opts.seed !== undefined ||
+        Boolean(opts.webgmex) ||
+        scope === "seed" ||
+        (scope === undefined && hasSession);
       if (seedScope) {
         const seedName = optionalArg(opts.seed);
-        if (!seedName && !hasSession) {
-          console.error("tree --seed <name> is required (or open a session first)");
+        if (!seedName && !opts.webgmex && !hasSession) {
+          console.error(
+            "tree seed requires --seed <name>, --webgmex <path>, or an open session",
+          );
           process.exit(2);
         }
         void runCli(() =>
@@ -177,6 +195,7 @@ Docs (tutorials + full flag reference): see the package README and docs/
             cwd: projectCwdFor(cmd, sessionCwd),
             sessionCwd,
             seed: seedName,
+            webgmex: opts.webgmex,
             seedModel: true,
             kind: opts.kind,
             format: (opts.format ?? "tree") as RepoTreeFormat | SeedTreeFormat,
@@ -204,13 +223,19 @@ Docs (tutorials + full flag reference): see the package README and docs/
     .description("MetaAspectSet IR from a file-project seed")
     .option("--seed [name]", "Seed name [default: open session project]")
     .option(
+      "--webgmex <path>",
+      "Direct .webgmex path (no catalog / -C required)",
+    )
+    .option(
       "--format <fmt>",
       "json | tree | tree-verbose | descriptor | metalang [default: json]",
     )
-    .action((opts: { seed?: string | boolean; format?: string }, cmd) => {
+    .action((opts: { seed?: string | boolean; webgmex?: string; format?: string }, cmd) => {
       const sessionCwd = executionCwd();
-      if (opts.seed === undefined && !readSessionState(sessionCwd)) {
-        console.error("seed meta requires --seed <name> (or open a session first)");
+      if (opts.seed === undefined && !opts.webgmex && !readSessionState(sessionCwd)) {
+        console.error(
+          "seed meta requires --seed <name>, --webgmex <path>, or an open session",
+        );
         process.exit(2);
       }
       void runCli(() =>
@@ -218,6 +243,7 @@ Docs (tutorials + full flag reference): see the package README and docs/
           cwd: projectCwdFor(cmd, sessionCwd),
           sessionCwd,
           seed: optionalArg(opts.seed),
+          webgmex: opts.webgmex,
           format: opts.format as SeedMetaFormat | undefined,
         }),
       );
@@ -417,6 +443,162 @@ until you run session save. Use session open / session status to manage state.
         if (err instanceof SessionError) {
           console.error(err.message);
           process.exit(1);
+        }
+        console.error(err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  /** Library ops never use the session working copy — always the seed / --webgmex file. */
+  function libraryProjectCwd(cmd: Command): string {
+    return explicitProjectCwd(cmd) ?? executionCwd();
+  }
+
+  function resolveLibraryHostWebgmex(
+    cwd: string,
+    opts: { seed?: string; webgmex?: string },
+  ): string {
+    if (opts.webgmex) {
+      return path.resolve(executionCwd(), opts.webgmex);
+    }
+    if (!opts.seed) {
+      throw new Error("Provide --seed <name> or --webgmex <path>");
+    }
+    const catalog = loadSetupCatalog(cwd);
+    const entry = resolveSeedSelection(catalog, opts.seed);
+    return primaryWebgmexPath(entry);
+  }
+
+  const libraryCmd = program
+    .command("library")
+    .description(
+      "Attach / inspect WebGME libraries on a .webgmex (always persists; not part of session)",
+    );
+
+  libraryCmd
+    .command("list")
+    .description("List libraries attached to a seed or .webgmex")
+    .option("--seed <name>", "Seed from webgme-setup.json")
+    .option("--webgmex <path>", "Direct .webgmex path (relative to shell cwd)")
+    .action((opts: { seed?: string; webgmex?: string }, cmd) => {
+      try {
+        const cwd = libraryProjectCwd(cmd);
+        const webgmex = resolveLibraryHostWebgmex(cwd, opts);
+        void runCli(async () =>
+          formatLibraryList(await runLibraryList({ webgmex, cwd })),
+        );
+      } catch (err) {
+        if (err instanceof AmbiguousSeedError) {
+          console.error(err.message);
+          process.exit(2);
+        }
+        console.error(err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  libraryCmd
+    .command("add")
+    .description("Attach a library .webgmex (same semantics as GUI addLibrary; writes host file)")
+    .requiredOption("--from <path>", "Library .webgmex to attach")
+    .requiredOption("--as <name>", "Library name / namespace")
+    .option("--seed <name>", "Host seed from webgme-setup.json")
+    .option("--webgmex <path>", "Host .webgmex path (relative to shell cwd)")
+    .action((opts: { from: string; as: string; seed?: string; webgmex?: string }, cmd) => {
+      try {
+        const cwd = libraryProjectCwd(cmd);
+        const webgmex = resolveLibraryHostWebgmex(cwd, opts);
+        void runCli(async () => {
+          const result = await runLibraryAdd({
+            webgmex,
+            cwd,
+            from: opts.from,
+            as: opts.as,
+          });
+          return (
+            "added library " +
+            result.library +
+            " → " +
+            result.webgmex +
+            " (commit " +
+            result.commitHash +
+            ")"
+          );
+        });
+      } catch (err) {
+        if (err instanceof AmbiguousSeedError) {
+          console.error(err.message);
+          process.exit(2);
+        }
+        console.error(err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  libraryCmd
+    .command("update")
+    .description("Replace an attached library from a .webgmex (writes host file)")
+    .argument("<name>", "Attached library name")
+    .requiredOption("--from <path>", "Updated library .webgmex")
+    .option("--seed <name>", "Host seed from webgme-setup.json")
+    .option("--webgmex <path>", "Host .webgmex path (relative to shell cwd)")
+    .action((name: string, opts: { from: string; seed?: string; webgmex?: string }, cmd) => {
+      try {
+        const cwd = libraryProjectCwd(cmd);
+        const webgmex = resolveLibraryHostWebgmex(cwd, opts);
+        void runCli(async () => {
+          const result = await runLibraryUpdate({
+            webgmex,
+            cwd,
+            name,
+            from: opts.from,
+          });
+          return (
+            "updated library " +
+            result.library +
+            " → " +
+            result.webgmex +
+            " (commit " +
+            result.commitHash +
+            ")"
+          );
+        });
+      } catch (err) {
+        if (err instanceof AmbiguousSeedError) {
+          console.error(err.message);
+          process.exit(2);
+        }
+        console.error(err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  libraryCmd
+    .command("remove")
+    .description("Detach a library (writes host file)")
+    .argument("<name>", "Attached library name")
+    .option("--seed <name>", "Host seed from webgme-setup.json")
+    .option("--webgmex <path>", "Host .webgmex path (relative to shell cwd)")
+    .action((name: string, opts: { seed?: string; webgmex?: string }, cmd) => {
+      try {
+        const cwd = libraryProjectCwd(cmd);
+        const webgmex = resolveLibraryHostWebgmex(cwd, opts);
+        void runCli(async () => {
+          const result = await runLibraryRemove({ webgmex, cwd, name });
+          return (
+            "removed library " +
+            result.library +
+            " → " +
+            result.webgmex +
+            " (commit " +
+            result.commitHash +
+            ")"
+          );
+        });
+      } catch (err) {
+        if (err instanceof AmbiguousSeedError) {
+          console.error(err.message);
+          process.exit(2);
         }
         console.error(err instanceof Error ? err.message : err);
         process.exit(1);

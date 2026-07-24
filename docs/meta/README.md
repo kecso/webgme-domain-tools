@@ -26,6 +26,7 @@ webdot seed meta --seed StateMachine --format json        # [default: json] (IR)
 webdot seed meta --seed StateMachine --format tree        # same indentation as tree --seed
 webdot seed meta --seed StateMachine --format descriptor
 webdot seed meta --seed StateMachine --format metalang
+webdot seed meta --webgmex ./model.webgmex --format descriptor   # no catalog required
 ```
 
 ## Specifications
