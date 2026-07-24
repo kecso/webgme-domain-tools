@@ -39,17 +39,22 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 9 — MetaLang authoring** — `review` (branch `feature/phase9-metalang`)
+**Phase 9 — Extract `webgme-metalang` (F44)** — `pending` (next)
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F16d | MetaLang → descriptor parser | `review` | Hand-rolled; round-trip with examples + library blocks/imports |
-| F42 | ImportMetaLang plugin | `review` | `importMetaLangToWebgmex` / `plugins/ImportMetaLang` create-only |
-| F49 | Textual libraries (multi-domain + `library` directive) | `review` | Domains are scopes; `library Dom [as Alias]`; file import; canonical emit |
-| F43 | Langium LSP | `deferred` → F44 package | Not in webdot |
-| F44 | Extract `webgme-metalang` | `pending` | Last |
+| F44 | Extract `webgme-metalang` package | `pending` | Move grammar, translate, Langium/LSP; webdot depends on the package |
+| F43 | Langium LSP | `deferred` → F44 package | Ships with extract, not webdot CLI |
 
-**Review gate:** `npm test` · `webdot seed meta --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex --format metalang` (library blocks) · import example metalang to a new `.webgmex`
+**Review gate:** Package boundary + in-repo webdot dependency; LSP not required for first extract cut if deferred inside the package.
+
+**Phase 9 — MetaLang authoring** — `done` (merged to `main` 2026-07-24, branch `feature/phase9-metalang`)
+
+| ID | Feature | Status | Review |
+|----|---------|--------|--------|
+| F16d | MetaLang → descriptor parser | `done` | Hand-rolled; round-trip with examples + library/import. Deeper coverage → **B15** |
+| F42 | ImportMetaLang plugin | `done` | `importMetaLangToWebgmex` / `plugins/ImportMetaLang` create-only |
+| F49 | Textual libraries (multi-domain + `library` directive) | `done` | Domains are scopes; host = last `domain`; unused domains ignored; `library Dom [as Alias]` |
 
 **Phase 6 — Project libraries** — `done` (merged to `main` 2026-07-24, branch `feature/phase6-libraries`)
 
@@ -63,7 +68,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 **Review gate:** `npm test` · commands in [Phase 6 review checklist](#phase-6--project-libraries) below
 
-**Hard gate:** Do **not** extract `webgme-metalang` (**F44**) until Phase 9 authoring + textual library surface (F16d, F42, F49) are proven in-repo. Phase 6 F31–F34 only unlock FQN emit; finishing libraries in MetaLang is Phase 9.
+**Hard gate:** Authoring + textual libraries (F16d, F42, F49) are on `main`. **F44** may proceed; prefer landing **B15** fixtures/coverage before or with extract so the package ships with solid parser tests.
 
 **Phase 8 — Documentation (tutorials & CLI reference)** — `done` (merged to `main` 2026-07-22, PR [#8](https://github.com/kecso/webgme-domain-tools/pull/8))
 
@@ -140,7 +145,7 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 | F16a | Meta representation specs (IR, descriptor, MetaLang) | `done` | `docs/meta/README.md` + examples |
 | F16b | `seed meta --format descriptor` | `done` | `npm test` — `meta-translate.test.js` |
 | F16c | `seed meta --format metalang` | `done` | `webdot seed meta --seed StateMachine --format metalang` |
-| F16d | MetaLang parser / Langium (optional) | `deferred` → **Phase 9** | Authoring path + eventual package extract |
+| F16d | MetaLang parser / Langium (optional) | `done` | Phase 9 hand-rolled parser; Langium → F44 |
 
 ### Phase 2½ review notes (2026-07-10)
 
@@ -234,7 +239,7 @@ Fixture `sample-project` includes `StateMachine` and `StateModel` (duplicate `.w
 | F16a | Meta specs + examples | `done` | `docs/meta/` — pointer-first descriptor, MetaLang EBNF + RULES |
 | F16b | `seed meta --format descriptor` | `done` | `irToDescriptor` + tests |
 | F16c | `seed meta --format metalang` | `done` | `descriptorToMetalang` + tests |
-| F16d | MetaLang parser (Langium optional) | `deferred` → **Phase 9** | Authoring path metalang → descriptor |
+| F16d | MetaLang parser (Langium optional) | `done` | Phase 9 hand-rolled; Langium → F44 |
 
 ### Phase 3 — Plugin run
 | ID | Feature | Status | Notes |
@@ -401,22 +406,22 @@ webdot library remove Domain --webgmex ./Host.webgmex
 
 **Decisions (2026-07-23 / 2026-07-24):** Always-FQN for library types; no host namespace; session-free library CLI; richer library dogfood scenarios are **future (B14)**, not a Phase 6 blocker. Details: [`docs/meta/LIBRARIES.md`](meta/LIBRARIES.md).
 
-**Notes:** F17 IR fields are already in place. Prefer session write-back + Phase 7 history-aware save when library mutations write `.webgmex`. Textual `library` / import surface is **Phase 9 (F49)** — finish that before any package split (**F44**).
+**Notes:** F17 IR fields are already in place. Prefer session write-back + Phase 7 history-aware save when library mutations write `.webgmex`. Textual `library` / import surface landed in **Phase 9 (F49)**; package split is **F44**.
 
 ---
 
 ### Phase 9 — MetaLang authoring
 
-**Status:** `review` (branch `feature/phase9-metalang`)  
+**Status:** Authoring (F16d, F42, F49) `done` on `main` 2026-07-24; extract (**F44**) `pending`  
 **Goal:** Close the authoring loop (metalang → descriptor → WebGME meta), finish **textual library features**, then extract MetaLang into its own package **only after** libraries are complete in-language. LSP lives in that extracted package — not in webdot.
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F16d | MetaLang → descriptor parser | `review` | **Hand-rolled** in-repo (matches `grammar.ebnf`); Langium deferred to extract package |
-| F42 | ImportMetaLang plugin | `review` | **Create-only**; `importMetaLangToWebgmex` + `plugins/ImportMetaLang`; GUI-like `addLibrary` |
-| F49 | Textual libraries (multi-domain + `library` directive) | `review` | Domains are scopes; `library Dom [as Alias]`; import from files; canonical emit. **Required before F44** |
+| F16d | MetaLang → descriptor parser | `done` | **Hand-rolled** in-repo (matches `grammar.ebnf`); deeper coverage → **B15**; Langium deferred to extract |
+| F42 | ImportMetaLang plugin | `done` | **Create-only**; `importMetaLangToWebgmex` + `plugins/ImportMetaLang`; GUI-like `addLibrary` |
+| F49 | Textual libraries (multi-domain + `library` directive) | `done` | Domains are scopes; host = last `domain`; unused domains ignored; `library Dom [as Alias]`; file import; canonical emit |
 | F43 | Langium language server | `deferred` → **F44 package** | LSP ships with `webgme-metalang`, not webdot CLI |
-| F44 | Extract `webgme-metalang` package | `pending` | **Last** — after F16d + F42 + F49; move grammar, translate, **Langium/LSP**; webdot depends on the package |
+| F44 | Extract `webgme-metalang` package | `pending` | **Next** — move grammar, translate, **Langium/LSP**; webdot depends on the package |
 
 **Phase 9 — Scenario (boiled down)**
 
@@ -437,6 +442,8 @@ node -e "import('./dist/meta/import-metalang.js').then(m=>m.importMetaLangToWebg
 4. **`npm test`** — including `metalang-parse.test.js`, `import-metalang.test.js`.
 
 **Notes:** Descriptor/MetaLang remain lossy vs IR — ingest creates a **useful** meta project, not a bit-perfect GUI round-trip. Details: [`docs/meta/LIBRARIES.md`](meta/LIBRARIES.md).
+
+**Coverage follow-up:** `metalang-to-descriptor.ts` is ~79% lines / ~70% branches after Phase 9 happy paths — enough for review. Closing the gap (error paths + less-used syntax) is **B15**; prefer real `.metalang` / `.webgmex` fixtures over synthetic one-liners where possible.
 
 ---
 
@@ -493,9 +500,10 @@ Tasks not tied to a single milestone — pick up anytime.
 | B9 | compatibility | Repository `.webgmex` / history — see **Phase 7** (F36–F41) | — |
 | B10 | product | Phase 5 installable plugins (F26–F29) — done on `main` | — |
 | B11 | product | Phase 6 library CLI management (F35) | medium |
-| B12 | product | Phase 9 MetaLang authoring + textual libraries + package extract (F16d, F42, F49, F43, F44) — **next after Phase 6**; F44 last | high |
+| B12 | product | Phase 9 MetaLang authoring (F16d, F42, F49) done on `main`; remaining: extract **F44** (+ F43 LSP in package); parser coverage **B15** | high |
 | B13 | docs | Phase 8 tutorials + CLI reference (F45–F47) — done on `main` | — |
 | B14 | meta | Expand library dogfood beyond “domain as read-only library” (multi-lib, collisions, nested libs, DSS-scale) — collect real examples later | low |
+| B15 | meta / test | Raise `metalang-to-descriptor` coverage (error paths + under-tested syntax: `set`, union pointers `A\|B`, `:n..m` / global cards, enums, block comments, import/library failures, duplicate concept/namespace, implicit domain). Collect maintainer fixtures first; not a Phase 9 merge blocker | medium |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
 
@@ -507,6 +515,7 @@ Record of completed reviews (newest first).
 
 | Date | Feature | Reviewer | Outcome | Notes |
 |------|---------|----------|---------|-------|
+| 2026-07-24 | Phase 9 (F16d, F42, F49) | maintainer | Approved | Multi-domain MetaLang + `library` directive; host = last domain; unused domains ignored; ImportMetaLang create-only; deeper parser coverage → B15; next **F44** extract; merged `feature/phase9-metalang` → `main` |
 | 2026-07-24 | Phase 6 (F31–F35) | maintainer | Approved | Library list (with origin info) / FQN emit / nested TS namespaces / session-free library CLI; `--webgmex` added to `seed meta` + `tree`; richer dogfood → B14; textual libraries moved up as Phase 9 F49 before package extract; merged `feature/phase6-libraries` → `main` |
 | 2026-07-22 | Phase 8 (F45–F47) | maintainer | Approved | Tutorials + CLI reference + slim README; `[default: …]` on help/docs; `branch update`; merged PR #8 → `main` |
 | 2026-07-22 | Phase 7 (F36–F41) | maintainer | Approved | Repository exchange v2 / history / branch CLI; fixture + coverage; merged PR #7 → `main`; Phase 8 docs scheduled before MetaLang |
@@ -524,6 +533,15 @@ Record of completed reviews (newest first).
 
 ### Changelog
 
+### Unreleased — Phase 9 authoring on `main` (2026-07-24)
+- MetaLang → descriptor parser (`parseMetalang` / `parseMetalangFile`); multi-domain files; host = **last** `domain`
+- Domains not attached by the host via `library` land in `ignoredDomains` and are skipped on import
+- `library Dom [as Alias]`, `import Dom from "…"`, sugar `library Dom from "…" [as Alias]`
+- Canonical emit: library domains first (bare in-domain refs), then host with `library` + FQNs
+- ImportMetaLang create-only: `importMetaLangToWebgmex` + `plugins/ImportMetaLang` (GUI-like `addLibrary`)
+- Examples: `docs/meta/examples/shared-meta.metalang`, `host-with-sharedmeta.metalang`, `host-import-sharedmeta.metalang`
+- Follow-ups: **F44** extract `webgme-metalang`; **B15** richer parser coverage/fixtures
+
 ### Unreleased — Phase 6 on `main` (2026-07-24)
 - Phase 6: `webdot library list` / `add` / `update` / `remove` (always persists the target `.webgmex`, no session)
 - `library list` shows attached name, library root path, and origin info (`projectId`, `commitHash`, library `hash`)
@@ -532,18 +550,18 @@ Record of completed reviews (newest first).
 - `tree --format tree-verbose`: library roots first under ROOT, `[library-root]` / `[library]` tags
 - `seed meta` and `tree` accept `--webgmex <path>` — no `webgme-setup.json` / `-C` needed
 - Fixtures: `test/fixtures/libraries/` (host with attached `SharedMeta` + library source package)
-- Roadmap: **Phase 9** next — textual libraries (**F49**) before `webgme-metalang` extract (**F44**)
+- Roadmap: Phase 9 authoring landed; next **F44** extract
 
 ### Unreleased — Phase 7–8 on `main` (2026-07-22)
 - Phase 8: tutorials (`docs/tutorials/`), full CLI reference (`docs/CLI.md`), slim README; docs shipped in npm tarball; consistent `[default: …]` in `--help` / CLI.md
 - `branch update` to move an existing tip; `branch create` refuses to overwrite
 - Phase 7: v1/v2 `.webgmex` detect; history-preserving save for repository packages; `--branch` on session/plugin; `history` / `branch` / `tag` / `session checkout`
 - Fixture: `test/fixtures/repository/StateMachine.webgmex`; catalog StateMachine seed meta fix (Machine contains Variable*)
-- Next product work: **Phase 9** MetaLang (textual libraries **F49** before package extract **F44**)
+- Next product work: **F44** extract `webgme-metalang` (authoring F16d/F42/F49 done)
 - Package version still **0.7.0** until the next npm release cut
 
 ### Planning (2026-07-24) — roadmap
-- **Phase 9** moved up as next after Phase 6: complete library features in MetaLang (F49) **before** splitting out `webgme-metalang` (F44)
+- Phase 9 authoring (F16d, F42, F49) complete on `main`; next **F44** extract (+ **B15** parser fixtures/coverage)
 - Phase 6 remains binary list/emit/CLI; Phase 9 owns parser, ImportMetaLang, textual libraries, then extract
 
 ### 0.7.0 (2026-07-17) — merged to `main`
