@@ -168,6 +168,8 @@ concept Machine { contains SharedMeta.State*; }
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("importMetaLangToWebgmex rejects non-webgmex out path", async () => {
   await assert.rejects(
     () =>
       importMetaLangToWebgmex({
