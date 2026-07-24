@@ -103,7 +103,9 @@ test("library add / list / remove on a copied host (always persists)", async () 
       );
 
       const metalang = descriptorToMetalang(descriptor, "Host");
-      assert.match(metalang, /concept SharedMeta\./);
+      assert.match(metalang, /library SharedMeta \{/);
+      assert.match(metalang, /concept State/);
+      assert.doesNotMatch(metalang, /concept SharedMeta\.State/);
 
       const rows = await collectSeedNodes(ctx.core, ctx.rootNode, {});
       const tree = renderSeedTree("Host", dest, rows, { format: "tree-verbose" });

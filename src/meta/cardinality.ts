@@ -31,3 +31,39 @@ export function formatGlobalCardinality(card: CardinalityString): string {
   if (card === "0..1" || card === "?") return "0..1";
   return card;
 }
+
+/** Parse MetaLang member suffix (`*`, `+`, `?`, `:3`, `:2..5`) or bare token (`0..1`). */
+export function parseCardinalityToken(raw: string): CardinalityString {
+  const token = raw.trim();
+  if (token === "*" || token === "+" || token === "?") return token === "?" ? "0..1" : token;
+  if (/^\d+$/.test(token)) return token;
+  if (/^\d+\.\.\d+$/.test(token)) return token;
+  if (/^\d+\.\.\*$/.test(token)) {
+    const lo = Number(token.slice(0, token.indexOf("..")));
+    if (lo === 0) return "*";
+    if (lo === 1) return "+";
+    return `${lo}..*`;
+  }
+  throw new Error('Invalid cardinality: "' + token + '"');
+}
+
+/** Map cardinality string to core min/max (`-1` = unbound). */
+export function cardinalityToMinMax(card: CardinalityString | undefined): {
+  min: number;
+  max: number;
+} {
+  if (!card || card === "*") return { min: 0, max: -1 };
+  if (card === "+") return { min: 1, max: -1 };
+  if (card === "?" || card === "0..1") return { min: 0, max: 1 };
+  if (/^\d+$/.test(card)) {
+    const n = Number(card);
+    return { min: n, max: n };
+  }
+  const range = /^(\d+)\.\.(\d+|\*)$/.exec(card);
+  if (range) {
+    const min = Number(range[1]);
+    const max = range[2] === "*" ? -1 : Number(range[2]);
+    return { min, max };
+  }
+  throw new Error('Unsupported cardinality for core limits: "' + card + '"');
+}

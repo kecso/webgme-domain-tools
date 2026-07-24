@@ -102,16 +102,16 @@ Today, attaching a library in the GUI/engine roughly **imports another project�
 
 ### MetaLang ↔ libraries (authoring surface)
 
-Beyond binary `.webgmex` attach, we still need a path for **textual** library definitions (agents / review). Options to support (Phase 6 partial + Phase 9):
-
 | Path | Idea |
 |------|------|
-| **A. Library as its own `.metalang` + import** | Author `SharedMeta.metalang` (or emit from a library seed); `library add --from …` accepts `.webgmex` **or** a metalang that is compiled to a temp project then attached like GUI add |
-| **B. In-place `library` blocks in host metalang** | Host file may contain `library SharedMeta { concept State { … } }` (or equivalent); ingest attaches/updates that library rather than merging concepts into host-owned meta |
+| **A. Library as its own `.metalang` + import** | `import SharedMeta from "./SharedMeta.metalang"` — concepts prefixed with the import name |
+| **B. In-place `library` blocks** | `library SharedMeta { concept State { … } }` in the host file |
 
-**Principle:** whichever spelling we allow, materialization still **mimics `addLibrary`** (append under host root/FCO as a named library) — not a second attachment model. Exact grammar for in-place blocks and ImportMetaLang flags land in **Phase 9 (F49)**; Phase 6 only ensures FQN emit does not paint into a corner.
+**Canonical emit:** `library Lib { … }` blocks (not flat `concept Lib.X`). Descriptor remains flat FQNs.
 
-Exact ImportMetaLang UX stays Phase 9; F35 `.webgmex` CRUD ships first. **Do not extract `webgme-metalang` (F44) until F49 is done.**
+**Materialization:** ImportMetaLang / `importMetaLangToWebgmex` builds each library as a temp `.webgmex` and attaches via `addLibrary` (GUI-like). Create-only (`--out`) for now.
+
+**Langium / LSP:** deferred to the extracted `webgme-metalang` package (F44) — not part of webdot CLI.
 
 ## Remaining implementation
 

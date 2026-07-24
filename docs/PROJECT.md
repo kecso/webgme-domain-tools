@@ -39,7 +39,17 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 9 — MetaLang authoring** — `pending` (**next**; textual libraries **F49** before package extract **F44**)
+**Phase 9 — MetaLang authoring** — `review` (branch `feature/phase9-metalang`)
+
+| ID | Feature | Status | Review |
+|----|---------|--------|--------|
+| F16d | MetaLang → descriptor parser | `review` | Hand-rolled; round-trip with examples + library blocks/imports |
+| F42 | ImportMetaLang plugin | `review` | `importMetaLangToWebgmex` / `plugins/ImportMetaLang` create-only |
+| F49 | Textual libraries (import + `library` blocks) | `review` | Canonical emit uses `library` blocks; materialize via `addLibrary` |
+| F43 | Langium LSP | `deferred` → F44 package | Not in webdot |
+| F44 | Extract `webgme-metalang` | `pending` | Last |
+
+**Review gate:** `npm test` · `webdot seed meta --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex --format metalang` (library blocks) · import example metalang to a new `.webgmex`
 
 **Phase 6 — Project libraries** — `done` (merged to `main` 2026-07-24, branch `feature/phase6-libraries`)
 
@@ -397,28 +407,36 @@ webdot library remove Domain --webgmex ./Host.webgmex
 
 ### Phase 9 — MetaLang authoring
 
-**Status:** `pending` (**next** after Phase 6; package extract **last**)  
-**Goal:** Close the authoring loop (metalang → descriptor → WebGME meta), finish **textual library features**, optionally add LSP, then extract MetaLang into its own package **only after** libraries are complete in-language.
+**Status:** `review` (branch `feature/phase9-metalang`)  
+**Goal:** Close the authoring loop (metalang → descriptor → WebGME meta), finish **textual library features**, then extract MetaLang into its own package **only after** libraries are complete in-language. LSP lives in that extracted package — not in webdot.
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F16d | MetaLang → descriptor parser | `pending` | In-repo first (grammar + RULES already in `docs/meta/metalang/`); round-trip tests |
-| F42 | ImportMetaLang plugin | `pending` | Installable plugin: ingest `.metalang` → build/update meta in a project / `--out` `.webgmex` |
-| F49 | Textual libraries (import / `library` blocks) | `pending` | Complete library story in MetaLang — separate `.metalang` import and/or in-place `library Lib { … }`; materialize like `addLibrary`. **Required before F44** |
-| F43 | Langium language server | `pending` | Diagnostics / completion against grammar; thin editor extension optional |
-| F44 | Extract `webgme-metalang` package | `pending` | **Last** — only after F16d + F42 + F49 (and ideally F43) are proven in-repo; then move grammar, translate, LSP; webdot depends on the package |
+| F16d | MetaLang → descriptor parser | `review` | **Hand-rolled** in-repo (matches `grammar.ebnf`); Langium deferred to extract package |
+| F42 | ImportMetaLang plugin | `review` | **Create-only**; `importMetaLangToWebgmex` + `plugins/ImportMetaLang`; GUI-like `addLibrary` |
+| F49 | Textual libraries (import **and** `library` blocks) | `review` | **Both** A and B; canonical emit uses `library` blocks. **Required before F44** |
+| F43 | Langium language server | `deferred` → **F44 package** | LSP ships with `webgme-metalang`, not webdot CLI |
+| F44 | Extract `webgme-metalang` package | `pending` | **Last** — after F16d + F42 + F49; move grammar, translate, **Langium/LSP**; webdot depends on the package |
 
 **Phase 9 — Scenario (boiled down)**
 
 ```bash
-webdot seed meta --webgmex ./HostWithSharedMeta.webgmex --format metalang > host.metalang
-# edit host.metalang (FQNs + library blocks / imports once F49 lands; LSP once F43)
-webdot plugin run ImportMetaLang --set file=./host.metalang --out ./NewHost.webgmex
+webdot seed meta --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex --format metalang
+# edit / author .metalang (library blocks or import)
+# programmatic create (also via plugins/ImportMetaLang):
+node -e "import('./dist/meta/import-metalang.js').then(m=>m.importMetaLangToWebgmex({file:'docs/meta/examples/state-machine.metalang',out:'Out.webgmex'}))"
 ```
 
-**Sequencing (2026-07-24):** Phase 6 ships binary library list/emit/CLI. Phase 9 is next so we **complete library features in text** before splitting the repo. Do **not** publish `webgme-metalang` while libraries are still “FQN names only, no import/`library` definition.”
+**Decisions (2026-07-24):** Both import + `library` blocks; hand-rolled parser in-repo; Langium/LSP only in F44 extract; ImportMetaLang create-only (GUI-like `addLibrary`); canonical emit uses `library` blocks.
 
-**Notes:** Descriptor/MetaLang remain lossy vs IR (no sheets/mixins/constraints) — ingest creates a **useful** meta project, not a bit-perfect GUI round-trip. Details: [`docs/meta/LIBRARIES.md`](meta/LIBRARIES.md).
+**Phase 9 review checklist**
+
+1. **Parse** — `parseMetalang` round-trips `docs/meta/examples/state-machine.metalang` and library block / import forms.
+2. **Canonical emit** — `seed meta --format metalang` on `HostWithSharedMeta.webgmex` shows `library SharedMeta { … }` (not flat `concept SharedMeta.X`).
+3. **Import create** — `importMetaLangToWebgmex` (or plugin) builds a new `.webgmex` from metalang; libraries appear in `library list`.
+4. **`npm test`** — including `metalang-parse.test.js`, `import-metalang.test.js`.
+
+**Notes:** Descriptor/MetaLang remain lossy vs IR — ingest creates a **useful** meta project, not a bit-perfect GUI round-trip. Details: [`docs/meta/LIBRARIES.md`](meta/LIBRARIES.md).
 
 ---
 

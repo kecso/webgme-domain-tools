@@ -1,0 +1,38 @@
+{
+  "id": "ImportMetaLang",
+  "name": "Import MetaLang",
+  "version": "0.1.0",
+  "description": "Create a new .webgmex from a MetaLang file (host concepts + library blocks/imports). Create-only — pass --out.",
+  "icon": {
+    "src": "",
+    "class": "glyphicon glyphicon-import"
+  },
+  "disable": false,
+  "dependencies": [],
+  "configStructure": [
+    {
+      "name": "file",
+      "displayName": "MetaLang file",
+      "description": "Path to the .metalang source (relative to shell cwd)",
+      "value": "",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "out",
+      "displayName": "Output .webgmex",
+      "description": "Create-only output path (or use webdot --out)",
+      "value": "",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "templateWebgmex",
+      "displayName": "Template .webgmex",
+      "description": "Optional FCO/META template (default: bundled StateModel seed)",
+      "value": "",
+      "valueType": "string",
+      "readOnly": false
+    }
+  ]
+}

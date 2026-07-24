@@ -54,6 +54,23 @@ export async function closeProjectSession(): Promise<void> {
   }
 }
 
+/**
+ * Park the current session close-handler so a nested openProjectSession does not
+ * tear down the outer database. Caller must resume afterward.
+ */
+export function suspendProjectSession(): (() => Promise<void>) | null {
+  const prev = activeClose;
+  activeClose = null;
+  return prev;
+}
+
+export async function resumeProjectSession(
+  suspended: (() => Promise<void>) | null,
+): Promise<void> {
+  await closeProjectSession();
+  activeClose = suspended;
+}
+
 export async function openProjectSession(
   options: ProjectSessionOptions,
 ): Promise<LoadedSeedContext> {

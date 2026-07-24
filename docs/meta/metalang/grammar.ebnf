@@ -5,9 +5,17 @@
 document     = { statement } ;
 
 statement    = domain_decl
+               | import_decl
+               | library_decl
                | concept_decl ;
 
 domain_decl  = "domain" , qualified_name , { newline } ;
+
+; Path A — load another .metalang as a named library (concepts prefixed with the import name).
+import_decl  = "import" , identifier , "from" , string_literal , { newline } ;
+
+; Path B — in-place library definition (concepts inside use bare names; emit as Lib.Concept).
+library_decl = "library" , identifier , "{" , { concept_decl } , "}" , { newline } ;
 
 concept_decl = "concept" , type_ref , [ "extends" , type_ref ] ,
                concept_body , { newline } ;

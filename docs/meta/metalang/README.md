@@ -54,9 +54,35 @@ Descriptor JSON lists the same pointers — no separate connection block. Domain
 
 | Stage | Approach |
 |-------|----------|
-| Now | EBNF + hand-written examples; `descriptor → metalang` renderer in F16c |
-| Later | Langium grammar for validation, formatter, LSP (optional dep) |
-| Later | `metalang → descriptor` parser for authoring |
+| Now | Hand-rolled `metalang → descriptor` parser (`src/meta/metalang-to-descriptor.ts`); canonical emit uses `library` blocks |
+| Now | `ImportMetaLang` plugin / `importMetaLangToWebgmex` — create-only `.webgmex` (GUI-like `addLibrary` for libraries) |
+| Extract (F44) | Langium grammar + LSP in `webgme-metalang` package |
+
+## Libraries in MetaLang
+
+**Canonical emit** groups library concepts:
+
+```metalang
+domain Host
+
+concept Machine {
+  contains SharedMeta.State*;
+}
+
+library SharedMeta {
+  concept State {
+    isInitial: bool;
+  }
+}
+```
+
+**Import (path A):**
+
+```metalang
+import SharedMeta from "./SharedMeta.metalang"
+```
+
+**In-place block (path B):** `library SharedMeta { … }` as above. Descriptor JSON stays flat FQNs (`SharedMeta.State`).
 
 ## Examples
 
