@@ -114,11 +114,9 @@ Exact ImportMetaLang UX stays Phase 9; F35 `.webgmex` CRUD can ship first.
 
 ## Remaining implementation
 
-1. Fixtures (F31) — synthetic + real  
-2. `library list` + tree order (F32)  
-3. Descriptor / MetaLang always-FQN (F33)  
-4. GenerateMetaTs FQN / namespaces (F34)  
-5. `library add` / `update` / `remove` (F35)
+Phase 6 core (F31–F35) is on `feature/phase6-libraries` for review. Synthetic fixture matches the known real pattern: **domain package attached as a library** (host uses domain meta as effectively read-only).
+
+**Future (B14):** gather richer real-life library scenarios (multi-library hosts, collisions, nested libs, large DSS seeds) when they show up — not a Phase 6 blocker.
 
 See [PROJECT.md](../PROJECT.md) Phase 6.
 

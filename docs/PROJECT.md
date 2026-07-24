@@ -39,15 +39,17 @@ Non-blocking notes can be logged as backlog tasks ([Task template](.github/ISSUE
 
 ## Current milestone
 
-**Phase 6 — Project libraries** — `in progress` (branch `feature/phase6-libraries`)
+**Phase 6 — Project libraries** — `review` (branch `feature/phase6-libraries`)
 
 | ID | Feature | Status | Review |
 |----|---------|--------|--------|
-| F31 | Library-bearing fixtures | `in progress` | Synthetic: `test/fixtures/libraries/` · **need you:** real/DSS-scale package when ready |
+| F31 | Library-bearing fixtures | `review` | Synthetic `test/fixtures/libraries/` covers the known pattern (domain package attached as library). Richer multi-lib / DSS-scale scenarios → **future** (B14) |
 | F32 | List / inspect libraries | `review` | `webdot library list --webgmex …` · tree library-roots-first + `[library-root]` |
 | F33 | Descriptor / MetaLang always FQN | `review` | Host bare; library `Lib.Concept` |
 | F34 | GenerateMetaTs FQN / namespaces | `review` | Nested `namespace Lib { … }` |
 | F35 | Library CLI management | `review` | `add` / `update` / `remove` — no session; always persist |
+
+**Review gate:** `npm test` · commands in [Phase 6 review checklist](#phase-6--project-libraries) below
 
 **Hard gate:** Phase 9 may start parser/plugin work in-repo, but **`webgme-metalang` package extract (F44) waits until Phase 6 F31–F34 are done** so namespaces/libraries are part of the language surface we ship externally.
 
@@ -358,28 +360,36 @@ webdot session save                              # v2 file keeps full graph
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F31 | Library-bearing fixtures | `pending` | **Both:** synthetic (error/coverage) + real/trimmed seed (dogfood) |
-| F32 | List / inspect libraries | `pending` | `library list`; `tree --seed` keeps real structure, **library roots first under ROOT** |
-| F33 | Descriptor / MetaLang always FQN | `pending` | Library: `Lib.Concept`; **host: bare name** (no host namespace). Canonical — no short/FQN dual spelling |
-| F34 | GenerateMetaTs FQN / namespaces | `pending` | Nested `namespace Lib { … }` for library concepts; host interfaces stay top-level |
-| F35 | Library CLI management | `pending` | **No session** — `add`/`update`/`remove` always write the target `.webgmex` immediately; same as GUI `addLibrary` |
+| F31 | Library-bearing fixtures | `review` | Synthetic host+lib in `test/fixtures/libraries/`. Known real pattern = domain project imported as read-only library into a thin host — same shape as the fixture. Broader real-world scenarios deferred (**B14**) |
+| F32 | List / inspect libraries | `review` | `library list`; `tree --seed` keeps real structure, **library roots first under ROOT** |
+| F33 | Descriptor / MetaLang always FQN | `review` | Library: `Lib.Concept`; **host: bare name** (no host namespace). Canonical — no short/FQN dual spelling |
+| F34 | GenerateMetaTs FQN / namespaces | `review` | Nested `namespace Lib { … }` for library concepts; host interfaces stay top-level |
+| F35 | Library CLI management | `review` | **No session** — `add`/`update`/`remove` always write the target `.webgmex` immediately; same as GUI `addLibrary` |
 
 **Phase 6 — Scenario (boiled down)**  
-A domain studio imports a shared metamodel library into its seed. Authors want `webdot` to **show** what is host vs library, emit **canonical FQN** types, and (when ready) **attach/update/remove** library packages the same way the GUI does — without opening the WebGME GUI.
+Primary real usage today: a **domain** `.webgmex` is attached as a library into a (mostly empty) host so the domain meta is effectively read-only. Authors want `webdot` to **list** that attachment, emit **canonical FQN** types, and **add/update/remove** libraries headlessly.
 
 ```bash
 # Introspection (F32–F34)
-webdot library list --seed HostDomain
-webdot tree --seed HostDomain          # library roots first under ROOT
-webdot seed meta --seed HostDomain --format descriptor   # always FQN keys
+webdot library list --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex
+webdot tree --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex --format tree-verbose
+webdot seed meta --webgmex test/fixtures/libraries/HostWithSharedMeta.webgmex --format descriptor
 
 # Management (F35) — always persists; not part of session workspace
-webdot library add --seed HostDomain --from ./SharedMeta.webgmex --as SharedMeta
-webdot library update SharedMeta --seed HostDomain --from ./SharedMeta.webgmex
-webdot library remove SharedMeta --seed HostDomain
+webdot library add --webgmex ./Host.webgmex --from ./Domain.webgmex --as Domain
+webdot library update Domain --webgmex ./Host.webgmex --from ./Domain.webgmex
+webdot library remove Domain --webgmex ./Host.webgmex
 ```
 
-**Decisions (2026-07-23):** Always-FQN for library types; **no host namespace**; both fixtures; tree = real structure with libraries ordered first; F35 **outside sessions**, always save; textual library authoring via separate metalang import and/or in-place `library` blocks (mimic `addLibrary`) — see [`docs/meta/LIBRARIES.md`](meta/LIBRARIES.md).
+**Phase 6 review checklist (what to look at)**
+
+1. **FQN emit** — `seed meta --format descriptor` / `metalang` on `HostWithSharedMeta.webgmex`: host concepts bare, library concepts `SharedMeta.…`; no dual short/FQN spelling.
+2. **TS emit** — GenerateMetaTs (or unit coverage): library types under `namespace SharedMeta`.
+3. **Tree** — library roots appear first under ROOT; verbose shows `[library-root]`.
+4. **CLI** — `library list` / `add` / `remove` (and optionally `update`) on a **copy** of a host file; confirm it writes immediately and does **not** use session workspace.
+5. **`npm test`** — including `library-command.test.js`.
+
+**Decisions (2026-07-23 / 2026-07-24):** Always-FQN for library types; no host namespace; session-free library CLI; richer library dogfood scenarios are **future (B14)**, not a Phase 6 blocker. Details: [`docs/meta/LIBRARIES.md`](meta/LIBRARIES.md).
 
 **Notes:** F17 IR fields are already in place. Prefer session write-back + Phase 7 history-aware save when library mutations write `.webgmex`.
 
@@ -466,6 +476,7 @@ Tasks not tied to a single milestone — pick up anytime.
 | B11 | product | Phase 6 library CLI management (F35) | medium |
 | B12 | product | Phase 9 MetaLang authoring + package extract (F16d, F42–F44) | low |
 | B13 | docs | Phase 8 tutorials + CLI reference (F45–F47) — done on `main` | — |
+| B14 | meta | Expand library dogfood beyond “domain as read-only library” (multi-lib, collisions, nested libs, DSS-scale) — collect real examples later | low |
 
 *Add rows via [Task issue template](.github/ISSUE_TEMPLATE/task.md).*
 

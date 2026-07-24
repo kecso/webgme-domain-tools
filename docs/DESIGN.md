@@ -105,7 +105,7 @@ See [PROJECT.md](PROJECT.md) Phase 5 (F26–F29, optional F30).
 | TS emit | Nested `namespace Lib` for library concepts; host interfaces top-level |
 | Manage (CLI) | **Outside sessions** — always write target `.webgmex`; mimic GUI `addLibrary` |
 | Textual libs | Later: metalang import and/or in-place `library` blocks → same attach semantics |
-| Fixtures | Synthetic (coverage) + real/trimmed (dogfood) |
+| Fixtures | Synthetic host+lib (domain-as-library pattern). Richer dogfood → backlog **B14** |
 
 Phase 4 already records IR `libraries[]` and per-node `namespace` / `fullyQualifiedName` / `libraryElement`. Phase 6 finishes consumer-facing listing/emit and management. Decisions: [`meta/LIBRARIES.md`](meta/LIBRARIES.md).
 
